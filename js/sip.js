@@ -5,6 +5,7 @@ var endButton = document.getElementById('endCall').addEventListener("click", fun
 	alert("Call Ended");
 }, false);
 
+/*
 var userAgent = new SIP.UA({
 	uri: "sip:ntmudo@178.62.211.128",
 	wsServers: ["ws://178.62.211.128:8080/ws"],
@@ -13,18 +14,29 @@ var userAgent = new SIP.UA({
 	stunServers: ["stun:stun.l.google.com:19302"],
 	traceSip: true
 });
+*/
 
-var options = {
-	media: {
-		constraints: {
-			audio: true,
-			video: false
-		},
-		render: {
-			remote: document.getElementById('remoteAudio'),
-			local: document.getElementById('localAudio')
-		}
-	}
+var configuration = {
+    uri: 'sip:h7u6y0@178.62.211.128',
+    authorizationUser: 'h7u6y0',
+    password: 'GJUE5X',
+    wsServers: ["ws://178.62.211.128:8080/ws"],
+    stunServers: ["stun:stun.l.google.com:19302"],
 };
 
-session = userAgent.invite('sip:1111111111@178.62.211.128', options);
+var userAgent = new SIP.UA(configuration);
+
+userAgent.on('invite', function (session) {
+    session.accept({
+    	media: {
+    		constraints: {
+    			audio: true,
+    			video: false
+    		},
+    		render: {
+    			remote: document.getElementById('remoteAudio'),
+    			local: document.getElementById('localAudio')
+    		}
+    	}
+    });
+});

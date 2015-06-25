@@ -27,4 +27,4 @@ var options = {
 	}
 };
 
-session = userAgent.invite('sip:*9@178.62.211.128', options);
+session = userAgent.invite('sip:1111111111@178.62.211.128', options);

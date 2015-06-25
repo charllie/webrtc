@@ -1,0 +1,8 @@
+<form>
+	<label>Your Name     <input type="text" ng-model="user.name" name="displayName" placeholder="Thomas"/></label>
+	<label>SIP URI       <input type="text" ng-model="user.uri" name="uri" placeholder="sip:h7u6y0@178.62.211.128"></label>
+	<label>Auth Username <input type="text" ng-model="user.id" name="authorizationUser" placeholder="h7u6y0"></label>
+	<label>Password      <input type="password" ng-model="user.pwd" name="password"></label>
+	<label>WS Server     <input type="text" ng-model="user.wsServer" name="wsServers" placeholder="ws://178.62.211.128:8080/ws"></label>
+	<input type="submit" name="configSubmit" value="Connect" ng-click="submit(user)">
+</form>
