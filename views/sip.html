@@ -4,6 +4,11 @@
 <div>{{ user.pwd }}</div>
 <div>{{ user.wsServer }}</div>
 
+<form>
+	<input type="text" ng-model="person.id" placeholder>
+	<input type="submit" ng-click="call(person)">
+</form>
+
 <video id="remoteAudio" autoplay></video>
 <video id="localAudio" muted="muted"></video>
 <button id="endCall">End Call</button>
