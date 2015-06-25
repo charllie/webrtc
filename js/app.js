@@ -58,7 +58,8 @@ app.controller('SIPCtrl', ['$scope', 'aiStorage', function($scope, store) {
 
 	var userAgent = new SIP.UA(configuration);
 
-	userAgent.on('invite', function(session) {
+	userAgent.on('invite', function(incomingSession) {
+		session = incomingSession;
 		session.accept(options);
 	});
 
