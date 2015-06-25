@@ -21,17 +21,17 @@ app.controller('UserCtrl', ['$scope', '$location', 'aiStorage', function($scope,
 	$scope.submit = function(user) {
 		store.set('user', user);
 		$location.path("/sip");
-	}
+	};
 }]);
 
 app.controller('SIPCtrl', ['$scope', 'aiStorage', function($scope, store) {
 	var user = store.get('user');
+	var session;
+
 	$scope.user = user;
 
-	$scope.session = null;
-
 	var endButton = document.getElementById('endCall').addEventListener("click", function() {
-		$scope.session.bye();
+		session.bye();
 		alert("Call Ended");
 	}, false);
 
@@ -59,10 +59,10 @@ app.controller('SIPCtrl', ['$scope', 'aiStorage', function($scope, store) {
 	var userAgent = new SIP.UA(configuration);
 
 	userAgent.on('invite', function(session) {
-		session.accept(option);
+		session.accept(options);
 	});
 
 	$scope.call = function(person) {
-		userAgent.invite('sip:' + person.id + '@' + user.server, options);
-	}
+		session = userAgent.invite('sip:' + person.id + '@' + user.server, options);
+	};
 }]);
