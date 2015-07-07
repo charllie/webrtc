@@ -20,7 +20,6 @@
     "tests"
   ],
   "dependencies": {
-    "adapter.js": "*",
-    "kurento-utils": "~5.1.0"
+    "adapter.js": "*"
   }
 }
