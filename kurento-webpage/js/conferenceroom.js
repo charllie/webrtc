@@ -13,7 +13,7 @@
  *
  */
 
-var ws = new WebSocket('ws://192.168.12.229:8080/groupcall');
+var ws = new WebSocket('ws://192.168.12.217:8080/groupcall');
 var participants = {};
 var name;
 
@@ -102,10 +102,10 @@ function onExistingParticipants(msg) {
 	console.log(name + " registered in room " + room);
 	var participant = new Participant(name);
 	participants[name] = participant;
-	var video = participant.getVideoElement();
+	//var video = participant.getVideoElement();
 
 	var options = {
-	      localVideo: video,
+		  //localVideo: video,
 	      remoteVideo: document.getElementById('remote_video'),
 	      mediaConstraints: constraints,
 	      onicecandidate: participant.onIceCandidate.bind(participant)
@@ -138,10 +138,10 @@ function leaveRoom() {
 function receiveVideo(sender) {
 	var participant = new Participant(sender);
 	participants[sender] = participant;
-	var video = participant.getVideoElement();
+	//var video = participant.getVideoElement();
 
 	var options = {
-      remoteVideo: video,
+      //remoteVideo: video,
       onicecandidate: participant.onIceCandidate.bind(participant)
     }
 
