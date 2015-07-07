@@ -68,7 +68,7 @@ function register() {
 }
 
 function onNewParticipant(request) {
-	receiveVideo(request.name);
+	console.log(request.name + " has just arrived");
 }
 
 function receiveVideoResponse(result) {
@@ -118,7 +118,6 @@ function onExistingParticipants(msg) {
 		  this.generateOffer (participant.offerToReceiveVideo.bind(participant));
 	});
 
-	msg.data.forEach(receiveVideo);
 }
 
 function leaveRoom() {
