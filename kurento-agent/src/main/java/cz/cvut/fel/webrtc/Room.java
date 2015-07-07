@@ -24,7 +24,9 @@ import java.util.concurrent.ConcurrentMap;
 
 import javax.annotation.PreDestroy;
 
+import org.kurento.client.Composite;
 import org.kurento.client.Continuation;
+import org.kurento.client.HubPort;
 import org.kurento.client.MediaPipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +46,10 @@ public class Room implements Closeable {
 
 	private final ConcurrentMap<String, UserSession> participants = new ConcurrentHashMap<>();
 	private final MediaPipeline pipeline;
+	private final Composite composite;
 	private final String name;
+
+	private HubPort hubPort;
 
 	/**
 	 * @return the name
@@ -56,6 +61,7 @@ public class Room implements Closeable {
 	public Room(String roomName, MediaPipeline pipeline) {
 		this.name = roomName;
 		this.pipeline = pipeline;
+		this.composite = new Composite.Builder(pipeline).build();
 		log.info("ROOM {} has been created", roomName);
 	}
 
@@ -68,7 +74,13 @@ public class Room implements Closeable {
 			throws IOException {
 		log.info("ROOM {}: adding participant {}", userName, userName);
 		final UserSession participant = new UserSession(userName, this.name,
-				session, this.pipeline);
+				session, this.pipeline, this.composite);
+		
+		if (participants.size() == 1) {
+			log.info("ROOM {}: Create composite", getName());
+			this.hubPort = new HubPort.Builder(composite).build();
+		}
+		
 		joinRoom(participant);
 		participants.put(participant.getName(), participant);
 		sendParticipantNames(participant);

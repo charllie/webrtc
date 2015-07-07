@@ -13,7 +13,7 @@
  *
  */
 
-var ws = new WebSocket('ws://localhost:8080/groupcall');
+var ws = new WebSocket('ws://192.168.12.229:8080/groupcall');
 var participants = {};
 var name;
 
@@ -106,6 +106,7 @@ function onExistingParticipants(msg) {
 
 	var options = {
 	      localVideo: video,
+	      remoteVideo: document.getElementById('remote_video'),
 	      mediaConstraints: constraints,
 	      onicecandidate: participant.onIceCandidate.bind(participant)
 	    }

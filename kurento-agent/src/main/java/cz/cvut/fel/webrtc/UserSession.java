@@ -21,6 +21,8 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.kurento.client.Continuation;
 import org.kurento.client.EventListener;
+import org.kurento.client.Hub;
+import org.kurento.client.HubPort;
 import org.kurento.client.IceCandidate;
 import org.kurento.client.MediaPipeline;
 import org.kurento.client.OnIceCandidateEvent;
@@ -51,9 +53,10 @@ public class UserSession implements Closeable {
 	private final String roomName;
 	private final WebRtcEndpoint outgoingMedia;
 	private final ConcurrentMap<String, WebRtcEndpoint> incomingMedia = new ConcurrentHashMap<>();
-
+	private final HubPort hubPort;
+	
 	public UserSession(final String name, String roomName,
-			final WebSocketSession session, MediaPipeline pipeline) {
+			final WebSocketSession session, MediaPipeline pipeline, Hub hub) {
 
 		this.pipeline = pipeline;
 		this.name = name;
@@ -81,6 +84,10 @@ public class UserSession implements Closeable {
 						}
 					}
 				});
+		
+		this.hubPort = new HubPort.Builder(hub).build();
+		hubPort.connect(outgoingMedia);
+		outgoingMedia.connect(hubPort);
 	}
 
 	public WebRtcEndpoint getOutgoingWebRtcPeer() {
@@ -122,19 +129,21 @@ public class UserSession implements Closeable {
 
 		log.trace("USER {}: SdpOffer for {} is {}", this.name,
 				sender.getName(), sdpOffer);
-
-		final String ipSdpAnswer = this.getEndpointForUser(sender)
-				.processOffer(sdpOffer);
-		final JsonObject scParams = new JsonObject();
-		scParams.addProperty("id", "receiveVideoAnswer");
-		scParams.addProperty("name", sender.getName());
-		scParams.addProperty("sdpAnswer", ipSdpAnswer);
-
-		log.trace("USER {}: SdpAnswer for {} is {}", this.name,
-				sender.getName(), ipSdpAnswer);
-		this.sendMessage(scParams);
-		log.debug("gather candidates");
-		this.getEndpointForUser(sender).gatherCandidates();
+		
+		if (this.equals(sender)) {
+			final String ipSdpAnswer = this.getEndpointForUser(sender)
+					.processOffer(sdpOffer);
+			final JsonObject scParams = new JsonObject();
+			scParams.addProperty("id", "receiveVideoAnswer");
+			scParams.addProperty("name", sender.getName());
+			scParams.addProperty("sdpAnswer", ipSdpAnswer);
+	
+			log.trace("USER {}: SdpAnswer for {} is {}", this.name,
+					sender.getName(), ipSdpAnswer);
+			this.sendMessage(scParams);
+			log.debug("gather candidates");
+			this.getEndpointForUser(sender).gatherCandidates();
+		}
 	}
 
 	/**
