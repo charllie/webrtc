@@ -13,7 +13,7 @@
  *
  */
 
-var ws = new WebSocket('ws://147.32.211.107:8080/groupcall');
+var ws = new WebSocket('ws://<IP_ADDRESS>:8080/groupcall');
 var participants = {};
 var name;
 
@@ -68,6 +68,7 @@ function register() {
 }
 
 function onNewParticipant(request) {
+	participants[request.name] = new Participant(request.name);
 	console.log(request.name + " has just arrived");
 }
 
@@ -125,7 +126,7 @@ function leaveRoom() {
 		id : 'leaveRoom'
 	});
 
-	for ( var key in participants) {
+	for (var key in participants) {
 		participants[key].dispose();
 	}
 
@@ -157,7 +158,7 @@ function receiveVideo(sender) {
 function onParticipantLeft(request) {
 	console.log('Participant ' + request.name + ' left');
 	var participant = participants[request.name];
-	participant.dispose();
+	//participant.dispose();
 	delete participants[request.name];
 }
 

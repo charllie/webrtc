@@ -63,6 +63,7 @@ public class RoomManager {
 	 */
 	public void removeRoom(Room room) {
 		this.rooms.remove(room.getName());
+		room.getPipeline().release();
 		room.close();
 		log.info("Room {} removed and closed", room.getName());
 	}
