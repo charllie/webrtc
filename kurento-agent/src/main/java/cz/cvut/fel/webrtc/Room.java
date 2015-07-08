@@ -26,7 +26,7 @@ import javax.annotation.PreDestroy;
 
 import org.kurento.client.Composite;
 import org.kurento.client.Continuation;
-import org.kurento.client.HubPort;
+//import org.kurento.client.HubPort;
 import org.kurento.client.MediaPipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,9 +48,7 @@ public class Room implements Closeable {
 	private final MediaPipeline pipeline;
 	private final Composite composite;
 	private final String name;
-
-	private HubPort hubPort;
-
+	
 	/**
 	 * @return the name
 	 */
@@ -76,11 +74,6 @@ public class Room implements Closeable {
 		final UserSession participant = new UserSession(userName, this.name,
 				session, this.pipeline, this.composite);
 		
-		if (participants.size() == 1) {
-			log.info("ROOM {}: Create composite", getName());
-			this.hubPort = new HubPort.Builder(composite).build();
-		}
-		
 		joinRoom(participant);
 		participants.put(participant.getName(), participant);
 		sendParticipantNames(participant);
@@ -88,10 +81,11 @@ public class Room implements Closeable {
 	}
 
 	public void leave(UserSession user) throws IOException {
+
 		log.debug("PARTICIPANT {}: Leaving room {}", user.getName(), this.name);
-		pipeline.release();
 		this.removeParticipant(user.getName());
 		user.close();
+		
 	}
 
 	/**
@@ -212,6 +206,10 @@ public class Room implements Closeable {
 		});
 
 		log.debug("Room {} closed", this.name);
+	}
+	
+	public MediaPipeline getPipeline() {
+		return pipeline;
 	}
 
 }
