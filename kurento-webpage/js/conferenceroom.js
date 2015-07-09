@@ -13,7 +13,7 @@
  *
  */
 
-var ws = new WebSocket('ws://localhost:8080/groupcall');
+var ws = new WebSocket('ws://147.32.211.107:8080/groupcall');
 var inRoom = false;
 var participants = {};
 var name;
@@ -130,9 +130,10 @@ function leaveRoom() {
 		id : 'leaveRoom'
 	});
 
-	for (var key in participants) {
-		participants[key].dispose();
-	}
+	//for (var key in participants) {
+	//	participants[key].dispose();
+	//}
+	participants[name].dispose();
 
 	document.getElementById('join').style.display = 'block';
 	document.getElementById('room').style.display = 'none';
