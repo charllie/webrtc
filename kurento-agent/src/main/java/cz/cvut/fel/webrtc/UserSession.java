@@ -48,7 +48,7 @@ public class UserSession implements Closeable {
 	private final String name;
 	private final WebSocketSession session;
 	
-	private final MediaPipeline pipeline;
+	//private final MediaPipeline pipeline;
 
 	private final String roomName;
 	private final WebRtcEndpoint outgoingMedia;
@@ -58,7 +58,7 @@ public class UserSession implements Closeable {
 	public UserSession(final String name, String roomName,
 			final WebSocketSession session, MediaPipeline pipeline, Hub hub) {
 
-		this.pipeline = pipeline;
+		//this.pipeline = pipeline;
 		this.name = name;
 		this.session = session;
 		this.roomName = roomName;
