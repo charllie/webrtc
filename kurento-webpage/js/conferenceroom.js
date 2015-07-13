@@ -13,7 +13,7 @@
  *
  */
 
-var ws = new WebSocket('ws://147.32.211.107:8080/groupcall');
+var ws = new WebSocket('wss://147.32.211.107/groupcall');
 var inRoom = false;
 var participants = {};
 var name;
@@ -93,28 +93,53 @@ function callResponse(message) {
 	}
 }
 
+
 function onExistingParticipants(msg) {
-	var constraints = {
-		audio : true,
-		video : {
-			mandatory : {
-				maxWidth : 320,
-				maxFrameRate : 15,
-				minFrameRate : 15
-			}
-		}
-	};
+
+	// var constraints = {
+	// 	audio : true,
+	// 	video : {
+	// 		mandatory : {
+	// 			maxWidth : 320,
+	// 			maxFrameRate : 15,
+	// 			minFrameRate : 15
+	// 		}
+	// 	}
+	// };
 	console.log(name + " registered in room " + room);
 	var participant = new Participant(name);
 	participants[name] = participant;
 	//var video = participant.getVideoElement();
 
+	var width, height;
+
+	width = 1920;
+	height = 1080;
+
+
+	var constraints =
+	{
+		audio : false,
+		video : {
+			//mozMediaSource: 'window' || 'screen',
+            mediaSource: 'window' || 'screen'
+		}
+	};
+
+// window.navigator.mozGetUserMedia(constraints, function(stream) {
+//           content.appendChild(video);
+//           video.mozSrcObject = stream;
+//           video.play();
+//       }, function (err) {});
+
 	var options = {
 		  //localVideo: video,
-	      remoteVideo: document.getElementById('remote_video'),
+	      remoteVideo: document.getElementById('video'),
 	      mediaConstraints: constraints,
 	      onicecandidate: participant.onIceCandidate.bind(participant)
 	    }
+
+
 	participant.rtcPeer = new kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options,
 		function (error) {
 		  if(error) {
