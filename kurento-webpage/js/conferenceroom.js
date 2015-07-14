@@ -203,6 +203,10 @@ function onExistingParticipants(msg) {
 
 	participant.rtcPeer = new kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options,
 		function(error) {
+			if ((currentButton=='window' || currentButton=='screen') && location.protocol === 'http:' && error)
+				alert('Please test on HTTPS.');
+			else if ( (currentButton=='window' || currentButton=='screen') && error )
+				alert('Allow this domain in about:config media.getusermedia.screensharing.allowed_domains')
 			if (error) {
 				return console.error(error);
 			}
