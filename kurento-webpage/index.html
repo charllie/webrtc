@@ -31,6 +31,8 @@
 			<div id="room" style="display: none;">
 				<h2 id="room-header"></h2>
 				<div id="participants"></div>
+				<button id="screenshare" onclick="getScreenshare()">Screenshare</button>
+				<button id="webcam" onclick="getWebcam()" disabled>Webcam</button>
 				<input type="button" id="button-leave" onmouseup="leaveRoom();"
 					value="Leave room">
 				<video id="video" autoplay controls></video>
