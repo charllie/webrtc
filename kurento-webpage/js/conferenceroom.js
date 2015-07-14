@@ -12,89 +12,101 @@
  * Lesser General Public License for more details.
  *
  */
-
 var ws = new WebSocket('wss://147.32.211.107/groupcall');
 var inRoom = false;
 var participants = {};
 var name;
-var constraints = {
-	audio : true,
-	video : {
-		mandatory : {
-			maxWidth : 320,
-			maxFrameRate : 15,
-			minFrameRate : 15
-		}
-	}
-};
 
 // Detection of the browser
 var userAgent = navigator.userAgent.toLowerCase();
 var browserM = userAgent.match(/(opera|chrome|safari|firefox|msie)[\/\s]*([\d\.]+)/);
 var browser = navigator.appName.toLowerCase();
-if(browserM)
-  browser = browserM[1];
+if (browserM)
+	browser = browserM[1];
 var isChrome = (browser === "chrome");
 var isFirefox = (browser === "firefox");
 
-// if(!isFirefox) {  
-// 	document.getElementById("screen_btn").disabled = true; 
-// }
+// Disable screenshare on Chrome (temporary)
+if (isChrome) {
+	window.onload = function() {
+		toggleButton('screen_btn');
+	};
+}
+
+// Visual
+function toggleButton(button) {
+	document.getElementById(button).disabled = !document.getElementById(button).disabled;
+}
+
+// Constraints
+// Chrome screenshare
+var chromeConsScreen = {
+	video: {
+		mandatory: {
+			chromeMediaSource: 'screen',
+			maxWidth: screen.width,
+			maxHeight: screen.height,
+			minFrameRate: 1,
+			maxFrameRate: 5
+		}
+	},
+	optional: []
+};
+
+// Default screenshare
+var consScreen = {
+	audio: false,
+	video: {
+		//mozMediaSource: 'screen',
+		mediaSource: 'screen',
+		mandatory: {
+			maxWidth: screen.width,
+			maxHeight: screen.height,
+			minFrameRate: 1,
+			maxFrameRate: 5
+		}
+	}
+};
+
+// Webcam
+var consWebcam = {
+	audio: true,
+	video: {
+		mandatory: {
+			maxWidth: 320,
+			maxFrameRate: 15,
+			minFrameRate: 15
+		}
+	}
+};
+
+var constraints = consWebcam;
+
+function refresh() {
+	leaveRoom();
+	register();
+}
 
 function screenshare() {
-	if(isChrome) {  
-		// constraints = {
-		// 	video: {
-		// 		mandatory: {
-		// 			chromeMediaSource: 'screen',
-		// 			maxWidth: screen.width,
-		// 			maxHeight: screen.height,
-		// 			minFrameRate: 1,
-		// 			maxFrameRate: 5
-		// 		},
-		// 		optional: []
-		// 	}
-		// };
+	if (isChrome) {
+		constraints = chromeConsScreen;
 	} else {
-		document.getElementById("screen_btn").disabled = true;
-		document.getElementById("cam_btn").disabled = false;
-		leaveRoom();
-		constraints = {
-			audio: false,
-			video: {
-				//mozMediaSource: 'screen',
-				mediaSource: "screen",
-				mandatory: {
-					maxWidth: screen.width,
-					maxHeight: screen.height,
-					minFrameRate: 1,
-					maxFrameRate: 5
-				}
-			}
-		};
-		register();
+		toggleButton('screen_btn');
+		toggleButton('cam_btn');
+		constraints = consScreen;
+		refresh();
 	}
 }
 
 function webcam() {
-	document.getElementById("screen_btn").disabled = false;
-	document.getElementById("cam_btn").disabled = true;
-	leaveRoom();
-	constraints = {
-		audio : true,
-		video : {
-			mandatory : {
-				maxWidth : 320,
-				maxFrameRate : 15,
-				minFrameRate : 15
-			}
-		}
-	};
-	register();
+	toggleButton('screen_btn');
+	toggleButton('cam_btn');
+	constraints = consWebcam;
+	refresh();
 }
 
 window.onbeforeunload = function() {
-	if (inRoom == true)
+	if (inRoom === true)
 		leaveRoom();
 	ws.close();
 };
@@ -104,30 +116,30 @@ ws.onmessage = function(message) {
 	console.info('Received message: ' + message.data);
 
 	switch (parsedMessage.id) {
-	case 'existingParticipants':
-		onExistingParticipants(parsedMessage);
-		break;
-	case 'newParticipantArrived':
-		onNewParticipant(parsedMessage);
-		break;
-	case 'participantLeft':
-		onParticipantLeft(parsedMessage);
-		break;
-	case 'receiveVideoAnswer':
-		receiveVideoResponse(parsedMessage);
-		break;
-	case 'iceCandidate':
-		participants[parsedMessage.name].rtcPeer.addIceCandidate(parsedMessage.candidate, function (error) {
-	        if (error) {
-		      console.error("Error adding candidate: " + error);
-		      return;
-	        }
-	    });
-	    break;
-	default:
-		console.error('Unrecognized message', parsedMessage);
+		case 'existingParticipants':
+			onExistingParticipants(parsedMessage);
+			break;
+		case 'newParticipantArrived':
+			onNewParticipant(parsedMessage);
+			break;
+		case 'participantLeft':
+			onParticipantLeft(parsedMessage);
+			break;
+		case 'receiveVideoAnswer':
+			receiveVideoResponse(parsedMessage);
+			break;
+		case 'iceCandidate':
+			participants[parsedMessage.name].rtcPeer.addIceCandidate(parsedMessage.candidate, function(error) {
+				if (error) {
+					console.error("Error adding candidate: " + error);
+					return;
+				}
+			});
+			break;
+		default:
+			console.error('Unrecognized message', parsedMessage);
 	}
-}
+};
 
 function register() {
 	inRoom = true;
@@ -139,10 +151,11 @@ function register() {
 	document.getElementById('room').style.display = 'block';
 
 	var message = {
-		id : 'joinRoom',
-		name : name,
-		room : room,
-	}
+		id: 'joinRoom',
+		name: name,
+		room: room,
+	};
+
 	sendMessage(message);
 }
 
@@ -152,8 +165,8 @@ function onNewParticipant(request) {
 }
 
 function receiveVideoResponse(result) {
-	participants[result.name].rtcPeer.processAnswer (result.sdpAnswer, function (error) {
-		if (error) return console.error (error);
+	participants[result.name].rtcPeer.processAnswer(result.sdpAnswer, function(error) {
+		if (error) return console.error(error);
 	});
 }
 
@@ -162,8 +175,8 @@ function callResponse(message) {
 		console.info('Call not accepted by peer. Closing call');
 		stop();
 	} else {
-		webRtcPeer.processAnswer(message.sdpAnswer, function (error) {
-			if (error) return console.error (error);
+		webRtcPeer.processAnswer(message.sdpAnswer, function(error) {
+			if (error) return console.error(error);
 		});
 	}
 }
@@ -175,24 +188,25 @@ function onExistingParticipants(msg) {
 	//var video = participant.getVideoElement();
 
 	var options = {
-		  //localVideo: video,
-	      remoteVideo: document.getElementById('remote_video'),
-	      mediaConstraints: constraints,
-	      onicecandidate: participant.onIceCandidate.bind(participant)
-	    }
+		//localVideo: video,
+		remoteVideo: document.getElementById('remote_video'),
+		mediaConstraints: constraints,
+		onicecandidate: participant.onIceCandidate.bind(participant)
+	};
+
 	participant.rtcPeer = new kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options,
-		function (error) {
-		  if(error) {
-			  return console.error(error);
-		  }
-		  this.generateOffer (participant.offerToReceiveVideo.bind(participant));
-	});
+		function(error) {
+			if (error) {
+				return console.error(error);
+			}
+			this.generateOffer(participant.offerToReceiveVideo.bind(participant));
+		});
 
 }
 
 function leaveRoom() {
 	sendMessage({
-		id : 'leaveRoom'
+		id: 'leaveRoom'
 	});
 
 	//for (var key in participants) {
@@ -212,17 +226,17 @@ function receiveVideo(sender) {
 	//var video = participant.getVideoElement();
 
 	var options = {
-      //remoteVideo: video,
-      onicecandidate: participant.onIceCandidate.bind(participant)
-    }
+		//remoteVideo: video,
+		onicecandidate: participant.onIceCandidate.bind(participant)
+	};
 
 	participant.rtcPeer = new kurentoUtils.WebRtcPeer.WebRtcPeerRecvonly(options,
-			function (error) {
-			  if(error) {
-				  return console.error(error);
-			  }
-			  this.generateOffer (participant.offerToReceiveVideo.bind(participant));
-	});;
+		function(error) {
+			if (error) {
+				return console.error(error);
+			}
+			this.generateOffer(participant.offerToReceiveVideo.bind(participant));
+		});
 }
 
 function onParticipantLeft(request) {
