@@ -195,6 +195,14 @@ input[type=button]:active, input[type=submit]:active {
 	box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.2);
 }
 
+input[type=button]:disabled {
+	background: #e3e3e3;
+	border-color: #cecece #c8c8c8 #c2c2c2;
+	-webkit-box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.1);
+	box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.1);
+	color: #aaa;
+}
+
 .lt-ie9 input[type=text], .lt-ie9 input[type=password] {
 	line-height: 34px;
 }
@@ -206,7 +214,6 @@ input[type=button]:active, input[type=submit]:active {
 
 #button-leave {
 	text-align: center;
-	position: absolute;
 	bottom: 10px;
 }
 
