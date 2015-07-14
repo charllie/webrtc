@@ -16,6 +16,7 @@ var ws = new WebSocket('wss://147.32.211.107/groupcall');
 var inRoom = false;
 var participants = {};
 var name;
+var currentButton = 'webcam';
 
 // Detection of the browser
 var userAgent = navigator.userAgent.toLowerCase();
@@ -53,12 +54,12 @@ var chromeConsScreen = {
 	optional: []
 };
 
-// Default screenshare
-var consScreen = {
+// Default sharing
+var consShare = {
 	audio: false,
 	video: {
 		//mozMediaSource: 'screen',
-		mediaSource: 'screen',
+		//mediaSource: 'screen',
 		mandatory: {
 			maxWidth: screen.width,
 			maxHeight: screen.height,
@@ -87,20 +88,25 @@ function refresh() {
 	register();
 }
 
-function screenshare() {
-	if (isChrome) {
-		constraints = chromeConsScreen;
-	} else {
-		toggleButton('screen_btn');
-		toggleButton('cam_btn');
-		constraints = consScreen;
-		refresh();
+function share(type) {
+	if (type != currentButton) {
+		if (isChrome) {
+			constraints = chromeConsScreen;
+		} else {
+			toggleButton(type);
+			toggleButton(currentButton);
+			currentButton = type;
+			constraints = consShare;
+			constraints.video.mediaSource = type;
+			refresh();
+		}
 	}
 }
 
 function webcam() {
-	toggleButton('screen_btn');
-	toggleButton('cam_btn');
+	toggleButton(currentButton);
+	currentButton = 'webcam';
+	toggleButton(currentButton);
 	constraints = consWebcam;
 	refresh();
 }

@@ -30,13 +30,15 @@
 			<div id="room" style="display: none;">
 				<h2 id="room-header"></h2>
 				<div id="participants"></div>
-				<input type="button" id="button-leave" onmouseup="leaveRoom();"
-					value="Leave room">
 				<video id="remote_video" autoplay controls></video>
-				<div class="buttons-right-section">
-				<button type="button" id="cam_btn" onclick="webcam();" value="disable" disabled>Webcam</button>
-					<button type="button" id="screen_btn" onclick="screenshare();">ScreenShare</button>
-				</div>
+				<p>
+					<input type="button" id="webcam" onclick="webcam();" value="Webcam" disabled>
+					<input type="button" id="screen" onclick="share('screen');" value="Screenshare">
+					<input type="button" id="window" onclick="share('window');" value="Window share">
+				</p>
+				<p>
+					<input type="button" id="button-leave" onmouseup="leaveRoom();" value="Leave room">
+				</p>
 			</div>
 		</div>
 	</div>
