@@ -30,7 +30,8 @@ var isFirefox = (browser === "firefox");
 // Disable screenshare on Chrome (temporary)
 if (isChrome) {
 	window.onload = function() {
-		toggleButton('screen_btn');
+		toggleButton('screen');
+		toggleButton('window');
 	};
 }
 
