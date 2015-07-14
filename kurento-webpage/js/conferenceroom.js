@@ -43,16 +43,17 @@ function toggleButton(button) {
 // Constraints
 // Chrome screenshare
 var chromeConsScreen = {
+	audio: false,
 	video: {
 		mandatory: {
-			chromeMediaSource: 'screen',
+			chromeMediaSource: 'desktop',
 			maxWidth: screen.width,
 			maxHeight: screen.height,
 			minFrameRate: 1,
 			maxFrameRate: 5
 		}
 	},
-	optional: []
+	optional: [{googTemporalLayeredScreencast: true}]
 };
 
 // Default sharing
@@ -93,6 +94,7 @@ function share(type) {
 	if (type != currentButton) {
 		if (isChrome) {
 			constraints = chromeConsScreen;
+			refresh();	
 		} else {
 			toggleButton(type);
 			toggleButton(currentButton);
@@ -203,10 +205,11 @@ function onExistingParticipants(msg) {
 
 	participant.rtcPeer = new kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options,
 		function(error) {
-			if ((currentButton=='window' || currentButton=='screen') && location.protocol === 'http:' && error)
-				alert('Please test on HTTPS.');
-			else if ( (currentButton=='window' || currentButton=='screen') && error )
-				alert('Allow this domain in about:config media.getusermedia.screensharing.allowed_domains')
+			if ((currentButton == 'window' || currentButton == 'screen') && location.protocol === 'http:' && error)
+				alert('Please use https to try screenshare.');
+			else if ((currentButton == 'window' || currentButton == 'screen') && error)
+				//alert('Allow this domain in about:config media.getusermedia.screensharing.allowed_domains')
+				alert('You need to enable the appropriate flag:\n - Open about:config and set media.getusermedia.screensharing.enabled to true \n - In about:config, add our address to media.getusermedia.screensharing.allowed_domains (e.g: "147.32.211.107" )');
 			if (error) {
 				return console.error(error);
 			}
