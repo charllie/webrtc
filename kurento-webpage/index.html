@@ -7,7 +7,6 @@
 <script src="./js/conferenceroom.js"></script>
 <script src="./js/participant.js"></script>
 <script src="./js/kurento-utils.js"></script>
-<script src="//cdn.WebRTC-Experiment.com/getScreenId.js"></script>
 </head>
 <body>
 	<div id="container">
@@ -31,11 +30,13 @@
 			<div id="room" style="display: none;">
 				<h2 id="room-header"></h2>
 				<div id="participants"></div>
-				<button id="screenshare" onclick="getScreenshare()">Screenshare</button>
-				<button id="webcam" onclick="getWebcam()" disabled>Webcam</button>
 				<input type="button" id="button-leave" onmouseup="leaveRoom();"
 					value="Leave room">
-				<video id="video" autoplay controls></video>
+				<video id="remote_video" autoplay controls></video>
+				<div class="buttons-right-section">
+				<button type="button" id="cam_btn" onclick="webcam();" value="disable" disabled>Webcam</button>
+					<button type="button" id="screen_btn" onclick="screenshare();">ScreenShare</button>
+				</div>
 			</div>
 		</div>
 	</div>

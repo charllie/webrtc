@@ -13,17 +13,88 @@
  *
  */
 
-// Global variables
 var ws = new WebSocket('wss://147.32.211.107/groupcall');
 var inRoom = false;
 var participants = {};
 var name;
-var mediaSource = 'webcam';
+var constraints = {
+	audio : true,
+	video : {
+		mandatory : {
+			maxWidth : 320,
+			maxFrameRate : 15,
+			minFrameRate : 15
+		}
+	}
+};
 
-// Parameters
+// Detection of the browser
+var userAgent = navigator.userAgent.toLowerCase();
+var browserM = userAgent.match(/(opera|chrome|safari|firefox|msie)[\/\s]*([\d\.]+)/);
+var browser = navigator.appName.toLowerCase();
+if(browserM)
+  browser = browserM[1];
+var isChrome = (browser === "chrome");
+var isFirefox = (browser === "firefox");
+
+// if(!isFirefox) {  
+// 	document.getElementById("screen_btn").disabled = true; 
+// }
+
+function screenshare() {
+	if(isChrome) {  
+		// constraints = {
+		// 	video: {
+		// 		mandatory: {
+		// 			chromeMediaSource: 'screen',
+		// 			maxWidth: screen.width,
+		// 			maxHeight: screen.height,
+		// 			minFrameRate: 1,
+		// 			maxFrameRate: 5
+		// 		},
+		// 		optional: []
+		// 	}
+		// };
+	} else {
+		document.getElementById("screen_btn").disabled = true;
+		document.getElementById("cam_btn").disabled = false;
+		leaveRoom();
+		constraints = {
+			audio: false,
+			video: {
+				//mozMediaSource: 'screen',
+				mediaSource: "screen",
+				mandatory: {
+					maxWidth: screen.width,
+					maxHeight: screen.height,
+					minFrameRate: 1,
+					maxFrameRate: 5
+				}
+			}
+		};
+		register();
+	}
+}
+
+function webcam() {
+	document.getElementById("screen_btn").disabled = false;
+	document.getElementById("cam_btn").disabled = true;
+	leaveRoom();
+	constraints = {
+		audio : true,
+		video : {
+			mandatory : {
+				maxWidth : 320,
+				maxFrameRate : 15,
+				minFrameRate : 15
+			}
+		}
+	};
+	register();
+}
 
 window.onbeforeunload = function() {
-	if (inRoom === true)
+	if (inRoom == true)
 		leaveRoom();
 	ws.close();
 };
@@ -33,30 +104,30 @@ ws.onmessage = function(message) {
 	console.info('Received message: ' + message.data);
 
 	switch (parsedMessage.id) {
-		case 'existingParticipants':
-			onExistingParticipants(parsedMessage);
-			break;
-		case 'newParticipantArrived':
-			onNewParticipant(parsedMessage);
-			break;
-		case 'participantLeft':
-			onParticipantLeft(parsedMessage);
-			break;
-		case 'receiveVideoAnswer':
-			receiveVideoResponse(parsedMessage);
-			break;
-		case 'iceCandidate':
-			participants[parsedMessage.name].rtcPeer.addIceCandidate(parsedMessage.candidate, function(error) {
-				if (error) {
-					console.error("Error adding candidate: " + error);
-					return;
-				}
-			});
-			break;
-		default:
-			console.error('Unrecognized message', parsedMessage);
+	case 'existingParticipants':
+		onExistingParticipants(parsedMessage);
+		break;
+	case 'newParticipantArrived':
+		onNewParticipant(parsedMessage);
+		break;
+	case 'participantLeft':
+		onParticipantLeft(parsedMessage);
+		break;
+	case 'receiveVideoAnswer':
+		receiveVideoResponse(parsedMessage);
+		break;
+	case 'iceCandidate':
+		participants[parsedMessage.name].rtcPeer.addIceCandidate(parsedMessage.candidate, function (error) {
+	        if (error) {
+		      console.error("Error adding candidate: " + error);
+		      return;
+	        }
+	    });
+	    break;
+	default:
+		console.error('Unrecognized message', parsedMessage);
 	}
-};
+}
 
 function register() {
 	inRoom = true;
@@ -68,11 +139,10 @@ function register() {
 	document.getElementById('room').style.display = 'block';
 
 	var message = {
-		id: 'joinRoom',
-		name: name,
-		room: room,
-	};
-
+		id : 'joinRoom',
+		name : name,
+		room : room,
+	}
 	sendMessage(message);
 }
 
@@ -82,8 +152,8 @@ function onNewParticipant(request) {
 }
 
 function receiveVideoResponse(result) {
-	participants[result.name].rtcPeer.processAnswer(result.sdpAnswer, function(error) {
-		if (error) return console.error(error);
+	participants[result.name].rtcPeer.processAnswer (result.sdpAnswer, function (error) {
+		if (error) return console.error (error);
 	});
 }
 
@@ -92,65 +162,37 @@ function callResponse(message) {
 		console.info('Call not accepted by peer. Closing call');
 		stop();
 	} else {
-		webRtcPeer.processAnswer(message.sdpAnswer, function(error) {
-			if (error) return console.error(error);
+		webRtcPeer.processAnswer(message.sdpAnswer, function (error) {
+			if (error) return console.error (error);
 		});
 	}
 }
 
-
 function onExistingParticipants(msg) {
-
-	//	var constraints = {
-	//		audio : true,
-	//		video : {
-	//			mandatory : {
-	//				maxWidth : 320,
-	//				maxFrameRate : 15,
-	//				minFrameRate : 15
-	//			}
-	//		}
-	//	};
-
 	console.log(name + " registered in room " + room);
 	var participant = new Participant(name);
 	participants[name] = participant;
 	//var video = participant.getVideoElement();
 
-	var videoParams = (mediaSource == 'webcam') ? true : { mediaSource: 'window' || 'screen' };
-
-	var constraints = {
-		audio: false,
-		video: videoParams
-	};
-
-	// window.navigator.mozGetUserMedia(constraints, function(stream) {
-	//           content.appendChild(video);
-	//           video.mozSrcObject = stream;
-	//           video.play();
-	//       }, function (err) {});
-
 	var options = {
-		//localVideo: video,
-		remoteVideo: document.getElementById('video'),
-		mediaConstraints: constraints,
-		onicecandidate: participant.onIceCandidate.bind(participant)
-	};
-
-
+		  //localVideo: video,
+	      remoteVideo: document.getElementById('remote_video'),
+	      mediaConstraints: constraints,
+	      onicecandidate: participant.onIceCandidate.bind(participant)
+	    }
 	participant.rtcPeer = new kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options,
-		function(error) {
-			if (error) {
-				return console.error(error);
-			}
-			this.generateOffer(participant.offerToReceiveVideo.bind(participant));
-		});
+		function (error) {
+		  if(error) {
+			  return console.error(error);
+		  }
+		  this.generateOffer (participant.offerToReceiveVideo.bind(participant));
+	});
 
 }
 
 function leaveRoom() {
 	sendMessage({
-		id: 'leaveRoom'
+		id : 'leaveRoom'
 	});
 
 	//for (var key in participants) {
@@ -170,17 +212,17 @@ function receiveVideo(sender) {
 	//var video = participant.getVideoElement();
 
 	var options = {
-		//remoteVideo: video,
-		onicecandidate: participant.onIceCandidate.bind(participant)
-	};
+      //remoteVideo: video,
+      onicecandidate: participant.onIceCandidate.bind(participant)
+    }
 
 	participant.rtcPeer = new kurentoUtils.WebRtcPeer.WebRtcPeerRecvonly(options,
-		function(error) {
-			if (error) {
-				return console.error(error);
-			}
-			this.generateOffer(participant.offerToReceiveVideo.bind(participant));
-		});
+			function (error) {
+			  if(error) {
+				  return console.error(error);
+			  }
+			  this.generateOffer (participant.offerToReceiveVideo.bind(participant));
+	});;
 }
 
 function onParticipantLeft(request) {
@@ -194,27 +236,4 @@ function sendMessage(message) {
 	var jsonMessage = JSON.stringify(message);
 	console.log('Senging message: ' + jsonMessage);
 	ws.send(jsonMessage);
-}
-
-function refresh() {
-	leaveRoom();
-	register();
-}
-
-function getScreenshare() {
-	if (mediaSource != 'screen') {
-		document.getElementById('screenshare').disabled = true;
-		document.getElementById('webcam').disabled = false;
-		refresh();
-		mediaSource = 'screen';
-	}
-}
-
-function getWebcam() {
-	if (mediaSource != 'webcam') {
-		document.getElementById('screenshare').disabled = false;
-		document.getElementById('webcam').disabled = true;
-		refresh();
-		mediaSource = 'webcam';
-	}
 }
