@@ -12,7 +12,7 @@
  * Lesser General Public License for more details.
  *
  */
-var ws = new WebSocket('wss://147.32.211.107/groupcall');
+var ws = new WebSocket('wss://webrtc.ml/groupcall');
 var inRoom = false;
 var participants = {};
 var name;
@@ -209,7 +209,7 @@ function onExistingParticipants(msg) {
 				alert('Please use https to try screenshare.');
 			else if ((currentButton == 'window' || currentButton == 'screen') && error)
 				//alert('Allow this domain in about:config media.getusermedia.screensharing.allowed_domains')
-				alert('You need to enable the appropriate flag:\n - Open about:config and set media.getusermedia.screensharing.enabled to true \n - In about:config, add our address to media.getusermedia.screensharing.allowed_domains (e.g: "147.32.211.107" )');
+				alert('You need to enable the appropriate flag:\n - Open about:config and set media.getusermedia.screensharing.enabled to true \n - In about:config, add our address to media.getusermedia.screensharing.allowed_domains (e.g: "webrtc.ml" )');
 			if (error) {
 				return console.error(error);
 			}
