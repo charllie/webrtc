@@ -35,6 +35,11 @@ if (isChrome) {
 	};
 }
 
+setInterval(function() {
+	console.log("Ping!")
+	sendMessage({ id: 'ping' });
+}, 30000);
+
 // Visual
 function toggleButton(button) {
 	document.getElementById(button).disabled = !document.getElementById(button).disabled;
