@@ -36,9 +36,9 @@ if (isChrome) {
 }
 
 setInterval(function() {
-	console.log("Ping!")
-	sendMessage({ id: 'ping' });
-}, 30000);
+	// Keep the websocket alive
+	sendMessage({ id: 'stay-alive' });
+}, 50000);
 
 // Visual
 function toggleButton(button) {
