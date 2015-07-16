@@ -5,6 +5,14 @@ var UAParser = require('ua-parser-js');
 var uuid = require('uuid');
 var EventEmitter = require('events').EventEmitter;
 var recursive = require('merge').recursive.bind(undefined, true);
+navigator.mediaDevices = navigator.mediaDevices || ((navigator.mozGetUserMedia || navigator.webkitGetUserMedia) ? {
+   getUserMedia: function(c) {
+     return new Promise(function(y, n) {
+       (navigator.mozGetUserMedia ||
+        navigator.webkitGetUserMedia).call(navigator, c, y, n);
+     });
+   }
+} : null);
 try {
     (function () {
         throw new Error('Cannot find module \'kurento-browser-extensions\' from \'/var/lib/jenkins/workspace/Development/kurento_js_merge_project/lib\'');
@@ -21,7 +29,7 @@ var MEDIA_CONSTRAINTS = {
         audio: true,
         video: {
             mandatory: {
-                maxWidth: 640,
+                maxWidth: 320,
                 maxFrameRate: 15,
                 minFrameRate: 15
             }
