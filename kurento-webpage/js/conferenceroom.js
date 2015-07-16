@@ -12,7 +12,7 @@
  * Lesser General Public License for more details.
  *
  */
-var ws = new WebSocket('wss://webrtc.ml/groupcall');
+var ws = new WebSocket('ws://192.168.12.217:8080/groupcall');
 var inRoom = false;
 var participants = {};
 var name;
@@ -72,7 +72,13 @@ var consShare = {
 };
 
 // Webcam
-var consWebcam = {
+if (isFirefox) {
+	var consWebcam = {
+	audio: true,
+	video: { width: 320, height: 180 }	
+	};
+} else {
+	var consWebcam = {
 	audio: true,
 	video: {
 		mandatory: {
@@ -82,6 +88,7 @@ var consWebcam = {
 		}
 	}
 };
+}
 
 var constraints = consWebcam;
 
@@ -136,6 +143,9 @@ ws.onmessage = function(message) {
 			break;
 		case 'receiveVideoAnswer':
 			receiveVideoResponse(parsedMessage);
+			break;
+		case 'existingParticipant':
+			console.error('This name is already taken', parsedMessage);
 			break;
 		case 'iceCandidate':
 			participants[parsedMessage.name].rtcPeer.addIceCandidate(parsedMessage.candidate, function(error) {

@@ -105,8 +105,16 @@ public class CallHandler extends TextWebSocketHandler {
 		log.info("PARTICIPANT {}: trying to join room {}", name, roomName);
 
 		Room room = roomManager.getRoom(roomName);
-		final UserSession user = room.join(name, session);
-		registry.register(user);
+		if ( registry.getByName(name) != null ){
+			final JsonObject scParams = new JsonObject();
+			scParams.addProperty("id", "existingParticipant");
+			synchronized (session) {
+				session.sendMessage(new TextMessage(scParams.toString()));
+			}
+		}else{
+			final UserSession user = room.join(name, session);
+			registry.register(user);
+		}
 	}
 
 	private void leaveRoom(UserSession user) throws IOException {
