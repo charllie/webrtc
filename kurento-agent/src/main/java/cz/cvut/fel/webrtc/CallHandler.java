@@ -94,7 +94,11 @@ public class CallHandler extends TextWebSocketHandler {
 	@Override
 	public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
 		//UserSession user = registry.removeBySession(session);
-		registry.removeBySession(session);
+		UserSession user = registry.removeBySession(session);
+		
+		if (user != null) {
+			leaveRoom(user);
+		}
 		//roomManager.getRoom(user.getRoomName()).leave(user); déjà fait a priori dans leaveRoom
 	}
 
@@ -105,13 +109,14 @@ public class CallHandler extends TextWebSocketHandler {
 		log.info("PARTICIPANT {}: trying to join room {}", name, roomName);
 
 		Room room = roomManager.getRoom(roomName);
-		if ( registry.getByName(name) != null ){
+		
+		if (registry.getByName(name) != null) {
 			final JsonObject scParams = new JsonObject();
 			scParams.addProperty("id", "existingParticipant");
 			synchronized (session) {
 				session.sendMessage(new TextMessage(scParams.toString()));
 			}
-		}else{
+		} else {
 			final UserSession user = room.join(name, session);
 			registry.register(user);
 		}
@@ -123,5 +128,6 @@ public class CallHandler extends TextWebSocketHandler {
 		if (room.getParticipants().isEmpty()) {
 			roomManager.removeRoom(room);
 		}
+		registry.removeBySession(user.getSession());
 	}
 }
