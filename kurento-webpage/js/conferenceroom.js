@@ -86,20 +86,20 @@ var consShare = {
 // Webcam
 if (isFirefox) {
 	var consWebcam = {
-	audio: true,
-	video: { width: 320, height: 180 }	
+		audio: true,
+		video: { width: 320, height: 180 }
 	};
 } else {
 	var consWebcam = {
-	audio: true,
-	video: {
-		mandatory: {
-			maxWidth: 320,
-			maxFrameRate: 15,
-			minFrameRate: 15
+		audio: true,
+		video: {
+			mandatory: {
+				maxWidth: 320,
+				maxFrameRate: 15,
+				minFrameRate: 15
+			}
 		}
-	}
-};
+	};
 }
 
 var constraints = consWebcam;
@@ -113,7 +113,7 @@ function share(type) {
 	if (type != currentButton) {
 		if (isChrome) {
 			constraints = chromeConsScreen;
-			refresh();	
+			refresh();
 		} else {
 			toggleButton(type);
 			toggleButton(currentButton);
@@ -256,8 +256,9 @@ function onExistingParticipants(msg) {
 
 	if (currentButton == 'webcam' && msg.existingScreensharer === true && msg.screensharer != name)
 		receiveVideo(msg.screensharer, true);
-	else if (currentButton != 'webcam' && msg.data.length > 0)
+	else if (currentButton != 'webcam' && msg.data.length > 0) {
 		receiveVideo(msg.data[0], false);
+	}
 
 }
 
@@ -269,7 +270,7 @@ function leaveRoom() {
 	//for (var key in participants) {
 	//	participants[key].dispose();
 	//}
-	if (participants[name] != null)
+	if (participants[name] !== null)
 		participants[name].dispose();
 
 	document.getElementById('join').style.display = 'block';
@@ -301,7 +302,7 @@ function onParticipantLeft(request) {
 	console.log('Participant ' + request.name + ' left');
 	var participant = participants[request.name];
 
-	if (participant != null)
+	if (participant !== null)
 		participant.dispose();
 
 	delete participants[request.name];
