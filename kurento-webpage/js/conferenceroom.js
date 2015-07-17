@@ -12,7 +12,7 @@
  * Lesser General Public License for more details.
  *
  */
-var ws = new WebSocket('ws://192.168.12.217:8080/groupcall');
+var ws = new WebSocket('wss://webrtc.ml/groupcall');
 var inRoom = false;
 var participants = {};
 var name;
