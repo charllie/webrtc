@@ -90,12 +90,11 @@ public class UserSession implements Closeable {
 					}
 				});
 		
+		this.hubPort = new HubPort.Builder(hub).build();
+		
 		if (!isScreensharer) {
-			this.hubPort = new HubPort.Builder(hub).build();
 			hubPort.connect(outgoingMedia);
 			outgoingMedia.connect(hubPort);
-		} else {
-			this.hubPort = null;
 		}
 	}
 
@@ -192,7 +191,13 @@ public class UserSession implements Closeable {
 
 		log.info("PARTICIPANT {}: obtained endpoint for {}", this.name, sender.getName());
 		
-		sender.getOutgoingWebRtcPeer().connect(incoming);		
+		sender.getOutgoingWebRtcPeer().connect(incoming);
+		
+		if (isScreensharer && !this.equals(sender)) {
+			hubPort.connect(incoming);
+			incoming.connect(hubPort);
+		}
+		
 		return incoming;
 
 		/*log.info("PARTICIPANT {}: receiving video from {}", this.name,

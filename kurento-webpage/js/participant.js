@@ -96,7 +96,9 @@ function Participant(name) {
 
 	this.dispose = function() {
 		console.log('Disposing participant ' + this.name);
-		this.rtcPeer.dispose();
+
+		if (this.rtcPeer !== null)
+			this.rtcPeer.dispose();
 		//container.parentNode.removeChild(container);
 	};
 }
