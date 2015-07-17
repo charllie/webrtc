@@ -12,7 +12,7 @@
  * Lesser General Public License for more details.
  *
  */
-var ws = new WebSocket('wss://webrtc.ml/groupcall');
+var ws = new WebSocket('ws://192.168.12.217:8080/groupcall');
 var inRoom = false;
 var participants = {};
 var name;
@@ -90,6 +90,12 @@ if (isFirefox) {
 };
 }
 
+if ( sessionStorage.reloadAfterPageLoad ) {
+    sessionStorage.reloadAfterPageLoad = false;
+    sessionStorage.clear();
+    alert( "This username already exists." );
+}
+
 var constraints = consWebcam;
 
 function refresh() {
@@ -144,8 +150,9 @@ ws.onmessage = function(message) {
 		case 'receiveVideoAnswer':
 			receiveVideoResponse(parsedMessage);
 			break;
-		case 'existingParticipant':
-			console.error('This name is already taken', parsedMessage);
+		case 'existingName':
+			sessionStorage.reloadAfterPageLoad = true;
+			window.location.reload(true);
 			break;
 		case 'iceCandidate':
 			participants[parsedMessage.name].rtcPeer.addIceCandidate(parsedMessage.candidate, function(error) {
@@ -236,7 +243,8 @@ function leaveRoom() {
 	//for (var key in participants) {
 	//	participants[key].dispose();
 	//}
-	participants[name].dispose();
+	if( participants[name] != null )
+		participants[name].dispose();
 
 	document.getElementById('join').style.display = 'block';
 	document.getElementById('room').style.display = 'none';
