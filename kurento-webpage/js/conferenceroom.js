@@ -35,6 +35,11 @@ if (isChrome) {
 	};
 }
 
+setInterval(function() {
+	// Keep the websocket alive
+	sendMessage({ id: 'stay-alive' });
+}, 50000);
+
 // Visual
 function toggleButton(button) {
 	document.getElementById(button).disabled = !document.getElementById(button).disabled;
