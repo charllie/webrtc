@@ -106,6 +106,8 @@ public class CallHandler extends TextWebSocketHandler {
 			throws IOException {
 		final String roomName = params.get("room").getAsString();
 		final String name = params.get("name").getAsString();
+		final String mediaSource = params.get("mediaSource").getAsString();
+		
 		log.info("PARTICIPANT {}: trying to join room {}", name, roomName);
 
 		Room room = roomManager.getRoom(roomName);
@@ -117,7 +119,8 @@ public class CallHandler extends TextWebSocketHandler {
 				session.sendMessage(new TextMessage(scParams.toString()));
 			}
 		} else {
-			final UserSession user = room.join(name, session);
+			boolean isScreensharer = (!mediaSource.equals("webcam")) ? true : false;
+			final UserSession user = room.join(name, session, isScreensharer);
 			registry.register(user);
 		}
 	}

@@ -18,6 +18,13 @@ var participants = {};
 var name;
 var currentButton = 'webcam';
 
+if (sessionStorage.reloadAfterPageLoad) {
+	sessionStorage.reloadAfterPageLoad = false;
+	sessionStorage.clear();
+	alert("This username already exists.");
+}
+
+
 // Detection of the browser
 var userAgent = navigator.userAgent.toLowerCase();
 var browserM = userAgent.match(/(opera|chrome|safari|firefox|msie)[\/\s]*([\d\.]+)/);
@@ -93,12 +100,6 @@ if (isFirefox) {
 		}
 	}
 };
-}
-
-if ( sessionStorage.reloadAfterPageLoad ) {
-    sessionStorage.reloadAfterPageLoad = false;
-    sessionStorage.clear();
-    alert( "This username already exists." );
 }
 
 var constraints = consWebcam;
@@ -185,14 +186,24 @@ function register() {
 		id: 'joinRoom',
 		name: name,
 		room: room,
+		mediaSource: currentButton
 	};
 
 	sendMessage(message);
 }
 
 function onNewParticipant(request) {
+
 	participants[request.name] = new Participant(request.name);
 	console.log(request.name + " has just arrived");
+
+	// Get the video from the screensharer
+	if (request.isScreensharer)
+		receiveVideo(request.name, true);
+
+	// The screensharer wants to get composite
+	if (!request.isScreensharer && Object.keys(participants).length == 2 && currentButton != 'webcam')
+		receiveVideo(request.name, false);
 }
 
 function receiveVideoResponse(result) {
@@ -216,14 +227,19 @@ function onExistingParticipants(msg) {
 	console.log(name + " registered in room " + room);
 	var participant = new Participant(name);
 	participants[name] = participant;
-	//var video = participant.getVideoElement();
+	var video = (currentButton == 'webcam') ? 'remote_video' : 'remote_screenshare';
 
 	var options = {
 		//localVideo: video,
-		remoteVideo: document.getElementById('remote_video'),
 		mediaConstraints: constraints,
 		onicecandidate: participant.onIceCandidate.bind(participant)
 	};
+
+	// Triche
+	if (currentButton == 'webcam')
+		options.remoteVideo = document.getElementById(video);
+	else
+		options.localVideo = document.getElementById(video);
 
 	participant.rtcPeer = new kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options,
 		function(error) {
@@ -238,6 +254,11 @@ function onExistingParticipants(msg) {
 			this.generateOffer(participant.offerToReceiveVideo.bind(participant));
 		});
 
+	if (currentButton == 'webcam' && msg.existingScreensharer === true && msg.screensharer != name)
+		receiveVideo(msg.screensharer, true);
+	else if (currentButton != 'webcam' && msg.data.length > 0)
+		receiveVideo(msg.data[0], false);
+
 }
 
 function leaveRoom() {
@@ -248,7 +269,7 @@ function leaveRoom() {
 	//for (var key in participants) {
 	//	participants[key].dispose();
 	//}
-	if( participants[name] != null )
+	if (participants[name] != null)
 		participants[name].dispose();
 
 	document.getElementById('join').style.display = 'block';
@@ -257,13 +278,13 @@ function leaveRoom() {
 	//ws.close();
 }
 
-function receiveVideo(sender) {
+function receiveVideo(sender, isScreensharer) {
 	var participant = new Participant(sender);
 	participants[sender] = participant;
-	//var video = participant.getVideoElement();
+	var video = (!isScreensharer) ? 'remote_video' : 'remote_screenshare';
 
 	var options = {
-		//remoteVideo: video,
+		remoteVideo: document.getElementById(video),
 		onicecandidate: participant.onIceCandidate.bind(participant)
 	};
 
@@ -279,7 +300,10 @@ function receiveVideo(sender) {
 function onParticipantLeft(request) {
 	console.log('Participant ' + request.name + ' left');
 	var participant = participants[request.name];
-	//participant.dispose();
+
+	if (participant != null)
+		participant.dispose();
+
 	delete participants[request.name];
 }
 

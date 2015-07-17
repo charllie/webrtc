@@ -19,6 +19,8 @@ import java.io.IOException;
 //import java.util.concurrent.ConcurrentHashMap;
 //import java.util.concurrent.ConcurrentMap;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.kurento.client.Continuation;
 import org.kurento.client.EventListener;
 import org.kurento.client.Hub;
@@ -48,20 +50,22 @@ public class UserSession implements Closeable {
 	private final String name;
 	private final WebSocketSession session;
 	
-	//private final MediaPipeline pipeline;
+	private final MediaPipeline pipeline;
 
 	private final String roomName;
 	private final WebRtcEndpoint outgoingMedia;
-	//private final ConcurrentMap<String, WebRtcEndpoint> incomingMedia = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, WebRtcEndpoint> incomingMedia = new ConcurrentHashMap<String, WebRtcEndpoint>();
 	private final HubPort hubPort;
+	private final boolean isScreensharer;
 	
 	public UserSession(final String name, String roomName,
-			final WebSocketSession session, MediaPipeline pipeline, Hub hub) {
+			final WebSocketSession session, MediaPipeline pipeline, Hub hub, boolean isScreensharer) {
 
-		//this.pipeline = pipeline;
+		this.pipeline = pipeline;
 		this.name = name;
 		this.session = session;
 		this.roomName = roomName;
+		this.isScreensharer = isScreensharer;
 		
 		this.outgoingMedia = new WebRtcEndpoint.Builder(pipeline).build();
 
@@ -86,9 +90,13 @@ public class UserSession implements Closeable {
 					}
 				});
 		
-		this.hubPort = new HubPort.Builder(hub).build();
-		hubPort.connect(outgoingMedia);
-		outgoingMedia.connect(hubPort);
+		if (!isScreensharer) {
+			this.hubPort = new HubPort.Builder(hub).build();
+			hubPort.connect(outgoingMedia);
+			outgoingMedia.connect(hubPort);
+		} else {
+			this.hubPort = null;
+		}
 	}
 
 	public WebRtcEndpoint getOutgoingWebRtcPeer() {
@@ -131,7 +139,7 @@ public class UserSession implements Closeable {
 		log.trace("USER {}: SdpOffer for {} is {}", this.name,
 				sender.getName(), sdpOffer);
 		
-		final String ipSdpAnswer = this.getEndpointForUser().processOffer(sdpOffer);
+		final String ipSdpAnswer = this.getEndpointForUser(sender).processOffer(sdpOffer);
 		final JsonObject scParams = new JsonObject();
 		scParams.addProperty("id", "receiveVideoAnswer");
 		scParams.addProperty("name", sender.getName());
@@ -141,7 +149,7 @@ public class UserSession implements Closeable {
 				sender.getName(), ipSdpAnswer);
 		this.sendMessage(scParams);
 		log.debug("gather candidates");
-		this.getEndpointForUser().gatherCandidates();
+		this.getEndpointForUser(sender).gatherCandidates();
 	}
 
 	/**
@@ -149,11 +157,43 @@ public class UserSession implements Closeable {
 	 *            the user
 	 * @return the endpoint used to receive media from a certain user
 	 */
-	private WebRtcEndpoint getEndpointForUser() {
-		//if (sender.getName().equals(name)) {
+	private WebRtcEndpoint getEndpointForUser(final UserSession sender) {
+		if ((!this.isScreensharer && !sender.isScreensharer) || (this.equals(sender))) {
 			log.info("PARTICIPANT {}: configuring loopback", this.name);
 			return outgoingMedia;
-		//}
+		}
+		
+		WebRtcEndpoint incoming = incomingMedia.get(sender.getName());
+		if (incoming == null) {
+			incoming = new WebRtcEndpoint.Builder(pipeline).build();
+			
+			log.info("PARTICIPANT {}: creating new endpoint for {}", this.name, sender.getName());
+	
+			incoming.addOnIceCandidateListener(new EventListener<OnIceCandidateEvent>() {
+	
+				@Override
+				public void onEvent(OnIceCandidateEvent event) {
+					JsonObject response = new JsonObject();
+					response.addProperty("id", "iceCandidate");
+					response.addProperty("name", sender.getName());
+					response.add("candidate", JsonUtils.toJsonObject(event.getCandidate()));
+					try {
+						synchronized (session) {
+							session.sendMessage(new TextMessage(response.toString()));
+						}
+					} catch (IOException e) {
+						log.debug(e.getMessage());
+					}
+				}
+			});
+			
+			incomingMedia.put(sender.getName(), incoming);
+		}
+
+		log.info("PARTICIPANT {}: obtained endpoint for {}", this.name, sender.getName());
+		
+		sender.getOutgoingWebRtcPeer().connect(incoming);		
+		return incoming;
 
 		/*log.info("PARTICIPANT {}: receiving video from {}", this.name,
 				sender.getName());
@@ -209,7 +249,7 @@ public class UserSession implements Closeable {
 	public void cancelVideoFrom(final String senderName) {
 		log.debug("PARTICIPANT {}: canceling video reception from {}",
 				this.name, senderName);
-		//incomingMedia.remove(senderName);		
+		final WebRtcEndpoint incoming = incomingMedia.remove(senderName);		
 
 		log.debug("PARTICIPANT {}: removing endpoint for {}", this.name,
 				senderName);
@@ -217,54 +257,58 @@ public class UserSession implements Closeable {
 		//this.hubPort.disconnect(outgoingMedia);
 		//this.outgoingMedia.disconnect(hubPort);
 		
-		/*
-		incoming.release(new Continuation<Void>() {
-			@Override
-			public void onSuccess(Void result) throws Exception {
-				log.trace(
-						"PARTICIPANT {}: Released successfully incoming EP for {}",
-						UserSession.this.name, senderName);
-			}
-
-			@Override
-			public void onError(Throwable cause) throws Exception {
-				log.warn(
-						"PARTICIPANT {}: Could not release incoming EP for {}",
-						UserSession.this.name, senderName);
-			}
-		});*/
+		if (incoming != null) {
+			incoming.release(new Continuation<Void>() {
+				@Override
+				public void onSuccess(Void result) throws Exception {
+					log.trace(
+							"PARTICIPANT {}: Released successfully incoming EP for {}",
+							UserSession.this.name, senderName);
+				}
+	
+				@Override
+				public void onError(Throwable cause) throws Exception {
+					log.warn(
+							"PARTICIPANT {}: Could not release incoming EP for {}",
+							UserSession.this.name, senderName);
+				}
+			});
+		}
 	}
 
 	@Override
 	public void close() throws IOException {
 		
-//		log.debug("PARTICIPANT {}: Releasing resources", this.name);
-//		
-//		for (final String remoteParticipantName : incomingMedia.keySet()) {
-//
-//			log.info("PARTICIPANT {}: Released incoming EP for {}", this.name,
-//					remoteParticipantName);
-//
-//			final WebRtcEndpoint ep = this.incomingMedia
-//					.get(remoteParticipantName);
-//
-//			ep.release(new Continuation<Void>() {
-//
-//				@Override
-//				public void onSuccess(Void result) throws Exception {
-//					log.trace(
-//							"PARTICIPANT {}: Released successfully incoming EP for {}",
-//							UserSession.this.name, remoteParticipantName);
-//				}
-//
-//				@Override
-//				public void onError(Throwable cause) throws Exception {
-//					log.warn("PARTICIPANT {}: Could not release incoming EP for {}", UserSession.this.name, remoteParticipantName);
-//				}
-//			});
-//		}
+		log.debug("PARTICIPANT {}: Releasing resources", this.name);
 		
-		hubPort.release();
+		for (final String remoteParticipantName : incomingMedia.keySet()) {
+
+			log.info("PARTICIPANT {}: Released incoming EP for {}", this.name,
+					remoteParticipantName);
+
+			final WebRtcEndpoint ep = this.incomingMedia
+					.get(remoteParticipantName);
+			
+			if (ep != null) {
+				ep.release(new Continuation<Void>() {
+	
+					@Override
+					public void onSuccess(Void result) throws Exception {
+						log.trace(
+								"PARTICIPANT {}: Released successfully incoming EP for {}",
+								UserSession.this.name, remoteParticipantName);
+					}
+	
+					@Override
+					public void onError(Throwable cause) throws Exception {
+						log.warn("PARTICIPANT {}: Could not release incoming EP for {}", UserSession.this.name, remoteParticipantName);
+					}
+				});
+			}
+		}
+		
+		if (hubPort != null)
+			hubPort.release();
 		
 		outgoingMedia.release(new Continuation<Void>() {
 
@@ -292,12 +336,12 @@ public class UserSession implements Closeable {
 	public void addCandidate(IceCandidate e, String name) {
 		if (this.name.compareTo(name) == 0) {
 			outgoingMedia.addIceCandidate(e);
-		}// else {
-			//WebRtcEndpoint webRtc = incomingMedia.get(name);
-			//if (webRtc != null) {
-			//	webRtc.addIceCandidate(e);
-			//}
-		//}
+		} else {
+			WebRtcEndpoint webRtc = incomingMedia.get(name);
+			if (webRtc != null) {
+				webRtc.addIceCandidate(e);
+			}
+		}
 	}
 
 	/*
