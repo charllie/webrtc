@@ -110,9 +110,9 @@ public class CallHandler extends TextWebSocketHandler {
 
 		Room room = roomManager.getRoom(roomName);
 		
-		if (registry.getByName(name) != null) {
+		if (room.getParticipant(name) != null) {
 			final JsonObject scParams = new JsonObject();
-			scParams.addProperty("id", "existingParticipant");
+			scParams.addProperty("id", "existingName");
 			synchronized (session) {
 				session.sendMessage(new TextMessage(scParams.toString()));
 			}
