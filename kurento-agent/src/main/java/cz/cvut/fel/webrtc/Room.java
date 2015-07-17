@@ -48,6 +48,7 @@ public class Room implements Closeable {
 	private final MediaPipeline pipeline;
 	private final Composite composite;
 	private final String name;
+	private UserSession screensharer;
 	
 	/**
 	 * @return the name
@@ -68,13 +69,16 @@ public class Room implements Closeable {
 		this.close();
 	}
 
-	public UserSession join(String userName, WebSocketSession session)
+	public UserSession join(String userName, WebSocketSession session, boolean isScreensharer)
 			throws IOException {
 		log.info("ROOM {}: adding participant {}", userName, userName);
 		final UserSession participant = new UserSession(userName, this.name,
-				session, this.pipeline, this.composite);
+				session, this.pipeline, this.composite, isScreensharer);
 		
-		joinRoom(participant);
+		if (isScreensharer)
+			setScreensharer(participant);		
+		
+		joinRoom(participant, isScreensharer);
 		participants.put(participant.getName(), participant);
 		sendParticipantNames(participant);
 		return participant;
@@ -84,6 +88,10 @@ public class Room implements Closeable {
 
 		log.debug("PARTICIPANT {}: Leaving room {}", user.getName(), this.name);
 		this.removeParticipant(user.getName());
+		
+		if (user.equals(screensharer))
+			this.screensharer = null;
+		
 		user.close();
 		
 	}
@@ -92,16 +100,16 @@ public class Room implements Closeable {
 	 * @param participant
 	 * @throws IOException
 	 */
-	private Collection<String> joinRoom(UserSession newParticipant)
+	private Collection<String> joinRoom(UserSession newParticipant, boolean isScreensharer)
 			throws IOException {
 		final JsonObject newParticipantMsg = new JsonObject();
 		newParticipantMsg.addProperty("id", "newParticipantArrived");
 		newParticipantMsg.addProperty("name", newParticipant.getName());
+		newParticipantMsg.addProperty("isScreensharer", isScreensharer);
 
-		final List<String> participantsList = new ArrayList<>(participants
-				.values().size());
-		log.debug(
-				"ROOM {}: notifying other participants of new participant {}",
+		final List<String> participantsList = new ArrayList<>(participants.values().size());
+		
+		log.debug("ROOM {}: notifying other participants of new participant {}",
 				name, newParticipant.getName());
 
 		for (final UserSession participant : participants.values()) {
@@ -147,6 +155,7 @@ public class Room implements Closeable {
 	public void sendParticipantNames(UserSession user) throws IOException {
 
 		final JsonArray participantsArray = new JsonArray();
+		
 		for (final UserSession participant : this.getParticipants()) {
 			if (!participant.equals(user)) {
 				final JsonElement participantName = new JsonPrimitive(
@@ -158,8 +167,14 @@ public class Room implements Closeable {
 		final JsonObject existingParticipantsMsg = new JsonObject();
 		existingParticipantsMsg.addProperty("id", "existingParticipants");
 		existingParticipantsMsg.add("data", participantsArray);
+		existingParticipantsMsg.addProperty("existingScreensharer", (screensharer != null));
+		
+		if (screensharer != null)
+			existingParticipantsMsg.addProperty("screensharer", screensharer.getName());
+		
 		log.debug("PARTICIPANT {}: sending a list of {} participants",
 				user.getName(), participantsArray.size());
+		
 		user.sendMessage(existingParticipantsMsg);
 	}
 
@@ -210,6 +225,10 @@ public class Room implements Closeable {
 	
 	public MediaPipeline getPipeline() {
 		return pipeline;
+	}
+	
+	public void setScreensharer(UserSession user) {
+		this.screensharer = user;
 	}
 
 }

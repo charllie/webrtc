@@ -52,8 +52,7 @@ public class GroupCallApp implements WebSocketConfigurer {
 
 	@Bean
 	public KurentoClient kurentoClient() {
-		return KurentoClient.create(System.getProperty("kms.ws.uri",
-				DEFAULT_KMS_WS_URI));
+		return KurentoClient.create(System.getProperty("kms.ws.uri", DEFAULT_KMS_WS_URI));
 	}
 
 	public static void main(String[] args) throws Exception {
