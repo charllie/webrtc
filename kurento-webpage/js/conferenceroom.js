@@ -264,8 +264,11 @@ function onExistingParticipants(msg) {
 			this.generateOffer(participant.offerToReceiveVideo.bind(participant));
 		});
 
-	if (currentButton == 'webcam' && msg.existingScreensharer === true && msg.screensharer != name)
+	if (currentButton == 'webcam' && msg.existingScreensharer === true && msg.screensharer != name) {
 		receiveVideo(msg.screensharer, true);
+		toggleButton('screen');
+		toggleButton('window');
+	}
 	else if (currentButton != 'webcam' && msg.data.length > 0) {
 		receiveVideo(msg.data[0], false);
 	}
