@@ -107,14 +107,21 @@ public class CallHandler extends TextWebSocketHandler {
 		final String roomName = params.get("room").getAsString();
 		final String name = params.get("name").getAsString();
 		final String mediaSource = params.get("mediaSource").getAsString();
+		final JsonObject scParams;
 		
 		log.info("PARTICIPANT {}: trying to join room {}", name, roomName);
 
 		Room room = roomManager.getRoom(roomName);
 		
 		if (room.getParticipant(name) != null) {
-			final JsonObject scParams = new JsonObject();
+			scParams = new JsonObject();
 			scParams.addProperty("id", "existingName");
+			synchronized (session) {
+				session.sendMessage(new TextMessage(scParams.toString()));
+			}
+		} else if (room.hasScreensharer() && !mediaSource.equals("webcam")) {
+			scParams = new JsonObject();
+			scParams.addProperty("id", "existingScreensharer");
 			synchronized (session) {
 				session.sendMessage(new TextMessage(scParams.toString()));
 			}
