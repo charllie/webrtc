@@ -17,6 +17,7 @@ var inRoom = false;
 var participants = {};
 var name;
 var currentButton = 'webcam';
+var constraints;
 
 if (sessionStorage.reloadAfterPageLoad) {
 	sessionStorage.reloadAfterPageLoad = false;
@@ -33,14 +34,6 @@ if (browserM)
 var isChrome = (browser === "chrome");
 var isFirefox = (browser === "firefox");
 
-// Disable screenshare on Chrome (temporary)
-if (isChrome) {
-	window.onload = function() {
-		toggleButton('screen');
-		toggleButton('window');
-	};
-}
-
 setInterval(function() {
 	// Keep the websocket alive
 	sendMessage({ id: 'stay-alive' });
@@ -49,6 +42,14 @@ setInterval(function() {
 // Visual
 function toggleButton(button) {
 	document.getElementById(button).disabled = !document.getElementById(button).disabled;
+}
+
+function disableButton(button) {
+	document.getElementById(button).disabled = true;
+}
+
+function enableButton(button) {
+	document.getElementById(button).disabled = false;
 }
 
 // Constraints
@@ -92,7 +93,26 @@ if (isFirefox) {
 	};
 }
 
-var constraints = consWebcam;
+// Initialization function
+function init() {
+	inRoom = false;
+	participants = {};
+	name = null;
+	currentButton = 'webcam';
+	disableButton('webcam');
+	enableButton('screen');
+	enableButton('window');
+	constraints = consWebcam;
+}
+
+// Disable screenshare on Chrome (temporary)
+window.onload = function() {
+	init();
+	if (isChrome) {
+		toggleButton('screen');
+		toggleButton('window');
+	}
+};
 
 function refresh() {
 	leaveRoom();
@@ -255,8 +275,11 @@ function onExistingParticipants(msg) {
 			this.generateOffer(participant.offerToReceiveVideo.bind(participant));
 		});
 
-	if (currentButton == 'webcam' && msg.existingScreensharer === true && msg.screensharer != name)
+	if (currentButton == 'webcam' && msg.existingScreensharer === true && msg.screensharer != name) {
 		receiveVideo(msg.screensharer, true);
+		toggleButton('screen');
+		toggleButton('window');
+	}
 	else if (currentButton != 'webcam' && msg.data.length > 0) {
 		receiveVideo(msg.data[0], false);
 	}
