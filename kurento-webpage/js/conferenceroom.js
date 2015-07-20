@@ -20,10 +20,9 @@ var currentButton = 'webcam';
 
 if (sessionStorage.reloadAfterPageLoad) {
 	sessionStorage.reloadAfterPageLoad = false;
+	alert(sessionStorage.getItem("info"));
 	sessionStorage.clear();
-	alert("This username already exists.");
 }
-
 
 // Detection of the browser
 var userAgent = navigator.userAgent.toLowerCase();
@@ -133,6 +132,12 @@ function webcam() {
 	refresh();
 }
 
+function errorReload(msg) {
+	sessionStorage.reloadAfterPageLoad = true;
+	sessionStorage.setItem("info", msg);
+	window.location.reload(true);
+}
+
 window.onbeforeunload = function() {
 	if (inRoom === true)
 		leaveRoom();
@@ -156,9 +161,11 @@ ws.onmessage = function(message) {
 		case 'receiveVideoAnswer':
 			receiveVideoResponse(parsedMessage);
 			break;
+		case 'existingScreensharer':
+			errorReload("A user' screen is currently being shared.");
+			break;
 		case 'existingName':
-			sessionStorage.reloadAfterPageLoad = true;
-			window.location.reload(true);
+			errorReload("This username already exists.");
 			break;
 		case 'iceCandidate':
 			participants[parsedMessage.name].rtcPeer.addIceCandidate(parsedMessage.candidate, function(error) {
@@ -198,8 +205,11 @@ function onNewParticipant(request) {
 	console.log(request.name + " has just arrived");
 
 	// Get the video from the screensharer
-	if (request.isScreensharer)
+	if (request.isScreensharer && currentButton == 'webcam') {
+		toggleButton('screen');
+		toggleButton('window');
 		receiveVideo(request.name, true);
+	}
 
 	// The screensharer wants to get composite
 	if (!request.isScreensharer && Object.keys(participants).length == 2 && currentButton != 'webcam')
@@ -301,6 +311,11 @@ function receiveVideo(sender, isScreensharer) {
 function onParticipantLeft(request) {
 	console.log('Participant ' + request.name + ' left');
 	var participant = participants[request.name];
+
+	if (request.isScreensharer) {
+		toggleButton('screen');
+		toggleButton('window');
+	}
 
 	if (participant !== null)
 		participant.dispose();

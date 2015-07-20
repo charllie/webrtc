@@ -127,6 +127,8 @@ public class Room implements Closeable {
 
 	private void removeParticipant(String name) throws IOException {
 		participants.remove(name);
+		
+		boolean isScreensharer = (screensharer != null && name.equals(screensharer.getName()));
 
 		log.debug("ROOM {}: notifying all users that {} is leaving the room",
 				this.name, name);
@@ -135,6 +137,7 @@ public class Room implements Closeable {
 		final JsonObject participantLeftJson = new JsonObject();
 		participantLeftJson.addProperty("id", "participantLeft");
 		participantLeftJson.addProperty("name", name);
+		participantLeftJson.addProperty("isScreensharer", isScreensharer);
 		for (final UserSession participant : participants.values()) {
 			try {
 				participant.cancelVideoFrom(name);
@@ -229,6 +232,10 @@ public class Room implements Closeable {
 	
 	public void setScreensharer(UserSession user) {
 		this.screensharer = user;
+	}
+
+	public boolean hasScreensharer() {
+		return (screensharer != null);
 	}
 
 }
