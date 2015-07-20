@@ -58,8 +58,8 @@ var chromeConsScreen = {
 	video: {
 		mandatory: {
 			chromeMediaSource: 'desktop',
-			maxWidth: screen.width,
-			maxHeight: screen.height,
+			maxWidth: 320,
+			maxHeight: 180,
 			minFrameRate: 1,
 			maxFrameRate: 5
 		}
@@ -70,16 +70,7 @@ var chromeConsScreen = {
 // Default sharing
 var consShare = {
 	audio: false,
-	video: {
-		//mozMediaSource: 'screen',
-		//mediaSource: 'screen',
-		mandatory: {
-			maxWidth: screen.width,
-			maxHeight: screen.height,
-			minFrameRate: 1,
-			maxFrameRate: 5
-		}
-	}
+	video: { width: 320, height: 180 }
 };
 
 // Webcam
