@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -128,16 +129,32 @@ public class Room implements Closeable {
 	private void removeParticipant(String name) throws IOException {
 		participants.remove(name);
 		
+		int compositeUserNb;
+		
 		boolean isScreensharer = (screensharer != null && name.equals(screensharer.getName()));
 
 		log.debug("ROOM {}: notifying all users that {} is leaving the room",
 				this.name, name);
+		
+		compositeUserNb = participants.size() - ((screensharer != null) ? 1 : 0);
+		
 
 		final List<String> unnotifiedParticipants = new ArrayList<>();
 		final JsonObject participantLeftJson = new JsonObject();
 		participantLeftJson.addProperty("id", "participantLeft");
 		participantLeftJson.addProperty("name", name);
 		participantLeftJson.addProperty("isScreensharer", isScreensharer);
+		participantLeftJson.addProperty("compositeUserNb", compositeUserNb);
+
+		if (compositeUserNb > 0) {
+			for (Entry<String, UserSession> participant : participants.entrySet()) {
+				if (!participant.getValue().equals(screensharer)) {
+					participantLeftJson.addProperty("compositeLeader", participant.getKey());
+					break;
+				}
+			}
+		}
+		
 		for (final UserSession participant : participants.values()) {
 			try {
 				participant.cancelVideoFrom(name);

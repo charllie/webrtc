@@ -331,8 +331,11 @@ function onParticipantLeft(request) {
 		toggleButton('window');
 	}
 
-	if (participant !== null)
+	if (participant !== null) {
 		participant.dispose();
+		if (currentButton != 'webcam' && request.compositeUserNb > 0)
+			receiveVideo(request.compositeLeader, false);
+	}
 
 	delete participants[request.name];
 }
