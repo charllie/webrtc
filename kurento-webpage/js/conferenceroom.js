@@ -55,7 +55,7 @@ function enableButton(button) {
 // Constraints
 // Chrome screenshare
 var chromeConsScreen = {
-	audio: false,
+	audio: true,
 	video: {
 		mandatory: {
 			chromeMediaSource: 'desktop',
@@ -70,7 +70,7 @@ var chromeConsScreen = {
 
 // Default sharing
 var consShare = {
-	audio: false,
+	audio: true,
 	video: { width: 320, height: 180 }
 };
 
