@@ -97,7 +97,7 @@ function Participant(name) {
 	this.dispose = function() {
 		console.log('Disposing participant ' + this.name);
 
-		if (this.rtcPeer !== null)
+		if (this.rtcPeer !== null && this.rtcPeer != undefined)
 			this.rtcPeer.dispose();
 		//container.parentNode.removeChild(container);
 	};

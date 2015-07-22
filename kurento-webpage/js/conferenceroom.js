@@ -291,11 +291,10 @@ function leaveRoom() {
 		id: 'leaveRoom'
 	});
 
-	//for (var key in participants) {
-	//	participants[key].dispose();
-	//}
-	if (participants[name] != undefined)
-		participants[name].dispose();
+	for (var key in participants) {
+		if (participants[key] != undefined)
+			participants[name].dispose();
+	}
 
 	document.getElementById('join').style.display = 'block';
 	document.getElementById('room').style.display = 'none';
@@ -332,10 +331,13 @@ function onParticipantLeft(request) {
 	}
 
 	if (participant != undefined) {
-		participant.dispose();
+		if ((currentButton != 'webcam') || (currentButton == 'webcam' && request.isScreensharer))
+			participant.dispose();
 		if (currentButton != 'webcam' && request.compositeUserNb > 0)
 			receiveVideo(request.compositeLeader, false);
 	}
+
+	console.log(participants);
 
 	delete participants[request.name];
 }
