@@ -294,7 +294,7 @@ function leaveRoom() {
 	//for (var key in participants) {
 	//	participants[key].dispose();
 	//}
-	if (participants[name] !== null)
+	if (participants[name] != undefined)
 		participants[name].dispose();
 
 	document.getElementById('join').style.display = 'block';
@@ -331,7 +331,7 @@ function onParticipantLeft(request) {
 		toggleButton('window');
 	}
 
-	if (participant !== null) {
+	if (participant != undefined) {
 		participant.dispose();
 		if (currentButton != 'webcam' && request.compositeUserNb > 0)
 			receiveVideo(request.compositeLeader, false);
