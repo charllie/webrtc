@@ -18,6 +18,7 @@ var participants = {};
 var name;
 var currentButton = 'webcam';
 var constraints;
+var speed;
 
 if (sessionStorage.reloadAfterPageLoad) {
 	sessionStorage.reloadAfterPageLoad = false;
@@ -107,12 +108,47 @@ function init() {
 
 // Disable screenshare on Chrome (temporary)
 window.onload = function() {
+	upload(2097152, Date.now());
 	init();
 	if (isChrome) {
 		toggleButton('screen');
 		toggleButton('window');
 	}
 };
+
+function upload(uploadSize) {
+	var content = "0".repeat(uploadSize);
+	var startTime, endTime;
+	var iterations = 3;
+
+	speed = 0;
+
+	function beforeSendFunction() {
+		startTime = Date.now();
+	}
+
+	function successFunction(data) {
+		endTime = Date.now();
+		speed += (0.008 * uploadSize / (endTime - startTime));
+	}
+
+	for (var i = 0; i < iterations; i++) {
+		$.ajax('http://webrtc.ml:8081/upload', {
+			data: {
+				content: content
+			},
+			type: 'POST',
+			async: false,
+			beforeSend: beforeSendFunction,
+			success: successFunction
+		});
+	}
+
+	speed = speed / iterations;
+	speed = Math.round(speed * 100) / 100;
+
+	console.log("Upload speedtest: " + speed + "Mbps");
+}
 
 function refresh() {
 	leaveRoom();
@@ -347,3 +383,41 @@ function sendMessage(message) {
 	console.log('Senging message: ' + jsonMessage);
 	ws.send(jsonMessage);
 }
+
+
+
+if (!String.prototype.repeat) {
+	String.prototype.repeat = function(count) {
+		"use strict";
+		if (this === null)
+			throw new TypeError("ne peut convertir " + this + " en objet");
+		var str = "" + this;
+		count = +count;
+		if (count != count)
+			count = 0;
+		if (count < 0)
+			throw new RangeError("le nombre de répétitions doit être positif");
+		if (count === Infinity)
+			throw new RangeError("le nombre de répétitions doit être inférieur à l'infini");
+		count = Math.floor(count);
+		if (str.length === 0 || count === 0)
+			return "";
+		// En vérifiant que la longueur résultant est un entier sur 31-bit
+		// cela permet d'optimiser l'opération.
+		// La plupart des navigateurs (août 2014) ne peuvent gérer des
+		// chaînes de 1 << 28 caractères ou plus. Ainsi :
+		if (str.length * count >= 1 << 28)
+			throw new RangeError("le nombre de répétitions ne doit pas dépasser la taille de chaîne maximale");
+		var rpt = "";
+		for (;;) {
+			if ((count & 1) == 1)
+				rpt += str;
+			count >>>= 1;
+			if (count === 0)
+				break;
+			str += str;
+		}
+		return rpt;
+	};
+}
+
