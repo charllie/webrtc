@@ -10,11 +10,9 @@ var opts = {
 app.use(express.static(__dirname + '/html'));
 app.use(bodyParser.urlencoded({ limit: '20MB', extended: true }));
 
-app.get('/upload', function(req, res) {
-	res.end();
-});
-
 app.post('/upload', function(req, res) {
+	res.setHeader('Content-Type', 'application/json');
+	res.send(JSON.stringify({}));
 	res.end();
 });
 
