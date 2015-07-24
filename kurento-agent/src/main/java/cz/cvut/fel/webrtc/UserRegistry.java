@@ -14,7 +14,7 @@
  */
 package cz.cvut.fel.webrtc;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.web.socket.WebSocketSession;
@@ -46,8 +46,8 @@ public class UserRegistry {
 		return usersBySessionId.get(session.getId());
 	}*/
 	
-	public HashSet<UserSession> getBySession(WebSocketSession session) {
-		HashSet<UserSession> users = new HashSet<UserSession> ();
+	public ArrayList<UserSession> getBySession(WebSocketSession session) {
+		ArrayList<UserSession> users = new ArrayList<UserSession> ();
 		for (UserSession user : usersByName.values()) {
 			if (user.getSession().getId().equals(session.getId()))
 				users.add(user);
@@ -59,8 +59,8 @@ public class UserRegistry {
 		return usersByName.keySet().contains(name);
 	}
 
-	public HashSet<UserSession> removeBySession(WebSocketSession session) {
-		HashSet<UserSession> users = getBySession(session);
+	public ArrayList<UserSession> removeBySession(WebSocketSession session) {
+		ArrayList<UserSession> users = getBySession(session);
 		
 		for (final UserSession user : users) {
 			

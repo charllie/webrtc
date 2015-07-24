@@ -15,7 +15,7 @@
 package cz.cvut.fel.webrtc;
 
 import java.io.IOException;
-import java.util.HashSet;
+import java.util.ArrayList;
 
 import org.kurento.client.IceCandidate;
 import org.slf4j.Logger;
@@ -54,9 +54,14 @@ public class CallHandler extends TextWebSocketHandler {
 		final JsonObject jsonMessage = gson.fromJson(message.getPayload(),
 				JsonObject.class);
 
-		HashSet<UserSession> users = registry.getBySession(session);
-		final UserSession user = users.iterator().next();
+		ArrayList<UserSession> users = registry.getBySession(session);
+		
+		log.info("Test 1");
+		
+		final UserSession user = users.get(0);
 
+		log.info("Test 2");
+		
 		if (user != null) {
 			log.debug("Incoming message from user '{}': {}", user.getName(),
 					jsonMessage);
@@ -72,7 +77,7 @@ public class CallHandler extends TextWebSocketHandler {
 			final String senderName = jsonMessage.get("sender").getAsString();
 			final UserSession sender = registry.getByName(senderName);
 			final String sdpOffer = jsonMessage.get("sdpOffer").getAsString();
-			user.receiveVideoFrom(sender, sdpOffer);
+			users.get(0).receiveVideoFrom(sender, sdpOffer);
 			break;
 		case "leaveRoom":
 			leaveRoom(users);
@@ -96,7 +101,7 @@ public class CallHandler extends TextWebSocketHandler {
 	@Override
 	public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
 		//UserSession user = registry.removeBySession(session);
-		HashSet<UserSession> users = registry.removeBySession(session);
+		ArrayList<UserSession> users = registry.removeBySession(session);
 		
 		for (UserSession user : users) {
 			if (user != null) {
@@ -145,7 +150,7 @@ public class CallHandler extends TextWebSocketHandler {
 		registry.removeByName(user);
 	}
 	
-	private void leaveRoom(HashSet<UserSession> users) throws IOException {
+	private void leaveRoom(ArrayList<UserSession> users) throws IOException {
 		for (final UserSession user : users) {
 			leaveRoom(user);
 		}
