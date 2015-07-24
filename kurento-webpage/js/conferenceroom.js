@@ -56,7 +56,7 @@ function enableButton(button) {
 // Constraints
 // Chrome screenshare
 var chromeConsScreen = {
-	audio: false,
+	audio: true,
 	video: {
 		mandatory: {
 			chromeMediaSource: 'desktop',
@@ -71,7 +71,7 @@ var chromeConsScreen = {
 
 // Default sharing
 var consShare = {
-	audio: false,
+	audio: true,
 	video: { width: 320, height: 180 }
 };
 
@@ -159,17 +159,15 @@ function share(type) {
 	if (type != currentButton) {
 		if (isChrome) {
 			constraints = chromeConsScreen;
-			//refresh();
+			refresh();
 		} else {
 			toggleButton(type);
 			toggleButton(currentButton);
 			currentButton = type;
 			constraints = consShare;
 			constraints.video.mediaSource = type;
-			//refresh();
+			refresh();
 		}
-		document.getElementById('name').value = name + Date.now();
-		register();
 	}
 }
 
@@ -326,12 +324,11 @@ function onExistingParticipants(msg) {
 
 function leaveRoom() {
 	sendMessage({
-		id: 'leaveRoom',
-		isScreensharer: (currentButton != 'webcam')
+		id: 'leaveRoom'
 	});
 
 	for (var key in participants) {
-		if (participants[key] !== undefined)
+		if (participants[key] != undefined)
 			participants[name].dispose();
 	}
 
