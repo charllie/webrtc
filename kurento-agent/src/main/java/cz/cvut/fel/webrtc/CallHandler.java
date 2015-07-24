@@ -15,7 +15,6 @@
 package cz.cvut.fel.webrtc;
 
 import java.io.IOException;
-import java.util.HashSet;
 
 import org.kurento.client.IceCandidate;
 import org.slf4j.Logger;
@@ -54,8 +53,7 @@ public class CallHandler extends TextWebSocketHandler {
 		final JsonObject jsonMessage = gson.fromJson(message.getPayload(),
 				JsonObject.class);
 
-		HashSet<UserSession> users = registry.getBySession(session);
-		final UserSession user = users.iterator().next();
+		final UserSession user = registry.getBySession(session);
 
 		if (user != null) {
 			log.debug("Incoming message from user '{}': {}", user.getName(),
@@ -75,7 +73,7 @@ public class CallHandler extends TextWebSocketHandler {
 			user.receiveVideoFrom(sender, sdpOffer);
 			break;
 		case "leaveRoom":
-			leaveRoom(users);
+			leaveRoom(user);
 			break;
 		case "onIceCandidate":
 			JsonObject candidate = jsonMessage.get("candidate")
@@ -96,12 +94,10 @@ public class CallHandler extends TextWebSocketHandler {
 	@Override
 	public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
 		//UserSession user = registry.removeBySession(session);
-		HashSet<UserSession> users = registry.removeBySession(session);
+		UserSession user = registry.removeBySession(session);
 		
-		for (UserSession user : users) {
-			if (user != null) {
-				leaveRoom(user);
-			}
+		if (user != null) {
+			leaveRoom(user);
 		}
 		//roomManager.getRoom(user.getRoomName()).leave(user); déjà fait a priori dans leaveRoom
 	}
@@ -142,12 +138,6 @@ public class CallHandler extends TextWebSocketHandler {
 		if (room.getParticipants().isEmpty()) {
 			roomManager.removeRoom(room);
 		}
-		registry.removeByName(user);
-	}
-	
-	private void leaveRoom(HashSet<UserSession> users) throws IOException {
-		for (final UserSession user : users) {
-			leaveRoom(user);
-		}
+		registry.removeBySession(user.getSession());
 	}
 }

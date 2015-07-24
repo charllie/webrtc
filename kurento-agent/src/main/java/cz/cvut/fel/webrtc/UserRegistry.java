@@ -14,7 +14,6 @@
  */
 package cz.cvut.fel.webrtc;
 
-import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.web.socket.WebSocketSession;
@@ -31,52 +30,34 @@ import org.springframework.web.socket.WebSocketSession;
 public class UserRegistry {
 
 	private final ConcurrentHashMap<String, UserSession> usersByName = new ConcurrentHashMap<String, UserSession>();
-	//private final ConcurrentHashMap<String, UserSession> usersBySessionId = new ConcurrentHashMap<String, UserSession>();
+	private final ConcurrentHashMap<String, UserSession> usersBySessionId = new ConcurrentHashMap<String, UserSession>();
 
 	public void register(UserSession user) {
 		usersByName.put(user.getName(), user);
-		//usersBySessionId.put(user.getSession().getId(), user);
+		usersBySessionId.put(user.getSession().getId(), user);
 	}
 
 	public UserSession getByName(String name) {
 		return usersByName.get(name);
 	}
 
-	/*public UserSession getBySession(WebSocketSession session) {
+	public UserSession getBySession(WebSocketSession session) {
 		return usersBySessionId.get(session.getId());
-	}*/
-	
-	public HashSet<UserSession> getBySession(WebSocketSession session) {
-		HashSet<UserSession> users = new HashSet<UserSession> ();
-		for (UserSession user : usersByName.values()) {
-			if (user.getSession().getId().equals(session.getId()))
-				users.add(user);
-		}
-		return users;
 	}
 
 	public boolean exists(String name) {
 		return usersByName.keySet().contains(name);
 	}
 
-	public HashSet<UserSession> removeBySession(WebSocketSession session) {
-		HashSet<UserSession> users = getBySession(session);
+	public UserSession removeBySession(WebSocketSession session) {
+		final UserSession user = getBySession(session);
 		
-		for (final UserSession user : users) {
-			
-			if (user != null) {
-				usersByName.remove(user.getName());
-				//usersBySessionId.remove(session.getId());
-			}
-			
+		if (user != null) {
+			usersByName.remove(user.getName());
+			usersBySessionId.remove(session.getId());
 		}
 		
-		return users;
+		return user;
 	}
 
-	public void removeByName(UserSession user) {
-		if (user != null)
-			usersByName.remove(user.getName());
-	}
-	
 }
