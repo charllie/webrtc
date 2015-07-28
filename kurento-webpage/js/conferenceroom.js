@@ -49,12 +49,10 @@ function toggleButton(button) {
 }
 
 function disableButton(button) {
-	console.log(button + " disabled");
 	document.getElementById(button).disabled = true;
 }
 
 function enableButton(button) {
-	console.log(button + " enabled");
 	document.getElementById(button).disabled = false;
 }
 
@@ -73,7 +71,7 @@ function enableAllButtons() {
 // Constraints
 // Chrome screenshare
 var chromeConsScreen = {
-	audio: true,
+	audio: false,
 	video: {
 		mandatory: {
 			chromeMediaSource: 'desktop',
@@ -88,7 +86,7 @@ var chromeConsScreen = {
 
 // Default sharing
 var consShare = {
-	audio: true,
+	audio: false,
 	video: { width: 320, height: 180 }
 };
 
@@ -240,8 +238,6 @@ ws.onmessage = function(message) {
 	var parsedMessage = JSON.parse(message.data);
 	console.info('Received message: ' + message.data);
 
-	console.log(parsedMessage);
-
 	switch (parsedMessage.id) {
 
 		case 'compositeInfo':
@@ -281,12 +277,17 @@ ws.onmessage = function(message) {
 			break;
 		
 		case 'iceCandidate':
+			console.log("--------- ICE CANDIDATE ---------");
+			console.log(parsedMessage);
 
 			var rtcPeer = 'participants["' + parsedMessage.name + '"].rtcPeer';
 			rtcPeer += (parsedMessage.type == 'webcam') ? 'Composite' : 'Presentation';
 
 			console.log(participants);
 			console.log(participants[parsedMessage.name]);
+
+			console.log(rtcPeer);
+			console.log(eval(rtcPeer));
 
 			eval(rtcPeer).addIceCandidate(parsedMessage.candidate, function(error) {
 				if (error) {
@@ -490,7 +491,6 @@ function receiveVideo(sender, isScreensharer) {
 
 	var participant = participants[sender];
 
-	console.log(participant);
 	
 	var video = (!isScreensharer) ? 'remote_video' : 'remote_screenshare';
 	var suffix = (!isScreensharer) ? 'Composite' : 'Presentation';
@@ -504,14 +504,11 @@ function receiveVideo(sender, isScreensharer) {
 		onicecandidate: eval(iceCandidate).bind(participant)
 	};
 
-	console.log(options);
-
 	var receive = rtcPeer + ' = new kurentoUtils.WebRtcPeer.WebRtcPeerRecvonly(options,' +
 		'function(error) { ' +
 			'if (error) { return console.error(error); };' +
 			'this.generateOffer(' + offerToReceive + '.bind(participant)); })';
 
-	console.log(receive);
 	eval(receive);
 }
 

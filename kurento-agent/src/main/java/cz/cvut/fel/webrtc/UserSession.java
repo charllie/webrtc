@@ -174,13 +174,15 @@ public class UserSession implements Closeable {
 				if (this.sharingMedia == null) {
 					this.sharingMedia = new WebRtcEndpoint.Builder(pipeline).build();
 					
+					final UserSession presenter = (this.isScreensharer) ? this : sender;
+					
 					this.sharingMedia.addOnIceCandidateListener(new EventListener<OnIceCandidateEvent>() {
 		
 						@Override
 						public void onEvent(OnIceCandidateEvent event) {
 							JsonObject response = new JsonObject();
 							response.addProperty("id", "iceCandidate");
-							response.addProperty("name", name);
+							response.addProperty("name", presenter.getName());
 							response.addProperty("type", type);
 							response.add("candidate", JsonUtils.toJsonObject(event.getCandidate()));
 							try {
