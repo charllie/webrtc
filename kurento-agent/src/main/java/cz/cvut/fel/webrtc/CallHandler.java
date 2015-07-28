@@ -66,28 +66,60 @@ public class CallHandler extends TextWebSocketHandler {
 		case "joinRoom":
 			joinRoom(jsonMessage, session);
 			break;
+		
+		case "newPresenter":
+			presenter(user);
+			break;
+			
+		case "presenterReady":
+			if (user != null) {
+				Room room = roomManager.getRoom(user.getRoomName());
+				
+				final JsonObject newPresenterMsg = new JsonObject();
+				newPresenterMsg.addProperty("id", "presenter");
+				newPresenterMsg.addProperty("name", user.getName());
+				
+				room.broadcast(newPresenterMsg);
+			}
+			break;
+			
 		case "receiveVideoFrom":
 			final String senderName = jsonMessage.get("sender").getAsString();
 			final UserSession sender = registry.getByName(senderName);
+			final Room room = roomManager.getRoom(user.getRoomName());
 			final String sdpOffer = jsonMessage.get("sdpOffer").getAsString();
-			user.receiveVideoFrom(sender, sdpOffer);
+			final String type = jsonMessage.get("type").getAsString();
+			user.receiveVideoFrom(sender, type, sdpOffer, room);
 			break;
+		
 		case "leaveRoom":
 			leaveRoom(user);
 			break;
+		
 		case "onIceCandidate":
-			JsonObject candidate = jsonMessage.get("candidate")
-					.getAsJsonObject();
+			JsonObject candidate = jsonMessage.get("candidate").getAsJsonObject();
 
 			if (user != null) {
 				IceCandidate cand = new IceCandidate(candidate.get("candidate")
 						.getAsString(), candidate.get("sdpMid").getAsString(),
 						candidate.get("sdpMLineIndex").getAsInt());
-				user.addCandidate(cand, jsonMessage.get("name").getAsString());
+				user.addCandidate(cand, jsonMessage.get("type").getAsString());
 			}
 			break;
 		default:
 			break;
+		}
+	}
+
+	private void presenter(UserSession user) throws IOException {
+		Room room = roomManager.getRoom(user.getRoomName());
+		
+		if (!room.hasScreensharer()) {
+			
+			room.sendParticipantNames(user, "presentationInfo");
+			room.setScreensharer(user);
+			user.isScreensharer(true);
+			
 		}
 	}
 
@@ -106,7 +138,6 @@ public class CallHandler extends TextWebSocketHandler {
 			throws IOException {
 		final String roomName = params.get("room").getAsString();
 		final String name = params.get("name").getAsString();
-		final String mediaSource = params.get("mediaSource").getAsString();
 		final JsonObject scParams;
 		
 		log.info("PARTICIPANT {}: trying to join room {}", name, roomName);
@@ -119,15 +150,8 @@ public class CallHandler extends TextWebSocketHandler {
 			synchronized (session) {
 				session.sendMessage(new TextMessage(scParams.toString()));
 			}
-		} else if (room.hasScreensharer() && !mediaSource.equals("webcam")) {
-			scParams = new JsonObject();
-			scParams.addProperty("id", "existingScreensharer");
-			synchronized (session) {
-				session.sendMessage(new TextMessage(scParams.toString()));
-			}
 		} else {
-			boolean isScreensharer = (!mediaSource.equals("webcam")) ? true : false;
-			final UserSession user = room.join(name, session, isScreensharer);
+			final UserSession user = room.join(name, session);
 			registry.register(user);
 		}
 	}
