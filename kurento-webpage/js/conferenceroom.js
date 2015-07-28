@@ -197,8 +197,11 @@ function webcam() {
 
 function stopPresenting() {
 	var message = {
-		id: "stopPresenting"
+		id: 'stopPresenting'
 	};
+
+	enableButton('screen');
+	enableButton('window');
 
 	sendMessage(message);
 }
@@ -381,8 +384,11 @@ function sendComposite(msg) {
 
 
 
-	if (msg.existingScreensharer)
+	if (msg.existingScreensharer) {
+		disableButton('window');
+		disableButton('screen');
 		receiveVideo(msg.screensharer, true);
+	}
 
 }
 
