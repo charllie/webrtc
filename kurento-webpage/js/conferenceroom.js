@@ -207,7 +207,8 @@ function webcam() {
 	currentButton = 'webcam';
 	constraints = consWebcam;
 
-	refresh();
+	//refresh();
+	enableAllButtons();
 	disableButton('webcam');
 }
 
@@ -215,6 +216,11 @@ function stopPresenting() {
 	var message = {
 		id: 'stopPresenting'
 	};
+
+	if (participants[name] !== undefined && participants[name].rtcPeerPresentation !== null) {
+		participants[name].rtcPeerPresentation.dispose();
+		participants[name].rtcPeerPresentation = null;
+	}
 
 	enableButton('screen');
 	enableButton('window');
