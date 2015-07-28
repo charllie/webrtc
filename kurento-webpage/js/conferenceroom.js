@@ -442,6 +442,9 @@ function cancelPresentation(msg) {
 
 	if (participants[msg.presenter] !== undefined)
 		participants[msg.presenter].rtcPeerPresentation.dispose();
+
+	enableButton('screen');
+	enableButton('window');
 }
 
 function leaveRoom() {
