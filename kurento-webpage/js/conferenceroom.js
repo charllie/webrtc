@@ -114,8 +114,8 @@ window.onload = function() {
 	upload(bytesToUpload, Date.now());
 	init();
 	if (isChrome) {
-		toggleButton('screen');
-		toggleButton('window');
+		disableButton('screen');
+		disableButton('window');
 	}
 };
 
@@ -159,10 +159,15 @@ function refresh() {
 
 function share(type) {
 	if (type != currentButton) {
+
+		if (currentButton != 'webcam')
+			stopPresenting();
+
 		if (isChrome) {
 			constraints = chromeConsScreen;
 			//refresh();
 		} else {
+
 			toggleButton(type);
 			toggleButton(currentButton);
 			currentButton = type;
@@ -186,7 +191,16 @@ function webcam() {
 	currentButton = 'webcam';
 	toggleButton(currentButton);
 	constraints = consWebcam;
+	stopPresenting();
 	refresh();
+}
+
+function stopPresenting() {
+	var message = {
+		id: "stopPresenting"
+	};
+
+	sendMessage(message);
 }
 
 function errorReload(msg) {
@@ -219,6 +233,10 @@ ws.onmessage = function(message) {
 
 		case 'presenterReady':
 			onPresenterReady(parsedMessage);
+			break;
+
+		case 'cancelPresentation':
+			cancelPresentation(parsedMessage);
 			break;
 		
 		case 'newParticipantArrived':
@@ -411,6 +429,13 @@ function sendPresentation(msg) {
 	}*/
 }
 
+function cancelPresentation(msg) {
+	console.log("Cancelling Presentation");
+
+	if (participants[msg.presenter] !== undefined)
+		participants[msg.presenter].rtcPeerPresentation.dispose();
+}
+
 function leaveRoom() {
 	sendMessage({
 		id: 'leaveRoom'
@@ -419,6 +444,8 @@ function leaveRoom() {
 	for (var key in participants) {
 		if (participants[key] !== undefined)
 			participants[key].dispose();
+
+		delete participants[key];
 	}
 
 	document.getElementById('join').style.display = 'block';
@@ -463,8 +490,8 @@ function onPresenterReady(parsedMessage) {
 	if (parsedMessage.presenter != name) {
 		receiveVideo(parsedMessage.presenter, true);
 
-		toggleButton('screen');
-		toggleButton('window');
+		disableButton('screen');
+		disableButton('window');
 	}
 }
 
@@ -473,8 +500,8 @@ function onParticipantLeft(request) {
 	var participant = participants[request.name];
 
 	if (request.isScreensharer) {
-		toggleButton('screen');
-		toggleButton('window');
+		enableButton('screen');
+		enableButton('window');
 
 		if (participant !== undefined)
 			participant.dispose();

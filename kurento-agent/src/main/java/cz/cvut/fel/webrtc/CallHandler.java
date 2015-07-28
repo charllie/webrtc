@@ -83,6 +83,10 @@ public class CallHandler extends TextWebSocketHandler {
 			}
 			break;
 			
+		case "stopPresenting":
+			stopPresenting(user);
+			break;
+			
 		case "receiveVideoFrom":
 			final String senderName = jsonMessage.get("sender").getAsString();
 			final UserSession sender = registry.getByName(senderName);
@@ -109,6 +113,11 @@ public class CallHandler extends TextWebSocketHandler {
 		default:
 			break;
 		}
+	}
+
+	private void stopPresenting(UserSession user) throws IOException {
+		final Room room = roomManager.getRoom(user.getRoomName());
+		room.cancelPresentation();
 	}
 
 	private void presenter(UserSession user) throws IOException {
