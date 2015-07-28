@@ -19,8 +19,6 @@ import java.io.IOException;
 //import java.util.concurrent.ConcurrentHashMap;
 //import java.util.concurrent.ConcurrentMap;
 
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.kurento.client.Continuation;
 import org.kurento.client.EventListener;
 import org.kurento.client.Hub;
@@ -53,19 +51,21 @@ public class UserSession implements Closeable {
 	private final MediaPipeline pipeline;
 
 	private final String roomName;
+	
 	private final WebRtcEndpoint outgoingMedia;
-	private final ConcurrentHashMap<String, WebRtcEndpoint> incomingMedia = new ConcurrentHashMap<String, WebRtcEndpoint>();
+	private WebRtcEndpoint sharingMedia; 
+	
+	//private final ConcurrentHashMap<String, WebRtcEndpoint> incomingMedia = new ConcurrentHashMap<String, WebRtcEndpoint>();
 	private final HubPort hubPort;
-	private final boolean isScreensharer;
+	private boolean isScreensharer = false;
 	
 	public UserSession(final String name, String roomName,
-			final WebSocketSession session, MediaPipeline pipeline, Hub hub, boolean isScreensharer) {
+			final WebSocketSession session, MediaPipeline pipeline, Hub hub) {
 
 		this.pipeline = pipeline;
 		this.name = name;
 		this.session = session;
 		this.roomName = roomName;
-		this.isScreensharer = isScreensharer;
 		
 		this.outgoingMedia = new WebRtcEndpoint.Builder(pipeline).build();
 
@@ -77,6 +77,7 @@ public class UserSession implements Closeable {
 						JsonObject response = new JsonObject();
 						response.addProperty("id", "iceCandidate");
 						response.addProperty("name", name);
+						response.addProperty("type", "webcam");
 						response.add("candidate",
 								JsonUtils.toJsonObject(event.getCandidate()));
 						try {
@@ -92,16 +93,22 @@ public class UserSession implements Closeable {
 		
 		this.hubPort = new HubPort.Builder(hub).build();
 		
-		if (!isScreensharer) {
-			hubPort.connect(outgoingMedia);
-			outgoingMedia.connect(hubPort);
-		}
+		hubPort.connect(outgoingMedia);
+		outgoingMedia.connect(hubPort);
 	}
 
 	public WebRtcEndpoint getOutgoingWebRtcPeer() {
 		return outgoingMedia;
 	}
 
+	public void setSharingMedia(WebRtcEndpoint sharingMedia) {
+		this.sharingMedia = sharingMedia;
+	}
+	
+	public WebRtcEndpoint getSharingMedia() {
+		return this.sharingMedia;
+	}
+	
 	/**
 	 * @return the name
 	 */
@@ -130,7 +137,7 @@ public class UserSession implements Closeable {
 	 * @param sdpOffer
 	 * @throws IOException
 	 */
-	public void receiveVideoFrom(UserSession sender, String sdpOffer)
+	public void receiveVideoFrom(UserSession sender, String type, String sdpOffer, Room room)
 			throws IOException {
 		log.info("USER {}: connecting with {} in room {}", this.name,
 				sender.getName(), this.roomName);
@@ -138,17 +145,20 @@ public class UserSession implements Closeable {
 		log.trace("USER {}: SdpOffer for {} is {}", this.name,
 				sender.getName(), sdpOffer);
 		
-		final String ipSdpAnswer = this.getEndpointForUser(sender).processOffer(sdpOffer);
+		WebRtcEndpoint ep = this.getEndpointForUser(sender, type, room);
+		
+		final String ipSdpAnswer = ep.processOffer(sdpOffer);
 		final JsonObject scParams = new JsonObject();
 		scParams.addProperty("id", "receiveVideoAnswer");
 		scParams.addProperty("name", sender.getName());
 		scParams.addProperty("sdpAnswer", ipSdpAnswer);
+		scParams.addProperty("type", type);
 
 		log.trace("USER {}: SdpAnswer for {} is {}", this.name,
 				sender.getName(), ipSdpAnswer);
 		this.sendMessage(scParams);
 		log.debug("gather candidates");
-		this.getEndpointForUser(sender).gatherCandidates();
+		ep.gatherCandidates();
 	}
 
 	/**
@@ -156,13 +166,55 @@ public class UserSession implements Closeable {
 	 *            the user
 	 * @return the endpoint used to receive media from a certain user
 	 */
-	private WebRtcEndpoint getEndpointForUser(final UserSession sender) {
-		if ((!this.isScreensharer && !sender.isScreensharer) || (this.equals(sender))) {
-			log.info("PARTICIPANT {}: configuring loopback", this.name);
-			return outgoingMedia;
+	private WebRtcEndpoint getEndpointForUser(final UserSession sender, final String type, Room room) {
+		
+		if (!type.equals("webcam")) {
+			if ((this.isScreensharer && this.equals(sender)) || (sender.isScreensharer)) {
+				
+				if (this.sharingMedia == null) {
+					this.sharingMedia = new WebRtcEndpoint.Builder(pipeline).build();
+					
+					this.sharingMedia.addOnIceCandidateListener(new EventListener<OnIceCandidateEvent>() {
+		
+						@Override
+						public void onEvent(OnIceCandidateEvent event) {
+							JsonObject response = new JsonObject();
+							response.addProperty("id", "iceCandidate");
+							response.addProperty("name", name);
+							response.addProperty("type", type);
+							response.add("candidate", JsonUtils.toJsonObject(event.getCandidate()));
+							try {
+								synchronized (session) {
+									session.sendMessage(new TextMessage(response.toString()));
+								}
+							} catch (IOException e) {
+								log.debug(e.getMessage());
+							}
+						}
+					});
+					
+					if (this.isScreensharer && this.equals(sender)) {
+						final JsonObject newPresenterMsg = new JsonObject();
+						newPresenterMsg.addProperty("id", "presenterReady");
+						newPresenterMsg.addProperty("presenter", this.getName());
+						
+						room.broadcast(newPresenterMsg);
+					}
+				}
+				
+				if (!this.isScreensharer)
+					sender.getSharingMedia().connect(sharingMedia);
+				
+				return this.sharingMedia;
+				
+			}
 		}
 		
-		WebRtcEndpoint incoming = incomingMedia.get(sender.getName());
+		return outgoingMedia;
+		
+		
+		
+		/*WebRtcEndpoint incoming = incomingMedia.get(sender.getName());
 		if (incoming == null) {
 			incoming = new WebRtcEndpoint.Builder(pipeline).build();
 			
@@ -254,7 +306,7 @@ public class UserSession implements Closeable {
 	public void cancelVideoFrom(final String senderName) {
 		log.debug("PARTICIPANT {}: canceling video reception from {}",
 				this.name, senderName);
-		final WebRtcEndpoint incoming = incomingMedia.remove(senderName);		
+		//final WebRtcEndpoint incoming = incomingMedia.remove(senderName);		
 
 		log.debug("PARTICIPANT {}: removing endpoint for {}", this.name,
 				senderName);
@@ -262,7 +314,7 @@ public class UserSession implements Closeable {
 		//this.hubPort.disconnect(outgoingMedia);
 		//this.outgoingMedia.disconnect(hubPort);
 		
-		if (incoming != null) {
+		/*if (incoming != null) {
 			incoming.release(new Continuation<Void>() {
 				@Override
 				public void onSuccess(Void result) throws Exception {
@@ -278,7 +330,7 @@ public class UserSession implements Closeable {
 							UserSession.this.name, senderName);
 				}
 			});
-		}
+		}*/
 	}
 
 	@Override
@@ -286,7 +338,7 @@ public class UserSession implements Closeable {
 		
 		log.debug("PARTICIPANT {}: Releasing resources", this.name);
 		
-		for (final String remoteParticipantName : incomingMedia.keySet()) {
+		/*for (final String remoteParticipantName : incomingMedia.keySet()) {
 
 			log.info("PARTICIPANT {}: Released incoming EP for {}", this.name,
 					remoteParticipantName);
@@ -310,10 +362,9 @@ public class UserSession implements Closeable {
 					}
 				});
 			}
-		}
+		}*/
 		
-		if (hubPort != null)
-			hubPort.release();
+		hubPort.release();
 		
 		outgoingMedia.release(new Continuation<Void>() {
 
@@ -329,6 +380,23 @@ public class UserSession implements Closeable {
 						UserSession.this.name);
 			}
 		});
+		
+		if (sharingMedia != null) {
+			sharingMedia.release(new Continuation<Void>() {
+
+				@Override
+				public void onSuccess(Void result) throws Exception {
+					log.trace("PARTICIPANT {}: Released outgoing EP",
+							UserSession.this.name);
+				}
+
+				@Override
+				public void onError(Throwable cause) throws Exception {
+					log.warn("USER {}: Could not release outgoing EP",
+							UserSession.this.name);
+				}
+			});
+		}
 	}
 
 	public void sendMessage(JsonObject message) throws IOException {
@@ -338,15 +406,11 @@ public class UserSession implements Closeable {
 		}
 	}
 
-	public void addCandidate(IceCandidate e, String name) {
-		if (this.name.compareTo(name) == 0) {
-			outgoingMedia.addIceCandidate(e);
-		} else {
-			WebRtcEndpoint webRtc = incomingMedia.get(name);
-			if (webRtc != null) {
-				webRtc.addIceCandidate(e);
-			}
-		}
+	public void addCandidate(IceCandidate e, String type) {
+		WebRtcEndpoint ep = (type.equals("composite")) ? outgoingMedia : sharingMedia;
+		
+		if (ep != null)
+			ep.addIceCandidate(e);
 	}
 
 	/*
@@ -380,5 +444,9 @@ public class UserSession implements Closeable {
 		result = 31 * result + name.hashCode();
 		result = 31 * result + roomName.hashCode();
 		return result;
+	}
+
+	public void isScreensharer(boolean b) {
+		this.isScreensharer = b;
 	}
 }
