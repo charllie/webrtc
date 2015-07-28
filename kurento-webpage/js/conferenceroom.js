@@ -168,8 +168,10 @@ function share(type) {
 			//refresh();
 		} else {
 
-			toggleButton(type);
-			toggleButton(currentButton);
+			//toggleButton(type);
+			//toggleButton(currentButton);
+			enableButton('webcam');
+			disableButton(type);
 			currentButton = type;
 			constraints = consShare;
 			constraints.video.mediaSource = type;
