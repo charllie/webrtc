@@ -295,42 +295,41 @@ public class UserSession implements Closeable {
 	 * @param sender
 	 *            the participant
 	 */
-	public void cancelVideoFrom(final UserSession sender) {
+	/*public void cancelVideoFrom(final UserSession sender) {
 		this.cancelVideoFrom(sender.getName());
-	}
+	}*/
 
 	/**
 	 * @param senderName
 	 *            the participant
 	 */
-	public void cancelVideoFrom(final String senderName) {
-		log.debug("PARTICIPANT {}: canceling video reception from {}",
-				this.name, senderName);
-		//final WebRtcEndpoint incoming = incomingMedia.remove(senderName);		
+	public void cancelPresentation() {
+		log.debug("PARTICIPANT {}: canceling presentation reception", this.name);
 
-		log.debug("PARTICIPANT {}: removing endpoint for {}", this.name,
-				senderName);
+		log.debug("PARTICIPANT {}: removing endpoint", this.name);
 
 		//this.hubPort.disconnect(outgoingMedia);
 		//this.outgoingMedia.disconnect(hubPort);
 		
-		/*if (incoming != null) {
-			incoming.release(new Continuation<Void>() {
+		if (sharingMedia != null) {
+			sharingMedia.release(new Continuation<Void>() {
 				@Override
 				public void onSuccess(Void result) throws Exception {
 					log.trace(
-							"PARTICIPANT {}: Released successfully incoming EP for {}",
-							UserSession.this.name, senderName);
+							"PARTICIPANT {}: Released successfully incoming EP",
+							UserSession.this.name);
 				}
 	
 				@Override
 				public void onError(Throwable cause) throws Exception {
 					log.warn(
-							"PARTICIPANT {}: Could not release incoming EP for {}",
-							UserSession.this.name, senderName);
+							"PARTICIPANT {}: Could not release incoming EP",
+							UserSession.this.name);
 				}
 			});
-		}*/
+			
+			sharingMedia = null;
+		}
 	}
 
 	@Override
