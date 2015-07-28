@@ -118,6 +118,7 @@ public class CallHandler extends TextWebSocketHandler {
 	private void stopPresenting(UserSession user) throws IOException {
 		if (user.isScreensharer()) {
 			final Room room = roomManager.getRoom(user.getRoomName());
+			user.isScreensharer(false);
 			room.cancelPresentation();
 		}
 	}
