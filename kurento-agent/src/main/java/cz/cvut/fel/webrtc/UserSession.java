@@ -444,6 +444,10 @@ public class UserSession implements Closeable {
 		result = 31 * result + roomName.hashCode();
 		return result;
 	}
+	
+	public boolean isScreensharer() {
+		return this.isScreensharer;
+	}
 
 	public void isScreensharer(boolean b) {
 		this.isScreensharer = b;

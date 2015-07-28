@@ -49,11 +49,25 @@ function toggleButton(button) {
 }
 
 function disableButton(button) {
+	console.log(button + " disabled");
 	document.getElementById(button).disabled = true;
 }
 
 function enableButton(button) {
+	console.log(button + " enabled");
 	document.getElementById(button).disabled = false;
+}
+
+function disableAllButtons() {
+	disableButton('webcam');
+	disableButton('screen');
+	disableButton('window');
+}
+
+function enableAllButtons() {
+	enableButton('webcam');
+	enableButton('screen');
+	enableButton('window');
 }
 
 // Constraints
@@ -168,10 +182,9 @@ function share(type) {
 			//refresh();
 		} else {
 
-			//toggleButton(type);
-			//toggleButton(currentButton);
-			enableButton('webcam');
+			enableAllButtons();
 			disableButton(type);
+
 			currentButton = type;
 			constraints = consShare;
 			constraints.video.mediaSource = type;
@@ -189,12 +202,15 @@ function share(type) {
 }
 
 function webcam() {
-	toggleButton(currentButton);
+
+	if (currentButton != 'webcam')
+		stopPresenting();
+
 	currentButton = 'webcam';
-	toggleButton(currentButton);
 	constraints = consWebcam;
-	stopPresenting();
+
 	refresh();
+	disableButton('webcam');
 }
 
 function stopPresenting() {
@@ -440,11 +456,13 @@ function sendPresentation(msg) {
 function cancelPresentation(msg) {
 	console.log("Cancelling Presentation");
 
-	if (participants[msg.presenter] !== undefined)
-		participants[msg.presenter].rtcPeerPresentation.dispose();
+	if (msg.presenter != name) {
+		if (participants[msg.presenter] !== undefined)
+			participants[msg.presenter].rtcPeerPresentation.dispose();
 
-	enableButton('screen');
-	enableButton('window');
+		enableButton('screen');
+		enableButton('window');
+	}
 }
 
 function leaveRoom() {
