@@ -38,6 +38,30 @@ if (browserM)
 var isChrome = (browser === "chrome");
 var isFirefox = (browser === "firefox");
 
+var chromeExtensionInstalled = false;
+
+if (isChrome) {
+	window.addEventListener('message', function(event) {
+		if (event.origin != window.location.origin) return;
+
+		// content-script will send a 'SS_PING' msg if extension is installed
+		if (event.data.type && (event.data.type === 'SS_PING')) {
+			chromeExtensionInstalled = true;
+		}
+
+		// user chose a stream
+		if (event.data.type && (event.data.type === 'SS_DIALOG_SUCCESS')) {
+			constraints.video.mandatory.chromeMediaSourceId = event.data.streamId;
+			sendPresentation(null);
+		}
+
+		// user clicked on 'cancel' in choose media dialog
+		if (event.data.type && (event.data.type === 'SS_DIALOG_CANCEL')) {
+			console.log('User cancelled!');
+		}
+	});
+}
+
 setInterval(function() {
 	// Keep the websocket alive
 	sendMessage({ id: 'stay-alive' });
@@ -75,39 +99,21 @@ var chromeConsScreen = {
 	video: {
 		mandatory: {
 			chromeMediaSource: 'desktop',
-			maxWidth: 320,
-			maxHeight: 180,
-			minFrameRate: 1,
-			maxFrameRate: 5
+			maxWidth: window.screen.width,
+			maxHeight: window.screen.height,
 		}
 	},
 	optional: [{googTemporalLayeredScreencast: true}]
 };
 
 // Default sharing
-var consShare = {
-	audio: false,
-	video: { width: 320, height: 180 }
-};
+var consShare = { audio: false, video: { width: 320, height: 180 } };
 
 // Webcam
-if (isFirefox) {
-	var consWebcam = {
-		audio: true,
-		video: { width: 320, height: 180 }
-	};
-} else {
-	var consWebcam = {
-		audio: true,
-		video: {
-			mandatory: {
-				maxWidth: 320,
-				maxFrameRate: 15,
-				minFrameRate: 15
-			}
-		}
-	};
-}
+if (isFirefox)
+	var consWebcam = { audio: true,	video: { width: 320, height: 180 } };
+else
+	var consWebcam = { audio: true,	video: { mandatory: { maxWidth: 320, maxFrameRate: 15, minFrameRate: 15 } } };
 
 // Initialization function
 function init() {
@@ -125,10 +131,11 @@ function init() {
 window.onload = function() {
 	upload(bytesToUpload, Date.now());
 	init();
-	if (isChrome) {
+	
+	/*if (isChrome) {
 		disableButton('screen');
 		disableButton('window');
-	}
+	}*/
 };
 
 function upload(uploadSize) {
@@ -176,26 +183,37 @@ function share(type) {
 			stopPresenting();
 
 		if (isChrome) {
+			
+			if (!chromeExtensionInstalled) {
+				var warning = 'Please install the extension:\n' +
+								'1. Download the extension at: https://webrtc.ml/extension.crx' +
+								'2. Go to chrome://extensions\n' +
+								'3. Drag the *.crx file on the Google extension page\n';
+				alert(warning);
+			}
+
+			window.postMessage({ type: 'SS_UI_REQUEST', text: 'start' }, '*');
+
 			constraints = chromeConsScreen;
-			//refresh();
 		} else {
-
-			enableAllButtons();
-			disableButton(type);
-
-			currentButton = type;
 			constraints = consShare;
 			constraints.video.mediaSource = type;
-			//refresh();
-			var message = {
-				id: 'newPresenter',
-				name: name,
-				room: room,
-				mediaSource: currentButton
-			};
-
-			sendMessage(message);
 		}
+
+		enableAllButtons();
+		disableButton(type);
+
+		currentButton = type;
+
+		//refresh();
+		var message = {
+			id: 'newPresenter',
+			name: name,
+			room: room,
+			mediaSource: currentButton
+		};
+
+		sendMessage(message);
 	}
 }
 
@@ -283,17 +301,9 @@ ws.onmessage = function(message) {
 			break;
 		
 		case 'iceCandidate':
-			console.log("--------- ICE CANDIDATE ---------");
-			console.log(parsedMessage);
 
 			var rtcPeer = 'participants["' + parsedMessage.name + '"].rtcPeer';
 			rtcPeer += (parsedMessage.type == 'webcam') ? 'Composite' : 'Presentation';
-
-			console.log(participants);
-			console.log(participants[parsedMessage.name]);
-
-			console.log(rtcPeer);
-			console.log(eval(rtcPeer));
 
 			eval(rtcPeer).addIceCandidate(parsedMessage.candidate, function(error) {
 				if (error) {
@@ -332,16 +342,6 @@ function onNewParticipant(request) {
 	participants[request.name] = new Participant(request.name);
 	console.log(request.name + " has just arrived");
 
-	// Get the video from the screensharer
-	/*if (request.isScreensharer && currentButton == 'webcam') {
-		toggleButton('screen');
-		toggleButton('window');
-		receiveVideo(request.name, true);
-	}
-
-	// The screensharer wants to get composite
-	if (!request.isScreensharer && Object.keys(participants).length == 2 && currentButton != 'webcam')
-		receiveVideo(request.name, false);*/
 }
 
 function receiveVideoResponse(result) {
@@ -369,7 +369,6 @@ function sendComposite(msg) {
 	console.log(name + " registered in room " + room);
 	var participant = new Participant(name);
 	participants[name] = participant;
-	//var video = (currentButton == 'webcam') ? 'remote_video' : 'remote_screenshare';
 
 	var options = {
 		//localVideo: video,
@@ -378,36 +377,10 @@ function sendComposite(msg) {
 		onicecandidate: participant.onIceCandidateComposite.bind(participant)
 	};
 
-	/*// Triche
-	if (currentButton == 'webcam')
-		options.remoteVideo = document.getElementById(video);
-	else
-		options.localVideo = document.getElementById(video);*/
-
 	participant.rtcPeerComposite = new kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options,
 		function(error) {
-			/*if ((currentButton == 'window' || currentButton == 'screen') && location.protocol === 'http:' && error)
-				alert('Please use https to try screenshare.');
-			else if ((currentButton == 'window' || currentButton == 'screen') && error)
-				//alert('Allow this domain in about:config media.getusermedia.screensharing.allowed_domains')
-				alert('You need to enable the appropriate flag:\n - Open about:config and set media.getusermedia.screensharing.enabled to true \n - In about:config, add our address to media.getusermedia.screensharing.allowed_domains (e.g: "webrtc.ml" )');
-			if (error) {
-				return console.error(error);
-			}*/
 			this.generateOffer(participant.offerToReceiveComposite.bind(participant));
 		});
-
-	/*if (currentButton == 'webcam' && msg.existingScreensharer === true && msg.screensharer != name) {
-		receiveVideo(msg.screensharer, true);
-		toggleButton('screen');
-		toggleButton('window');
-	}
-
-	else if (currentButton != 'webcam' && msg.data.length > 0) {
-		receiveVideo(msg.data[0], false);
-	}*/
-
-
 
 	if (msg.existingScreensharer) {
 		disableButton('window');
@@ -431,33 +404,17 @@ function sendPresentation(msg) {
 		onicecandidate: participant.onIceCandidatePresentation.bind(participant)
 	};
 
-	/*// Triche
-	if (currentButton == 'webcam')
-		options.remoteVideo = document.getElementById(video);
-	else
-		options.localVideo = document.getElementById(video);*/
-
 	participant.rtcPeerPresentation = new kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options,
 		function(error) {
 			if ((currentButton == 'window' || currentButton == 'screen') && location.protocol === 'http:' && error)
 				alert('Please use https to try screenshare.');
-			else if ((currentButton == 'window' || currentButton == 'screen') && error)
-				//alert('Allow this domain in about:config media.getusermedia.screensharing.allowed_domains')
+			else if ((currentButton == 'window' || currentButton == 'screen') && error && isFirefox)
 				alert('You need to enable the appropriate flag:\n - Open about:config and set media.getusermedia.screensharing.enabled to true \n - In about:config, add our address to media.getusermedia.screensharing.allowed_domains (e.g: "webrtc.ml" )');
 			if (error) {
 				return console.error(error);
 			}
 			this.generateOffer(participant.offerToReceivePresentation.bind(participant));
 		});
-
-	/*if (currentButton == 'webcam' && msg.existingScreensharer === true && msg.screensharer != name) {
-		receiveVideo(msg.screensharer, true);
-		toggleButton('screen');
-		toggleButton('window');
-	}
-	else if (currentButton != 'webcam' && msg.data.length > 0) {
-		receiveVideo(msg.data[0], false);
-	}*/
 }
 
 function cancelPresentation(msg) {
@@ -487,7 +444,6 @@ function leaveRoom() {
 	document.getElementById('join').style.display = 'block';
 	document.getElementById('room').style.display = 'none';
 
-	//ws.close();
 }
 
 function receiveVideo(sender, isScreensharer) {
@@ -539,15 +495,6 @@ function onParticipantLeft(request) {
 			participant.dispose();
 	}
 
-	//if (participant !== undefined) {
-	//	if ((currentButton != 'webcam') || (currentButton == 'webcam' && request.isScreensharer))
-	//		participant.dispose();
-	//	if (currentButton != 'webcam' && request.compositeUserNb > 0)
-	//		receiveVideo(request.compositeLeader, false);
-	//}
-
-	console.log(participants);
-
 	delete participants[request.name];
 }
 
@@ -573,10 +520,6 @@ if (!String.prototype.repeat) {
 		count = Math.floor(count);
 		if (str.length === 0 || count === 0)
 			return "";
-		// En vérifiant que la longueur résultant est un entier sur 31-bit
-		// cela permet d'optimiser l'opération.
-		// La plupart des navigateurs (août 2014) ne peuvent gérer des
-		// chaînes de 1 << 28 caractères ou plus. Ainsi :
 		if (str.length * count >= 1 << 28)
 			throw new RangeError("le nombre de répétitions ne doit pas dépasser la taille de chaîne maximale");
 		var rpt = "";
@@ -591,4 +534,3 @@ if (!String.prototype.repeat) {
 		return rpt;
 	};
 }
-
