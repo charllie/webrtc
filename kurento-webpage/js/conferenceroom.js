@@ -110,7 +110,18 @@ var chromeConsScreen = {
 var consShare = { audio: false, video: { width: 320, height: 180 } };
 
 // Webcam
-var consWebcam = { audio: true,	video: { width: 320, height: 180 } };
+var consWebcam = {
+	audio: true,
+	video: {
+		width: {
+			min: 160
+		},
+		height: {
+			min: 90
+			
+		}
+	}
+};
 
 // Initialization function
 function init() {
