@@ -110,10 +110,7 @@ var chromeConsScreen = {
 var consShare = { audio: false, video: { width: 320, height: 180 } };
 
 // Webcam
-if (isFirefox)
-	var consWebcam = { audio: true,	video: { width: 320, height: 180 } };
-else
-	var consWebcam = { audio: true,	video: { mandatory: { maxWidth: 320, maxFrameRate: 15, minFrameRate: 15 } } };
+var consWebcam = { audio: true,	video: { width: 320, height: 180 } };
 
 // Initialization function
 function init() {
@@ -169,6 +166,24 @@ function upload(uploadSize) {
 	speed = Math.round(speed * 100) / 100;
 
 	console.log("Upload speedtest: " + speed + "Mbps");
+
+	var consMaxWidth;
+	var consMaxHeight;
+
+	if ( speed >= 1.2 ){
+		consMaxWidth = 1280;
+		consMaxHeight = 720;
+	} elseif (  1.2 > speed && speed >= 0.5 ){
+		consMaxWidth = 640;
+		consMaxHeight = 480;
+	} elseif ( 0.5 > speed ){
+		consMaxWidth = 320;
+		consMaxHeight = 240;
+	}
+	
+	consWebcam.video.width.max = consMaxWidth;
+	consWebcam.video.height.max = consMaxHeight;
+
 }
 
 function refresh() {
@@ -186,7 +201,7 @@ function share(type) {
 			
 			if (!chromeExtensionInstalled) {
 				var warning = 'Please install the extension:\n' +
-								'1. Download the extension at: https://webrtc.ml/extension.crx' +
+								'1. Download the extension at: https://webrtc.ml/extension.crx\n' +
 								'2. Go to chrome://extensions\n' +
 								'3. Drag the *.crx file on the Google extension page\n';
 				alert(warning);
