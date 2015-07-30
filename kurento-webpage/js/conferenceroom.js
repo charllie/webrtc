@@ -192,9 +192,8 @@ function upload(uploadSize) {
 		consMaxHeight = 240;
 	}
 	
-	consWebcam.video.width.max = consMaxWidth;
-	consWebcam.video.height.max = consMaxHeight;
-
+	consWebcam.video.width.max, consWebcam.video.width.ideal = consMaxWidth;
+	consWebcam.video.height.max, consWebcam.video.height.ideal = consMaxHeight;
 }
 
 function refresh() {

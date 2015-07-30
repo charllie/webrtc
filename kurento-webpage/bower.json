@@ -20,7 +20,8 @@
     "tests"
   ],
   "dependencies": {
-    "adapter.js": "*",
-    "jquery": "~2.1.4"
+    "jquery": "~2.1.4",
+    "webrtc-adapter": "~0.1.9",
+    "kurento-utils": "~6.0.1"
   }
 }
