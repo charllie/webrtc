@@ -94,16 +94,13 @@ public class UserSession implements Closeable {
 
 		ImageOverlayFilter imageOverlayFilter = new ImageOverlayFilter.Builder(this.pipeline).build();
 
-        imageOverlayFilter.addImage("mario-wings.png", "http://files.kurento.org/imgs/mario-wings.png", -0.35F, -1.2F, 1.6F, 1.6F, true, true);
+        imageOverlayFilter.addImage("icon", "http://files.kurento.org/imgs/mario-wings.png", 0, 0, 1, 1, true, true);
 
-        outgoingMedia.connect(imageOverlayFilter);
-        imageOverlayFilter.connect(outgoingMedia);
-
-		
 		this.hubPort = new HubPort.Builder(hub).build();
 		
+		outgoingMedia.connect(imageOverlayFilter);
+		imageOverlayFilter.connect(hubPort);
 		hubPort.connect(outgoingMedia);
-		outgoingMedia.connect(hubPort);
 	}
 
 	public WebRtcEndpoint getOutgoingWebRtcPeer() {
