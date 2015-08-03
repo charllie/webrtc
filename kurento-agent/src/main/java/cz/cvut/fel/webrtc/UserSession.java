@@ -21,6 +21,7 @@ import java.io.IOException;
 
 import org.kurento.client.Continuation;
 import org.kurento.client.EventListener;
+import org.kurento.client.ImageOverlayFilter; 
 import org.kurento.client.Hub;
 import org.kurento.client.HubPort;
 import org.kurento.client.IceCandidate;
@@ -90,6 +91,14 @@ public class UserSession implements Closeable {
 						}
 					}
 				});
+
+		ImageOverlayFilter imageOverlayFilter = new ImageOverlayFilter.Builder(this.pipeline).build();
+
+        imageOverlayFilter.addImage("mario-wings.png", "http://files.kurento.org/imgs/mario-wings.png", -0.35F, -1.2F, 1.6F, 1.6F, true, true);
+
+        outgoingMedia.connect(imageOverlayFilter);
+        imageOverlayFilter.connect(outgoingMedia);
+
 		
 		this.hubPort = new HubPort.Builder(hub).build();
 		
