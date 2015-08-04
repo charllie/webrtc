@@ -8,12 +8,10 @@ WebRTC Conferencing Project
  5. nginx configuration
 
 
-----------
 
 To edit files in a Docker, first enter in the docker with this command:
 > docker exec -i -t CONTAINER /bin/bash
 
-----------
 
 
 Kurento Media Server 6 (Port 8888)
@@ -29,7 +27,6 @@ This project depends on Kurento so it has to be installed first.
  2. Configuration (vim /etc/kurento/kurento.conf.json)
 
 
-----------
 
 Kurento Client (Port 8080)
 --------------------------------
@@ -44,7 +41,6 @@ A Kurento Client is needed to process the information given by the users. In thi
 	> docker run --net=host --name=kurento-agent kurento-agent:6
 
 
-----------
 
 Upload speed tester (Port 8081)
 --------------------------------------
@@ -52,8 +48,6 @@ This little nodejs module enables to do an upload speed test to adapt the qualit
 	> docker build --file=upload-speed-tester -t upload-speed-tester:1 . 
 	> docker run --net=host --name=upload-speed-tester upload-speed-tester:1
 
-
-----------
 
 Web interface (Port 80)
 ----------------------------
@@ -72,7 +66,6 @@ Web interface (Port 80)
 		> $.ajax(*HTTP_URL_TO_UPLOAD_SPEED_TESTER*, {...});
 
 
-----------
 
 nginx Config
 ---------------
