@@ -10,7 +10,7 @@ WebRTC Conferencing Project
 
 
 To edit files in a Docker, first enter in the docker with this command:
-> docker exec -i -t CONTAINER /bin/bash
+> docker exec -i -t DOCKER_NAME /bin/bash
 
 
 
@@ -44,9 +44,10 @@ A Kurento Client is needed to process the information given by the users. In thi
 
 Upload speed tester (Port 8081)
 --------------------------------------
-This little nodejs module enables to do an upload speed test to adapt the quality before going in a room. To install it
-	> docker build --file=upload-speed-tester -t upload-speed-tester:1 . 
-	> docker run --net=host --name=upload-speed-tester upload-speed-tester:1
+This little nodejs module enables to do an upload speed test to adapt the quality before going in a room. To install it:
+
+> docker build --file=upload-speed-tester -t upload-speed-tester:1 . 
+> docker run --net=host --name=upload-speed-tester upload-speed-tester:1
 
 
 Web interface (Port 80)
