@@ -19,8 +19,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.kurento.client.EventListener;
-
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -29,8 +27,6 @@ import javax.annotation.PreDestroy;
 
 import org.kurento.client.Composite;
 import org.kurento.client.Continuation;
-import org.kurento.client.ErrorEvent;
-import org.kurento.client.ListenerSubscription;
 //import org.kurento.client.HubPort;
 import org.kurento.client.MediaPipeline;
 import org.slf4j.Logger;
@@ -49,7 +45,6 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
 import javax.imageio.ImageIO;
 
 /**
@@ -77,52 +72,6 @@ public class Room implements Closeable {
 		this.pipeline = pipeline;
 		this.composite = new Composite.Builder(pipeline).build();
 		log.info("ROOM {} has been created", roomName);
-		
-		composite.addErrorListener(new EventListener<ErrorEvent> () {
-			@Override
-			public void onEvent(ErrorEvent event) {
-				System.out.println("-----------------");
-				System.out.println("composite error event listener (async)");
-				System.out.println("-----------------");
-			}
-		}, new Continuation<ListenerSubscription> () {
-			@Override
-			public void onSuccess(ListenerSubscription result) throws Exception {
-				System.out.println("-----------------");
-				System.out.println("composite error event listener (async - success)");
-				System.out.println("-----------------");
-			}
-
-			@Override
-			public void onError(Throwable cause) throws Exception {
-				System.out.println("-----------------");
-				System.out.println("composite error event listener (async - error)");
-				System.out.println("-----------------");
-			}
-		});
-		
-		pipeline.addErrorListener(new EventListener<ErrorEvent> () {
-			@Override
-			public void onEvent(ErrorEvent event) {
-				System.out.println("-----------------");
-				System.out.println("pipeline error event listener (async)");
-				System.out.println("-----------------");
-			}
-		}, new Continuation<ListenerSubscription> () {
-			@Override
-			public void onSuccess(ListenerSubscription result) throws Exception {
-				System.out.println("-----------------");
-				System.out.println("pipeline error event listener (async - success)");
-				System.out.println("-----------------");
-			}
-
-			@Override
-			public void onError(Throwable cause) throws Exception {
-				System.out.println("-----------------");
-				System.out.println("composite error event listener (async - error)");
-				System.out.println("-----------------");
-			}
-		});
 	}
 
 	@PreDestroy
