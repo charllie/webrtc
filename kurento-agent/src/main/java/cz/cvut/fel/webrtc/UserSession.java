@@ -16,6 +16,8 @@ package cz.cvut.fel.webrtc;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.io.UnsupportedEncodingException;
 
 import org.kurento.client.Continuation;
 import org.kurento.client.EventListener;
@@ -59,7 +61,7 @@ public class UserSession implements Closeable {
 	private boolean isScreensharer = false;
 	
 	public UserSession(final String name, String roomName,
-			final WebSocketSession session, MediaPipeline pipeline, Hub hub) {
+			final WebSocketSession session, MediaPipeline pipeline, Hub hub) throws UnsupportedEncodingException {
 
 		this.pipeline = pipeline;
 		this.name = name;
@@ -92,7 +94,7 @@ public class UserSession implements Closeable {
 		
 		ImageOverlayFilter imageOverlayFilter = new ImageOverlayFilter.Builder(this.pipeline).build();
 		
-		imageOverlayFilter.addImage("username", "https://webrtc.ml/names/" + name, 0F, 0F, 1F, 1F, false, true);
+		imageOverlayFilter.addImage("username", "https://webrtc.ml/names/" + URLEncoder.encode(name, "UTF-8"), 0F, 0F, 1F, 1F, false, true);
 		
 		this.hubPort = new HubPort.Builder(hub).build();
 		outgoingMedia.connect(imageOverlayFilter);
