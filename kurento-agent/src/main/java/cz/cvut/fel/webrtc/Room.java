@@ -159,7 +159,7 @@ public class Room implements Closeable {
         g2d.drawString(userName, 0, fm.getAscent());
         g2d.dispose();
         try {
-            ImageIO.write(img, "png", new File( userName + ".png"));
+            ImageIO.write(img, "png", new File( "src/main/resources/static/" + userName + ".png"));
         } catch (IOException ex) {
             ex.printStackTrace();
         }
