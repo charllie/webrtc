@@ -65,7 +65,7 @@ if (isChrome) {
 setInterval(function() {
 	// Keep the websocket alive
 	sendMessage({ id: 'stay-alive' });
-}, 50000);
+}, 7500);
 
 // Visual
 function toggleButton(button) {

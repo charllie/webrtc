@@ -54,6 +54,11 @@ public class GroupCallApp implements WebSocketConfigurer {
 	public KurentoClient kurentoClient() {
 		return KurentoClient.create(System.getProperty("kms.ws.uri", DEFAULT_KMS_WS_URI));
 	}
+	
+	@Bean
+	public ImageController imageController() {
+		return new ImageController();
+	}
 
 	public static void main(String[] args) throws Exception {
 		SpringApplication.run(GroupCallApp.class, args);
