@@ -50,7 +50,7 @@ public class ImageController {
         g2d.setFont(font);
         fm = g2d.getFontMetrics();
         g2d.setColor(Color.MAGENTA);
-        g2d.drawString(userName, (320 - fm.stringWidth(userName)) / 2, 100);
+        g2d.drawString(userName, (320 - fm.stringWidth(userName)) / 2, 232);
         g2d.dispose();
     	output = new ByteArrayOutputStream() {
     	    @Override
