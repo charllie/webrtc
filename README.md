@@ -22,6 +22,7 @@ This project depends on Kurento so it has to be installed first.
  1. Installation
 
 	> docker build --file=kms6 -t kms:6 . 
+	
 	> docker run --net=host --name=kms6 kms:6
 
  2. Configuration (vim /etc/kurento/kurento.conf.json)
@@ -37,7 +38,9 @@ A Kurento Client is needed to process the information given by the users. In thi
 	> final static String DEFAULT_KMS_WS_URI = *WS_URL_TO_KMS*;
 
 2. Installation
+
 	> docker build --file=kurento-agent -t kurento-agent:6 . 
+
 	> docker run --net=host --name=kurento-agent kurento-agent:6
 
 
@@ -47,6 +50,7 @@ Upload speed tester (Port 8081)
 This little nodejs module enables to do an upload speed test to adapt the quality before going in a room. To install it:
 
 > docker build --file=upload-speed-tester -t upload-speed-tester:1 . 
+
 > docker run --net=host --name=upload-speed-tester upload-speed-tester:1
 
 
@@ -56,14 +60,17 @@ Web interface (Port 80)
 1. Installation
 
 	> docker build --file=kurento-agent -t kurento-agent:6 . 
+	
 	> docker run --net=host --name=kurento-agent kurento-agent:6
 
 2. Configuration (js/conferenceroom.js)
 	
 	* Kurento Client
+
 		> var ws = new WebSocket(*WS_URL_TO_GROUPCALL*);
 
 	* Upload speed tester
+
 		> $.ajax(*HTTP_URL_TO_UPLOAD_SPEED_TESTER*, {...});
 
 
