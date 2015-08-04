@@ -37,7 +37,7 @@ public class ImageController {
         //int height = fm.getHeight();
         g2d.dispose();
 
-        img = new BufferedImage(640, 480, BufferedImage.TYPE_INT_ARGB);
+        img = new BufferedImage(320, 240, BufferedImage.TYPE_INT_ARGB);
         g2d = img.createGraphics();
         g2d.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -50,7 +50,7 @@ public class ImageController {
         g2d.setFont(font);
         fm = g2d.getFontMetrics();
         g2d.setColor(Color.MAGENTA);
-        g2d.drawString(userName, (640 - fm.stringWidth(userName)) / 2, 465);
+        g2d.drawString(userName, (320 - fm.stringWidth(userName)) / 2, 100);
         g2d.dispose();
     	output = new ByteArrayOutputStream() {
     	    @Override
