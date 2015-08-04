@@ -59,9 +59,9 @@ Web interface (Port 80)
 
 1. Installation
 
-	> docker build --file=kurento-agent -t kurento-agent:6 . 
+	> docker build --file=kurento-webpage -t kurento-webpage:6 . 
 	
-	> docker run --net=host --name=kurento-agent kurento-agent:6
+	> docker run --net=host --name=kurento-webpage kurento-webpage:6
 
 2. Configuration (js/conferenceroom.js)
 	
@@ -90,6 +90,14 @@ nginx may be needed to redirect ports and/or to enable SSL on the domain (which 
 
         location / {
                 proxy_pass http://127.0.0.1:80;
+                proxy_redirect off;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+        
+        location /names {
+                proxy_pass http://127.0.0.1:8080/names;
                 proxy_redirect off;
                 proxy_set_header Host $host;
                 proxy_set_header X-Real-IP $remote_addr;
