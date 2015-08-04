@@ -181,13 +181,7 @@ function upload(uploadSize) {
 	var consMaxWidth;
 	var consMaxHeight;
 
-	if (speed >= 1.2) {
-		consMaxWidth = 1280;
-		consMaxHeight = 720;
-	} else if (1.2 > speed && speed >= 0.5) {
-		consMaxWidth = 640;
-		consMaxHeight = 480;
-	} else if (0.5 > speed) {
+	if (speed >= 0.5) {
 		consMaxWidth = 320;
 		consMaxHeight = 240;
 	}
