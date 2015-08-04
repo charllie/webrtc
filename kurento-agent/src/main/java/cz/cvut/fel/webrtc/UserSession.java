@@ -26,6 +26,7 @@ import java.io.IOException;
 
 
 
+
 import org.kurento.client.ConnectionStateChangedEvent;
 import org.kurento.client.Continuation;
 import org.kurento.client.ElementDisconnectedEvent;
@@ -37,6 +38,7 @@ import org.kurento.client.HubPort;
 import org.kurento.client.IceCandidate;
 import org.kurento.client.ListenerSubscription;
 import org.kurento.client.MediaPipeline;
+import org.kurento.client.MediaSessionTerminatedEvent;
 import org.kurento.client.OnIceCandidateEvent;
 import org.kurento.client.WebRtcEndpoint;
 import org.kurento.jsonrpc.JsonUtils;
@@ -103,19 +105,50 @@ public class UserSession implements Closeable {
 					}
 				});
 		
-		this.outgoingMedia.addConnectionStateChangedListener(new EventListener<ConnectionStateChangedEvent>() {
+		this.outgoingMedia.addMediaSessionTerminatedListener(new EventListener<MediaSessionTerminatedEvent> () {
+			@Override
+			public void onEvent(MediaSessionTerminatedEvent event) {
+				System.out.println("--------------------------");
+				System.out.println("media session terminated event (sync)");
+				System.out.println("--------------------------");
+			}
+		});
+		
+		this.outgoingMedia.addMediaSessionTerminatedListener(new EventListener<MediaSessionTerminatedEvent> () {
+			@Override
+			public void onEvent(MediaSessionTerminatedEvent event) {
+				System.out.println("--------------------------");
+				System.out.println("media session terminated event (async)");
+				System.out.println("--------------------------");
+			}
 			
+		}, new Continuation<ListenerSubscription>() {
+
+			@Override
+			public void onError(Throwable cause) throws Exception {
+				System.out.println("--------------------------");
+				System.out.println("media session terminated event (async - on error)");
+				System.out.println("--------------------------");
+			}
+
+			@Override
+			public void onSuccess(ListenerSubscription result) throws Exception {
+				System.out.println("--------------------------");
+				System.out.println("media session terminated event (async - on success)");
+				System.out.println("--------------------------");
+			}
+		});
+
+		this.outgoingMedia.addConnectionStateChangedListener(new EventListener<ConnectionStateChangedEvent> () {
 			@Override
 			public void onEvent(ConnectionStateChangedEvent event) {
 				System.out.println("--------------------------");
 				System.out.println("connection state changed event (sync)");
 				System.out.println("--------------------------");
 			}
-			
 		});
 		
-		this.outgoingMedia.addConnectionStateChangedListener(new EventListener<ConnectionStateChangedEvent>() {
-			
+		this.outgoingMedia.addConnectionStateChangedListener(new EventListener<ConnectionStateChangedEvent> () {
 			@Override
 			public void onEvent(ConnectionStateChangedEvent event) {
 				System.out.println("--------------------------");
@@ -140,82 +173,9 @@ public class UserSession implements Closeable {
 			}
 		});
 		
-		this.outgoingMedia.addElementDisconnectedListener(new EventListener<ElementDisconnectedEvent> () {
-			
-			@Override
-			public void onEvent(ElementDisconnectedEvent event) {
-				System.out.println("--------------------------");
-				System.out.println("element disconnected event (sync)");
-				System.out.println("--------------------------");
-			}
-			
-		});
-		
-		this.outgoingMedia.addElementDisconnectedListener(new EventListener<ElementDisconnectedEvent> () {
-			
-			@Override
-			public void onEvent(ElementDisconnectedEvent event) {
-				System.out.println("--------------------------");
-				System.out.println("element disconnected event (async)");
-				System.out.println("--------------------------");
-			}
-			
-		}, new Continuation<ListenerSubscription>() {
-
-			@Override
-			public void onError(Throwable cause) throws Exception {
-				System.out.println("--------------------------");
-				System.out.println("element disconnected event (async - on error)");
-				System.out.println("--------------------------");
-			}
-
-			@Override
-			public void onSuccess(ListenerSubscription result) throws Exception {
-				System.out.println("--------------------------");
-				System.out.println("element disconnected event (async - on success)");
-				System.out.println("--------------------------");
-			}
-		});
-		
-		this.outgoingMedia.addErrorListener(new EventListener<ErrorEvent> () {
-			@Override
-			public void onEvent(ErrorEvent event) {
-				System.out.println("--------------------------");
-				System.out.println("error event (sync)");
-				System.out.println("--------------------------");
-			}
-		});
-		
-		this.outgoingMedia.addErrorListener(new EventListener<ErrorEvent> () {
-			@Override
-			public void onEvent(ErrorEvent event) {
-				System.out.println("--------------------------");
-				System.out.println("error event (async)");
-				System.out.println("--------------------------");
-			}
-			
-		}, new Continuation<ListenerSubscription>() {
-
-			@Override
-			public void onError(Throwable cause) throws Exception {
-				System.out.println("--------------------------");
-				System.out.println("error event (async - on error)");
-				System.out.println("--------------------------");
-			}
-
-			@Override
-			public void onSuccess(ListenerSubscription result) throws Exception {
-				System.out.println("--------------------------");
-				System.out.println("error event (async - on success)");
-				System.out.println("--------------------------");
-			}
-		});
-
 		ImageOverlayFilter imageOverlayFilter = new ImageOverlayFilter.Builder(this.pipeline).build();
 		
-        imageOverlayFilter.addImage("icon", "file:///webrtc/kurento-agent/icon_small.png", 0, 0, 1, 1, true, true);
-
-
+		imageOverlayFilter.addImage("icon", "http://files.kurento.org/imgs/mario-wings.png", 0, 0, 1, 1, true, true);
 		
 		this.hubPort = new HubPort.Builder(hub).build();
 		outgoingMedia.connect(imageOverlayFilter);
