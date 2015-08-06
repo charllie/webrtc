@@ -16,7 +16,7 @@ var ws = new WebSocket('wss://webrtc.ml/groupcall');
 var inRoom = false;
 var participants = {};
 var name;
-var currentButton = 'webcam';
+var currentButton = 'composite';
 var constraints;
 var speed;
 //var bytesToUpload = 2097152;
@@ -81,13 +81,13 @@ function enableButton(button) {
 }
 
 function disableAllButtons() {
-	disableButton('webcam');
+	disableButton('composite');
 	disableButton('screen');
 	disableButton('window');
 }
 
 function enableAllButtons() {
-	enableButton('webcam');
+	enableButton('composite');
 	enableButton('screen');
 	enableButton('window');
 }
@@ -128,8 +128,8 @@ function init() {
 	inRoom = false;
 	participants = {};
 	name = null;
-	currentButton = 'webcam';
-	disableButton('webcam');
+	currentButton = 'composite';
+	disableButton('composite');
 	enableButton('screen');
 	enableButton('window');
 	constraints = consWebcam;
@@ -198,7 +198,7 @@ function refresh() {
 function share(type) {
 	if (type != currentButton) {
 
-		if (currentButton != 'webcam')
+		if (currentButton != 'composite')
 			stopPresenting();
 
 		if (isChrome) {
@@ -238,15 +238,15 @@ function share(type) {
 
 function webcam() {
 
-	if (currentButton != 'webcam')
+	if (currentButton != 'composite')
 		stopPresenting();
 
-	currentButton = 'webcam';
+	currentButton = 'composite';
 	constraints = consWebcam;
 
 	//refresh();
 	enableAllButtons();
-	disableButton('webcam');
+	disableButton('composite');
 }
 
 function stopPresenting() {
@@ -322,7 +322,7 @@ ws.onmessage = function(message) {
 		case 'iceCandidate':
 
 			var rtcPeer = 'participants["' + parsedMessage.name + '"].rtcPeer';
-			rtcPeer += (parsedMessage.type == 'webcam') ? 'Composite' : 'Presentation';
+			rtcPeer += (parsedMessage.type == 'composite') ? 'Composite' : 'Presentation';
 
 			eval(rtcPeer).addIceCandidate(parsedMessage.candidate, function(error) {
 				if (error) {
