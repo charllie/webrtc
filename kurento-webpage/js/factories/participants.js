@@ -117,10 +117,25 @@ app.factory('participants', ['socket', function(socket) {
 		return participants[name];
 	};
 
+	var isEmpty = function() {
+		return _.isEmpty(participants);
+	};
+
+	var clear = function() {
+		for (var key in participants) {
+			if (participants[key] !== undefined)
+				participants[key].dispose();
+
+			delete participants[key];
+		}
+	};
+
 	return {
 		add: add,
+		clear: clear,
 		get: get,
-		remove: remove,
-		me: me
+		isEmpty: isEmpty,
+		me: me,
+		remove: remove
 	};
 }]);

@@ -17,4 +17,4 @@ app.config(['$routeProvider', function($routeProvider) {
 
 // Injections
 app.controller('UserCtrl', ['$scope', '$location', 'socket', 'participants', UserCtrl]);
-app.controller('RoomCtrl', ['$scope', '$routeParams', 'socket', 'constraints', 'participants', RoomCtrl]);
+app.controller('RoomCtrl', ['$scope', '$location', '$routeParams', 'socket', 'constraints', 'participants', RoomCtrl]);

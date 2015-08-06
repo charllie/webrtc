@@ -1,4 +1,7 @@
-function RoomCtrl($scope, $params, socket, constraints, participants) {
+function RoomCtrl($scope, $location, $params, socket, constraints, participants) {
+
+	if (participants.isEmpty())
+		$location.path('/');
 
 	$scope.roomName = $params.roomName;
 
@@ -60,6 +63,10 @@ function RoomCtrl($scope, $params, socket, constraints, participants) {
 				console.error('Unrecognized message', parsedMessage);
 		}
 	};
+
+	setInterval(function() {
+		socket.send({ id: 'stay-alive' });
+	}, 30000);
 
 	// Configuration for the extension if it is Chrome
 	if (constraints.browserIsChrome) {
@@ -137,6 +144,16 @@ function RoomCtrl($scope, $params, socket, constraints, participants) {
 			});
 		}
 	};
+
+	$scope.leave = function() {
+		socket.send({ id: 'leaveRoom' });
+		participants.clear();
+		$location.path('/');
+	};
+
+	$scope.$on('$destroy', function() {
+		participants.clear();
+	});
 
 }
 
@@ -244,8 +261,6 @@ function onParticipantLeft(request, participants) {
 }
 
 function receiveVideoResponse(result, participants) {
-
-	console.log(result);
 
 	var participant = participants.get(result.name);
 	var rtcPeer = participant.getRtcPeer(result.type);
