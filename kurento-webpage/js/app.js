@@ -1,4 +1,4 @@
-var app = angular.module('app', ['ngRoute', 'ng.deviceDetector']);
+var app = angular.module('app', ['ngRoute', 'ng.deviceDetector', 'lumx']);
 
 app.config(['$routeProvider', function($routeProvider) {
 	$routeProvider

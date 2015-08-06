@@ -17,6 +17,9 @@
     "ng-device-detector": "~1.1.8",
     "webrtc-adapter": "~0.2.1",
     "angular-route": "~1.4.3",
-    "underscore": "~1.8.3"
+    "underscore": "~1.8.3",
+    "jquery": "~2.1.4",
+    "lumx": "~0.3.74",
+    "roboto-fontface": "~0.4.3"
   }
 }

@@ -1,7 +1,7 @@
 
 app.factory('constraints', ['deviceDetector', function(device) {
 
-	var type = 'webcam';
+	var type = 'composite';
 	var browser = device.browser;
 	var chromeExtensionInstalled = false;
 	var canPresent = (device.isDesktop() && (browser == 'chrome' || browser == 'firefox'));
@@ -37,7 +37,7 @@ app.factory('constraints', ['deviceDetector', function(device) {
 
 		var constraints;
 
-		if (type != 'webcam' && canPresent) {
+		if (type != 'composite' && canPresent) {
 
 			if (browser == 'chrome') {
 				constraints = chromeConstraintPresentation;

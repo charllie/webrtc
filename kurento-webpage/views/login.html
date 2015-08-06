@@ -1,5 +1,25 @@
-<form>
-	<input type="text" name="name" ng-model="participant.name" placeholder="Username" required>
-	<input type="text" name="room" ng-model="participant.room" placeholder="Room" required>
-	<input type="submit" ng-click="join(participant)" value="Join!">
-</form>
+<div flex-container="row">
+	<div flex-item="3" flex-item-order="1"></div>
+	<div flex-item="6" flex-item-order="2" class="p++">
+
+		<span class="fs-headline display-block text-center">WebRTC Video Conference</span>
+
+		<!-- Name -->
+		<lx-text-field label="Name" error="!checked.name">
+			<input type="name" ng-model="participant.name">
+		</lx-text-field>
+		<span class="text-field-error" ng-if="!checked.name">Name can't be empty</span>
+
+		<!-- Room -->
+		<lx-text-field label="Room" error="!checked.room">
+			<input type="room" ng-model="participant.room">
+		</lx-text-field>
+		<span class="text-field-error" ng-if="!checked.room">Room can't be empty</span>
+
+		<div class="p+++" flex-container="row">
+			<button class="width--100 btn btn--m btn--{{ color }} btn--raised" flex-item="12" lx-ripple ng-click="join(participant)">Join!</button>
+		</div>
+
+	</div>
+	<div flex-item="3" flex-item-order="3"></div>
+</div>

@@ -1,4 +1,45 @@
-<header>{{ roomName }}</header>
+<div class="card bgc-blue-grey-500 tc-white">
+	<div class="toolbar">
+		<div class="toolbar__left mr+++">
+			<button class="btn btn--l btn--white btn--icon" lx-ripple>
+				<i class="mdi mdi-menu"></i>
+			</button>
+		</div>
+
+		<span class="toolbar__label fs-title">Rooms &rsaquo; {{ roomName }}</span>
+
+		<div class="toolbar__right">
+
+			<lx-dropdown position="right" from-top>
+				<button class="btn btn--l btn--white btn--icon" lx-ripple lx-dropdown-toggle>
+					<i class="mdi mdi-share"></i>
+				</button>
+
+				<lx-dropdown-menu>
+					<ul>
+						<li><a class="dropdown-link dropdown-link--is-header">Share</a></li>
+						<li class="dropdown-divider"></li>
+						<li><a class="dropdown-link">Screenshare</a></li>
+						<li><a class="dropdown-link">Window share</a></li>
+					</ul>
+				</lx-dropdown-menu>
+			</lx-dropdown>
+
+			<lx-dropdown position="right" from-top>
+				<button class="btn btn--l btn--white btn--icon" lx-ripple lx-dropdown-toggle>
+					<i class="mdi mdi-account-network"></i>
+				</button>
+				<lx-dropdown-menu>
+					<ul>
+						<li><a class="dropdown-link dropdown-link--is-header">Online users</a></li>
+						<li class="dropdown-divider"></li>
+						<li><a class="dropdown-link">Charlie</a></li>
+					</ul>
+				</lx-dropdown-menu>
+			</lx-dropdown>
+		</div>
+	</div>
+</div>
 
 <video id="composite" width="45%" height="auto" autoplay controls></video>
 <video id="presentation" width="45%" height="auto" autoplay controls></video>

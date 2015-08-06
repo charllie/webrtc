@@ -4,6 +4,7 @@ function RoomCtrl($scope, $location, $params, socket, constraints, participants)
 		$location.path('/');
 
 	$scope.roomName = $params.roomName;
+	//$scope.participants = participants.getAll();
 
 	socket.get().onmessage = function(message) {
 
@@ -13,31 +14,33 @@ function RoomCtrl($scope, $location, $params, socket, constraints, participants)
 		switch (parsedMessage.id) {
 
 			case 'compositeInfo':
-				sendStream(parsedMessage, 'composite', participants, constraints);
+				$scope.updateNames(parsedMessage.data);
+				sendStream(parsedMessage, 'composite');
 				break;
 
 			case 'presentationInfo':
-				sendStream(parsedMessage, 'presentation', participants, constraints);
+				$scope.updateNames(parsedMessage.data);
+				sendStream(parsedMessage, 'presentation');
 				break;
 
 			case 'presenterReady':
-				onPresenterReady(parsedMessage, participants);
+				onPresenterReady(parsedMessage);
 				break;
 
 			case 'cancelPresentation':
-				cancelPresentation(parsedMessage, participants);
+				cancelPresentation(parsedMessage);
 				break;
 			
 			case 'newParticipantArrived':
-				onNewParticipant(parsedMessage, participants);
+				onNewParticipant(parsedMessage);
 				break;
 			
 			case 'participantLeft':
-				onParticipantLeft(parsedMessage, participants);
+				onParticipantLeft(parsedMessage);
 				break;
 			
 			case 'receiveVideoAnswer':
-				receiveVideoResponse(parsedMessage, participants);
+				receiveVideoResponse(parsedMessage);
 				break;
 			
 			case 'existingScreensharer':
@@ -50,7 +53,7 @@ function RoomCtrl($scope, $location, $params, socket, constraints, participants)
 			
 			case 'iceCandidate':
 
-				participants.get(parsedMessage.name).getRtcPeer(parsedMessage.type).addIceCandidate(parsedMessage.candidate, function(error) {
+				participants.get(parsedMessage.name).rtcPeer[parsedMessage.type].addIceCandidate(parsedMessage.candidate, function(error) {
 					if (error) {
 						console.error("Error adding candidate: " + error);
 						return;
@@ -95,15 +98,15 @@ function RoomCtrl($scope, $location, $params, socket, constraints, participants)
 
 		var participant = participants.me();
 
-		if (participant !== undefined && participants.rtcPeerPresentation !== null) {
-			participant.rtcPeerPresentation.dispose();
-			participant.rtcPeerPresentation = null;
+		if (participant !== undefined && participants.rtcPeer['presentation'] !== null) {
+			participant.rtcPeer['presentation'].dispose();
+			participant.rtcPeer['presentation'] = null;
 		}
 
 		//enableButton('screen');
 		//enableButton('window');
 
-		constraints.setCurrent('webcam');
+		constraints.setCurrent('composite');
 		socket.send({ id: 'stopPresenting' });
 	};
 
@@ -113,7 +116,7 @@ function RoomCtrl($scope, $location, $params, socket, constraints, participants)
 
 		if (type != currentType) {
 
-			if (currentType != 'webcam')
+			if (currentType != 'composite')
 				this.stopPresenting();
 
 			if (constraints.browserIsChrome) {
@@ -145,6 +148,10 @@ function RoomCtrl($scope, $location, $params, socket, constraints, participants)
 		}
 	};
 
+	$scope.updateNames = function(data) {
+		this.participantNames = data;
+	};
+
 	$scope.leave = function() {
 		socket.send({ id: 'leaveRoom' });
 		participants.clear();
@@ -155,119 +162,114 @@ function RoomCtrl($scope, $location, $params, socket, constraints, participants)
 		participants.clear();
 	});
 
-}
+	function receiveVideo(sender, isScreensharer) {
 
-function receiveVideo(sender, participants, isScreensharer) {
+		if (participants.get(sender) === undefined)
+			participants.add(sender);
 
-	if (participants.get(sender) === undefined)
-		participants.add(sender);
+		var participant = participants.get(sender);
+		
+		var type = (!isScreensharer) ? 'composite' : 'presentation';
 
-	var participant = participants.get(sender);
-	
-	var type = (!isScreensharer) ? 'composite' : 'presentation';
+		//var offerToReceive = 'participant.offerToReceive' + suffix;
+		//var rtcPeer = 'participant.rtcPeer' + suffix;
 
-	//var offerToReceive = 'participant.offerToReceive' + suffix;
-	//var rtcPeer = 'participant.rtcPeer' + suffix;
+		var options = {
+			remoteVideo: document.getElementById(type),
+			onicecandidate: participant.onIceCandidate[type].bind(participant)
+		};
 
-	var options = {
-		remoteVideo: document.getElementById(type),
-		onicecandidate: participant.getIceCandidate(type).bind(participant)
-	};
+		participant.rtcPeer[type] = new kurentoUtils.WebRtcPeer.WebRtcPeerRecvonly(options,
+			function(error) {
+				if (error) {
+					return console.error(error);
+				}
 
-	participant.setRtcPeer(type, new kurentoUtils.WebRtcPeer.WebRtcPeerRecvonly(options,
-		function(error) {
-			if (error) {
-				return console.error(error);
-			}
-
-			this.generateOffer(participant.getOffer(type).bind(participant));
-		})
-	);
-}
-
-function sendStream(message, type, participants, constraints) {
-
-	var participant = participants.me();
-
-	var options = {
-		//remoteVideo: document.getElementById(type),
-		mediaConstraints: constraints.get(),
-		onicecandidate: participant.getIceCandidate(type).bind(participant)
-	};
-
-	if (type == 'composite')
-		options.remoteVideo = document.getElementById(type);
-	else
-		options.localVideo = document.getElementById(type);
-
-	participant.setRtcPeer(type, new kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options,
-		function(error) {
-			this.generateOffer(participant.getOffer(type).bind(participant));
-		})
-	);
-
-	if (message.existingScreensharer && type == 'composite') {
-		//disableButton('window');
-		//disableButton('screen');
-		receiveVideo(message.screensharer, participants, true);
+				this.generateOffer(participant.offerToReceive[type].bind(participant));
+			});
 	}
 
-}
+	function sendStream(message, type) {
 
-function onPresenterReady(message, participants) {
+		var participant = participants.me();
 
-	if (message.presenter != participants.me().name) {
-		receiveVideo(message.presenter, participants, true);
+		var options = {
+			//remoteVideo: document.getElementById(type),
+			mediaConstraints: constraints.get(),
+			onicecandidate: participant.onIceCandidate[type].bind(participant)
+		};
 
-		//disableButton('screen');
-		//disableButton('window');
-	}
-}
+		if (type == 'composite')
+			options.remoteVideo = document.getElementById(type);
+		else
+			options.localVideo = document.getElementById(type);
 
-function cancelPresentation(message, participants) {
+		participant.rtcPeer[type] = new kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options,
+			function(error) {
+				this.generateOffer(participant.offerToReceive[type].bind(participant));
+			});
 
-	console.log("Cancelling Presentation");
+		if (message.existingScreensharer && type == 'composite') {
+			//disableButton('window');
+			//disableButton('screen');
+			receiveVideo(message.screensharer, true);
+		}
 
-	if (message.presenter != participants.me().name) {
-		if (participants.get(message.presenter) !== undefined)
-			participants.get(message.presenter).rtcPeerPresentation.dispose();
-
-		//enableButton('screen');
-		//enableButton('window');
-	}
-}
-
-function onNewParticipant(request, participants) {
-
-	participants.add(request.name);
-	console.log(request.name + " has just arrived");
-
-}
-
-function onParticipantLeft(request, participants) {
-
-	console.log('Participant ' + request.name + ' left');
-	var participant = participants.get(request.name);
-
-	if (request.isScreensharer) {
-		//enableButton('screen');
-		//enableButton('window');
-
-		if (participant !== undefined)
-			participant.dispose();
 	}
 
-	participants.remove(request.name);
-}
+	function onPresenterReady(message) {
 
-function receiveVideoResponse(result, participants) {
+		if (message.presenter != participants.me().name) {
+			receiveVideo(message.presenter, true);
 
-	var participant = participants.get(result.name);
-	var rtcPeer = participant.getRtcPeer(result.type);
-	
-	rtcPeer.processAnswer(result.sdpAnswer, function(error) {
-		if (error) return console.error(error);
-	});
+			//disableButton('screen');
+			//disableButton('window');
+		}
+	}
+
+	function cancelPresentation(message) {
+
+		console.log("Cancelling Presentation");
+
+		if (message.presenter != participants.me().name) {
+			if (participants.get(message.presenter) !== undefined)
+				participants.get(message.presenter).rtcPeer['presentation'].dispose();
+
+			//enableButton('screen');
+			//enableButton('window');
+		}
+	}
+
+	function onNewParticipant(request) {
+
+		participants.add(request.name);
+		console.log(request.name + " has just arrived");
+
+	}
+
+	function onParticipantLeft(request) {
+
+		console.log('Participant ' + request.name + ' left');
+		var participant = participants.get(request.name);
+
+		if (request.isScreensharer) {
+			//enableButton('screen');
+			//enableButton('window');
+
+			if (participant !== undefined)
+				participant.dispose();
+		}
+
+		participants.remove(request.name);
+	}
+
+	function receiveVideoResponse(result) {
+
+		participants.get(result.name).rtcPeer[result.type].processAnswer(result.sdpAnswer, function(error) {
+			if (error) return console.error(error);
+		});
+	}
+
 }
 
 /*function sendPresentation(msg) {
