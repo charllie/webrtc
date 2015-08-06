@@ -78,7 +78,7 @@ public class UserSession implements Closeable {
 						JsonObject response = new JsonObject();
 						response.addProperty("id", "iceCandidate");
 						response.addProperty("name", name);
-						response.addProperty("type", "webcam");
+						response.addProperty("type", "composite");
 						response.add("candidate",
 								JsonUtils.toJsonObject(event.getCandidate()));
 						try {
@@ -185,7 +185,7 @@ public class UserSession implements Closeable {
 	 */
 	private WebRtcEndpoint getEndpointForUser(final UserSession sender, final String type, Room room) {
 		
-		if (!type.equals("webcam")) {
+		if (!type.equals("composite")) {
 			if ((this.isScreensharer && this.equals(sender)) || (sender.isScreensharer)) {
 				
 				if (this.sharingMedia == null) {
