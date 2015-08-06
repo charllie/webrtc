@@ -1,17 +1,10 @@
 {
-  "name": "${project.artifactId}",
-  "version": "${project.version}",
-  "description": "${project.description}",
+  "name": "WebRTC Conferencing webpage",
+  "version": "0.0.0",
   "authors": [
-    "Kurento <info@kurento.org>"
+    "charllie <charlie59320@gmail.com>"
   ],
-  "main": "index.html",
-  "moduleType": [
-    "globals"
-  ],
-  "license": "LGPL",
-  "homepage": "http://www.kurento.org/",
-  "private": true,
+  "license": "MIT",
   "ignore": [
     "**/.*",
     "node_modules",
@@ -20,8 +13,9 @@
     "tests"
   ],
   "dependencies": {
-    "jquery": "~2.1.4",
-    "webrtc-adapter": "~0.1.9",
-    "kurento-utils": "~6.0.1"
+    "angularjs": "~1.4.3",
+    "ng-device-detector": "~1.1.8",
+    "webrtc-adapter": "~0.2.1",
+    "angular-route": "~1.4.3"
   }
 }

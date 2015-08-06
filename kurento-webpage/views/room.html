@@ -1,0 +1,8 @@
+<header>{{ roomName }}</header>
+
+<video id="composite" width="45%" height="auto" autoplay controls></video>
+<video id="presentation" width="45%" height="auto" autoplay controls></video>
+
+<button ng-click="stopPresenting()">Stop</button>
+<button ng-click="share('screen')">Screenshare</button>
+<button ng-click="share('window')">Window share</button>
