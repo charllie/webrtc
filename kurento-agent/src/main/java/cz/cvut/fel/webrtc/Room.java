@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ConcurrentMap;
 
 import javax.annotation.PreDestroy;
@@ -45,7 +45,7 @@ import com.google.gson.JsonPrimitive;
 public class Room implements Closeable {
 	private final Logger log = LoggerFactory.getLogger(Room.class);
 
-	private final ConcurrentMap<String, UserSession> participants = new ConcurrentHashMap<>();
+	private final ConcurrentMap<String, UserSession> participants = new ConcurrentSkipListMap<>();
 	private final MediaPipeline pipeline;
 	private final Composite composite;
 	private final String name;

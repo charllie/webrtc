@@ -15,7 +15,7 @@
 package cz.cvut.fel.webrtc;
 
 import java.io.IOException;
-import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.kurento.client.KurentoClient;
@@ -34,7 +34,7 @@ public class RoomManager {
 	@Autowired
 	private KurentoClient kurento;
 
-	private final ConcurrentMap<String, Room> rooms = new ConcurrentSkipListMap<>();
+	private final ConcurrentMap<String, Room> rooms = new ConcurrentHashMap<>();
 
 	/**
 	 * @param roomName
