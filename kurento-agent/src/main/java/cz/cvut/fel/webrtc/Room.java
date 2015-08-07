@@ -139,6 +139,14 @@ public class Room implements Closeable {
 		participantLeftJson.addProperty("name", name);
 		participantLeftJson.addProperty("isScreensharer", isScreensharer);
 		
+		final JsonArray participantsArray = new JsonArray();
+		
+		for (final UserSession participant : this.getParticipants()) {
+			final JsonElement participantName = new JsonPrimitive(participant.getName());
+				participantsArray.add(participantName);
+		}
+		participantLeftJson.add("data", participantsArray);
+		
 		for (final UserSession participant : participants.values()) {
 			if (isScreensharer)
 				participant.cancelPresentation();
