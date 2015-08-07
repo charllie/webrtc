@@ -1,3 +1,40 @@
+body, input, textarea {
+	font-family: 'Roboto';
+	font-weight: 400;
+}
+
 .width--100 {
 	width: 100%;
+}
+
+.video-room {
+	transition: all .5s ease-in-out;
+	-webkit-transition: all .5s ease-in-out;
+	-moz-transition: all .5s ease-in-out;
+	-o-transition: all .5s ease-in-out;
+	display: inline-block;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+#composite {
+	max-width: 640px;
+}
+
+#composite.noPresentation {
+	width: 90%;
+}
+
+#presentation.noPresentation {
+	width: 0;
+	opacity: 0;
+}
+
+#composite.hasPresentation {
+	width: 45%;
+}
+
+#presentation.hasPresentation {
+	width: 45%;
+	opacity: 1;
 }
