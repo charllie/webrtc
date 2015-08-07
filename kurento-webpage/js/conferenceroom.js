@@ -20,7 +20,8 @@ var currentButton = 'composite';
 var constraints;
 var speed;
 //var bytesToUpload = 2097152;
-var bytesToUpload = 209715;
+var bytesToUploadSmall = 102400;
+var bytesToUploadBig = 209715;
 var uploadNb = 3;
 
 if (sessionStorage.reloadAfterPageLoad) {
@@ -161,19 +162,19 @@ function upload(uploadSize) {
 		speed += (0.008 * uploadSize / (endTime - startTime));
 	}
 
-	for (var i = 0; i < uploadNb; i++) {
+	for (var i = 0; i < uploadNb/2; i++) {
 		$.ajax('https://webrtc.ml/upload', {
 			data: {
 				content: content
 			},
 			type: 'POST',
-			async: false,
+			async: true,
 			beforeSend: beforeSendFunction,
 			success: successFunction
 		});
 	}
 
-	speed = speed / uploadNb;
+	speed = 2 * speed / uploadNb;
 	speed = Math.round(speed * 100) / 100;
 
 	console.log("Upload speedtest: " + speed + "Mbps");
@@ -181,7 +182,28 @@ function upload(uploadSize) {
 	var consMaxWidth;
 	var consMaxHeight;
 
+	if (speed >= 2) {
+		for (var i = 0; i < uploadNb; i++) {
+			$.ajax('https://webrtc.ml/upload', {
+				data: {
+					content: content
+				},
+				type: 'POST',
+				async: true,
+				beforeSend: beforeSendFunction,
+				success: successFunction
+			});
+		}
+
+		speed = speed / uploadNb;
+		speed = Math.round(speed * 100) / 100;
+	}
+
+	// TODO
 	if (speed >= 0.5) {
+		consMaxWidth = 320;
+		consMaxHeight = 240;
+	} else {
 		consMaxWidth = 320;
 		consMaxHeight = 240;
 	}
