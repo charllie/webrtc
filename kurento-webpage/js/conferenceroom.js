@@ -176,11 +176,6 @@ function upload(uploadSize) {
 	speed = 2 * speed / uploadNb;
 	speed = Math.round(speed * 100) / 100;
 
-	console.log("Upload speedtest: " + speed + "Mbps");
-
-	var consMaxWidth;
-	var consMaxHeight;
-
 	if (speed >= 2) {
 		for (var i = 0; i < uploadNb; i++) {
 			$.ajax('https://webrtc.ml/upload', {
@@ -198,17 +193,6 @@ function upload(uploadSize) {
 		speed = Math.round(speed * 100) / 100;
 	}
 
-	// TODO
-	if (speed >= 0.5) {
-		consMaxWidth = 320;
-		consMaxHeight = 240;
-	} else {
-		consMaxWidth = 320;
-		consMaxHeight = 240;
-	}
-	
-	consWebcam.video.width.max, consWebcam.video.width.ideal = consMaxWidth;
-	consWebcam.video.height.max, consWebcam.video.height.ideal = consMaxHeight;
 }
 
 function refresh() {
@@ -366,6 +350,23 @@ function register() {
 	document.getElementById('room-header').innerText = 'ROOM ' + room;
 	document.getElementById('join').style.display = 'none';
 	document.getElementById('room').style.display = 'block';
+
+	console.log("Upload speedtest: " + speed + "Mbps");
+
+	var consMaxWidth;
+	var consMaxHeight;
+	
+	// TODO
+	if (speed >= 0.5) {
+		consMaxWidth = 320;
+		consMaxHeight = 240;
+	} else {
+		consMaxWidth = 320;
+		consMaxHeight = 240;
+	}
+	
+	consWebcam.video.width.max, consWebcam.video.width.ideal = consMaxWidth;
+	consWebcam.video.height.max, consWebcam.video.height.ideal = consMaxHeight;
 
 	var message = {
 		id: 'joinRoom',
