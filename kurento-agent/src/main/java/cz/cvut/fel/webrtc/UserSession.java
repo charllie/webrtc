@@ -94,7 +94,7 @@ public class UserSession implements Closeable {
 		
 		ImageOverlayFilter imageOverlayFilter = new ImageOverlayFilter.Builder(this.pipeline).build();
 		
-		imageOverlayFilter.addImage("username", "https://webrtc.ml/names/" + UrlEscapers.urlPathSegmentEscaper().escape(name).replace(";",""), 0F, 0F, 1F, 1F, false, true);
+		imageOverlayFilter.addImage("username",  "http://files.kurento.org/imgs/mario-wings.png", 0F, 0F, 1F, 1F, false, true);
 		
 		this.hubPort = new HubPort.Builder(hub).build();
 		outgoingMedia.connect(imageOverlayFilter);
