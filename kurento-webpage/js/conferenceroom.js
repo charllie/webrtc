@@ -20,8 +20,7 @@ var currentButton = 'composite';
 var constraints;
 var speed;
 //var bytesToUpload = 2097152;
-var bytesToUploadSmall = 102400;
-var bytesToUploadBig = 209715;
+var bytesToUpload = 209715;
 var uploadNb = 3;
 
 if (sessionStorage.reloadAfterPageLoad) {
