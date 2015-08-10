@@ -1,0 +1,4 @@
+{
+	"ws_uri": "ws://webrtc.ml:8080/groupcall",
+	"wss_uri": "wss://webrtc.ml/groupcall"
+}

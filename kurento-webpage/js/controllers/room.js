@@ -5,8 +5,8 @@ function RoomCtrl($scope, $location, $params, socket, constraints, notifications
 
 	$scope.roomName = $params.roomName;
 	$scope.presentation = false;
-	$scope.participantNames = [];
 	$scope.isPresenting = false;
+	$scope.participantNames = [];
 
 	socket.get().onmessage = function(message) {
 
@@ -310,21 +310,25 @@ function RoomCtrl($scope, $location, $params, socket, constraints, notifications
 
 	function generateTableNames(array) {
 
-		var i = 0;
-		var html = '';
+		if (array.length > 1) {
+			var i = 0;
+			var html = '';
 
-		for (i; i < array.length; i++) {
-			if ((i % 2) === 0)
-				html += '<tr>';
+			for (i; i < array.length; i++) {
+				if ((i % 2) === 0)
+					html += '<tr>';
 
-			html += '<td>' + array[i] + '</td>';
+				html += '<td>' + array[i] + '</td>';
+			}
+
+			if ((i % 2) == 1) {
+				html += '<td></td></tr>';
+			}
+
+			$('.overlay > table').html(html);
+		} else {
+			$('.overlay > table').html('<tr><td class="alone">' + array[0] + '</td></tr>');
 		}
-
-		if ((i % 2) == 1) {
-			html += '<td></td></tr>';
-		}
-
-		$('.overlay > table').html(html);
 
 	}
 

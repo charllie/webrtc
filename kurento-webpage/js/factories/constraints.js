@@ -1,10 +1,9 @@
-
-app.factory('constraints', ['deviceDetector', function(device) {
+app.factory('constraints', ['$window', 'deviceDetector', function($window, device) {
 
 	var type = 'composite';
 	var browser = device.browser;
 	var chromeExtensionInstalled = false;
-	var canPresent = (device.isDesktop() && (browser == 'chrome' || browser == 'firefox'));
+	var canPresent = (device.isDesktop() && (browser == 'chrome' || browser == 'firefox')) && ($window.location.protocol == 'https');
 	
 	var constraintWebcam = {
 		audio: true,
@@ -78,6 +77,7 @@ app.factory('constraints', ['deviceDetector', function(device) {
 	};
 
 	return {
+		browser: browser,
 		browserIsChrome: (browser == 'chrome'),
 		browserIsFirefox: (browser == 'firefox'),
 		chromeExtensionDetected: chromeExtensionDetected,

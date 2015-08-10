@@ -1,6 +1,14 @@
 app.factory('socket', ['$window', function($window) {
 
-	var socket = new WebSocket('wss://webrtc.ml/groupcall');
+	var uri;
+	var socket = {
+		readyState: 0
+	};
+
+	$.get('/config.json', function(data) {
+		uri = ($window.location.protocol == 'https:') ? data.wss_uri : data.ws_uri;
+		socket = new WebSocket(uri);
+	});
 
 	var send = function(message) {
 		var jsonMessage = JSON.stringify(message);

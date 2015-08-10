@@ -4,6 +4,10 @@
 
 		<span class="fs-headline display-block text-center">WebRTC Video Conference</span>
 
+		<div class="text-center fs-body-1 card p+ mt++ mb+ bgc-amber-100 tc-grey-800" ng-show="isIncompatible()">
+			<p>Your browser may not support WebRTC yet. Please use Mozilla Firefox, Google Chrome or Opera instead.</p>
+		</div>
+
 		<form ng-submit="join(participant)">
 			<!-- Name -->
 			<lx-text-field label="Name" error="!checked.name">

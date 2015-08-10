@@ -1,4 +1,4 @@
-function UserCtrl($scope, $location, socket, notifications, participants) {
+function UserCtrl($scope, $location, socket, constraints, notifications, participants) {
 
 	$scope.participant = {
 		name: '',
@@ -10,6 +10,15 @@ function UserCtrl($scope, $location, socket, notifications, participants) {
 	$scope.checked = {
 		name: true,
 		room: true
+	};
+
+	$scope.isIncompatible = function() {
+		var browser = constraints.browser;
+
+		if (browser == 'safari' || browser == 'ie' || browser == 'ms-edge')
+			return true;
+
+		return false;
 	};
 
 	$scope.join = function(participant) {
