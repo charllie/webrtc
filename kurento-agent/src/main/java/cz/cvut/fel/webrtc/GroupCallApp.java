@@ -58,15 +58,12 @@ public class GroupCallApp implements WebSocketConfigurer {
 
 		Properties prop = new Properties();
 		InputStream input = null;
+		String kms_ws_uri = null;
 
 		try {
 
 			String filename = "kms_doc.conf";
     		input = GroupCallApp.class.getClassLoader().getResourceAsStream(filename);
-    		if(input==null){
-    	            System.out.println("Sorry, unable to find " + filename);
-    		    return;
-    		}
 
 		// load a properties file
 			prop.load(input);
