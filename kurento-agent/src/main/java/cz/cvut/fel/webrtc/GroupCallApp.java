@@ -62,7 +62,7 @@ public class GroupCallApp implements WebSocketConfigurer {
 		try {
 
 			String filename = "kms_doc.conf";
-    		input = App3.class.getClassLoader().getResourceAsStream(filename);
+    		input = GroupCallApp.class.getClassLoader().getResourceAsStream(filename);
     		if(input==null){
     	            System.out.println("Sorry, unable to find " + filename);
     		    return;
