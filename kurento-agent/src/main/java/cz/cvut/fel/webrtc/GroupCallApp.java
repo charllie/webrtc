@@ -68,7 +68,7 @@ public class GroupCallApp implements WebSocketConfigurer {
 		// load a properties file
 			prop.load(input);
 
-			String kms_ws_uri = prop.getProperty("kms_ws");
+			kms_ws_uri = prop.getProperty("kms_ws");
 
 		} catch (IOException ex) {
 			ex.printStackTrace();
