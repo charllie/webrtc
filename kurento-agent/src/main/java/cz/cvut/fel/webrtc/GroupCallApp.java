@@ -23,6 +23,11 @@ import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+
 /**
  * 
  * @author Ivan Gracia (izanmail@gmail.com)
@@ -32,8 +37,6 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 @EnableWebSocket
 @EnableAutoConfiguration
 public class GroupCallApp implements WebSocketConfigurer {
-
-	final static String DEFAULT_KMS_WS_URI = "ws://localhost:8888/kurento";
 
 	@Bean
 	public UserRegistry registry() {
@@ -52,7 +55,37 @@ public class GroupCallApp implements WebSocketConfigurer {
 
 	@Bean
 	public KurentoClient kurentoClient() {
-		return KurentoClient.create(System.getProperty("kms.ws.uri", DEFAULT_KMS_WS_URI));
+
+		Properties prop = new Properties();
+		InputStream input = null;
+
+		try {
+
+			String filename = "kms_doc.conf";
+    		input = App3.class.getClassLoader().getResourceAsStream(filename);
+    		if(input==null){
+    	            System.out.println("Sorry, unable to find " + filename);
+    		    return;
+    		}
+
+		// load a properties file
+			prop.load(input);
+
+			String kms_ws_uri = prop.getProperty("kms_ws");
+
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} finally {
+			if (input != null) {
+				try {
+					input.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		return KurentoClient.create(System.getProperty("kms.ws.uri", kms_ws_uri));
 	}
 	
 	@Bean
