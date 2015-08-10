@@ -34,7 +34,7 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 public class GroupCallApp implements WebSocketConfigurer {
 
 	@Value("${kms.ws}")
-	final static String DEFAULT_KMS_WS_URI;
+	private String kms_uri;
 
 	@Bean
 	public UserRegistry registry() {
@@ -53,7 +53,7 @@ public class GroupCallApp implements WebSocketConfigurer {
 
 	@Bean
 	public KurentoClient kurentoClient() {
-		return KurentoClient.create(System.getProperty("kms.ws.uri", DEFAULT_KMS_WS_URI));
+		return KurentoClient.create(System.getProperty("kms.ws.uri", kms_uri));
 	}
 	
 	@Bean
