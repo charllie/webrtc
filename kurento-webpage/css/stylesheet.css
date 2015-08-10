@@ -24,21 +24,24 @@ body, input, textarea {
 	opacity: 1;
 }
 
+.container {
+	position: relative;
+}
+
 #composite-container {
 	max-width: 640px;
-	position: relative;
 }
 
 #composite-container.noPresentation {
 	width: 90%;
 }
 
-#composite-container video {
+video {
 	position: relative;
 	z-index: 0;
 }
 
-#composite-container > .overlay {
+#composite-container .overlay {
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -47,55 +50,65 @@ body, input, textarea {
 	height: 100%;
 }
 
-#composite-container > .overlay > table {
+#composite-container table {
 	margin: 0 auto;
 	width: 100%;
 	height: 100%;
 }
 
-#composite-container > .overlay > table td {
+#composite-container table td {
 	color: #eee;
 	vertical-align: bottom;
 	padding-bottom: 3%;
 	width: 50%;
 }
 
-#presentation.noPresentation {
+#presentation-container .underlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: -1;
+}
+
+#presentation-container.noPresentation {
 	width: 0;
 	opacity: 0;
 }
 
-#composite-container.hasPresentation {
-	width: 45%;
-}
-
-#presentation.hasPresentation {
-	width: 45%;
+.hasPresentation {
+	max-width: 45%;
 	opacity: 1;
 }
 
 .bigger {
-	width: 90% !important;
+	max-width: 90% !important;
 }
 
 .smaller {
-	width: 30% !important;
+	max-width: 30% !important;
 }
 
 video {
 	max-width: 90%;
 }
 
+.playing {
+	border-radius: 2px;
+	overflow: hidden;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, .3);
+	background: #000;
+}
+
 @media screen and (max-width: 1023px) {
 	.header-padding {
-		height: 64px;
+		height: 75px;
 		padding-top: 8px;
 		padding-bottom: 8px;
 	}
 }
 @media screen and (min-width: 1024px) {
 	.header-padding {
-		height: 72px;
+		height: 87px;
 		padding-top: 12px;
 		padding-bottom: 12px;
 	}

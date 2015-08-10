@@ -1,4 +1,4 @@
-function UserCtrl($scope, $location, socket, participants) {
+function UserCtrl($scope, $location, socket, notifications, participants) {
 
 	$scope.participant = {
 		name: '',
@@ -22,16 +22,35 @@ function UserCtrl($scope, $location, socket, participants) {
 			$scope.color = 'red';
 
 		} else {
-			participants.add(participant.name);
 
-			socket.send({
-				id: 'joinRoom',
-				name: participant.name,
-				room: participant.room,
-				mediaSource: 'composite'
-			});
+			if (socket.isOpen()) {
 
-			$location.path("/rooms/" + participant.room);
+				participants.add(participant.name);
+
+				socket.send({
+					id: 'joinRoom',
+					name: participant.name,
+					room: participant.room,
+					mediaSource: 'composite'
+				});
+
+				$location.path("/rooms/" + participant.room);
+
+			} else {
+
+				var warning = {
+					title: 'Websocket Error',
+					content: 'Unable to connect to the server. Please try later.'
+				};
+
+				notifications.alert(warning.title, warning.content, 'Ok', function(answer) {
+					// This should be handled by lumx (it must be a bug)
+					// May be removed in the future
+					$('.dialog-filter').remove();
+					$('.dialog').remove();
+				});
+
+			}
 		}
 	};
 }

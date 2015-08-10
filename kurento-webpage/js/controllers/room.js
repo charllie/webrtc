@@ -111,36 +111,52 @@ function RoomCtrl($scope, $location, $params, socket, constraints, notifications
 	$scope.share = function(type) {
 
 		var currentType = constraints.getCurrent();
+		var noProblem = true;
 
-		if (type != currentType) {
+		if (type != currentType && constraints.canPresent) {
 
 			if (currentType != 'composite')
 				this.stopPresenting();
 
 			if (constraints.browserIsChrome) {
 			
-				if (!constraints.chromeExtensionDetected) {
-					var warning = 'Please install the extension:\n' +
-									'1. Download the extension at: https://webrtc.ml/extension.crx\n' +
-									'2. Go to chrome://extensions\n' +
-									'3. Drag the *.crx file on the Google extension page\n';
-					alert(warning);
+				if (!constraints.isChromeExtensionInstalled()) {
+					var warning = {
+						title: 'Chrome extension needed',
+						content: 'To enable screensharing or window sharing, please use our extension.'
+					};
+					
+					notifications.confirm(warning.title, warning.content, { cancel: 'Cancel', ok: 'Download'}, function(answer) {
+						if (answer === true)
+							window.location = '/extension.crx';
+					});
+					
+					noProblem = false;
 				}
 
 				window.postMessage({ type: 'SS_UI_REQUEST', text: 'start' }, '*');
 
 			}
 
-			constraints.setCurrent(type);
+			if (noProblem) {
 
-			//refresh();
-			socket.send({
-				id: 'newPresenter',
-				name: participants.me().name,
-				room: this.roomName,
-				mediaSource: type
-			});
+				constraints.setCurrent(type);
+				socket.send({
+					id: 'newPresenter',
+					name: participants.me().name,
+					room: this.roomName,
+					mediaSource: type
+				});
+
+			}
 		}
+	};
+
+	$scope.canPresent = function() {
+
+		// TODO: test https
+
+		return constraints.canPresent;
 	};
 
 	$scope.leave = function() {
@@ -198,6 +214,7 @@ function RoomCtrl($scope, $location, $params, socket, constraints, notifications
 
 		participant.rtcPeer[type] = new kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options,
 			function(error) {
+
 				this.generateOffer(participant.offerToReceive[type].bind(participant));
 			});
 
@@ -300,10 +317,14 @@ function RoomCtrl($scope, $location, $params, socket, constraints, notifications
 		$('#composite').resize(function() {
 			adaptCompositeContainer();
 		});
+
+		$('video').on('play', function() {
+			$(this).addClass('playing');
+		});
 	});
 
 	function adaptCompositeContainer() {
-		$('video').css('max-height', $(window).height() - 70 + 'px');
+		$('video').css('max-height', $(window).height() - 90 + 'px');
 		$('#composite-container > .overlay > table').css('height', $('#composite').height());
 		$('#composite-container > .overlay > table').css('width', $('#composite').width());
 	}
@@ -314,10 +335,9 @@ function RoomCtrl($scope, $location, $params, socket, constraints, notifications
 	}
 
 	function disablePresentationClass() {
-
 		setWidth('.video-room', null, 'noPresentation', ['hasPresentation', 'bigger', 'smaller']);
+		$('#presentation').removeClass('playing');
 		$scope.presentation = false;
-
 	}
 
 	function setWidth(elt1, elt2, elt1Class, elt2Classes) {
@@ -343,12 +363,45 @@ function RoomCtrl($scope, $location, $params, socket, constraints, notifications
 		}
 	}
 
-	$scope.getBiggerComposite = function() {
-		setWidth('#composite-container', '#presentation', 'bigger', ['smaller']);
+	var compositeSizeBig = false;
+	var presentationSizeBig = false;
+
+	function setBigs(isCompositeBig, isPresentationBig) {
+		compositeSizeBig = isCompositeBig;
+		presentationSizeBig = isPresentationBig;
+	}
+
+	$scope.changeCompositeSize = function() {
+		if (!compositeSizeBig) {
+			setWidth('#composite-container', '#presentation-container', 'bigger', ['smaller']);
+			setBigs(true, false);
+		} else {
+			setWidth('#composite-container', null, null, ['bigger']);
+			setWidth('#presentation-container', null, null, ['smaller']);
+			setBigs(false, false);
+		}
 	};
 
-	$scope.getBiggerPresentation = function() {
-		setWidth('#composite-container', '#presentation', 'smaller', ['bigger']);
+	$scope.changePresentationSize = function() {
+		if (!presentationSizeBig) {
+			setWidth('#composite-container', '#presentation-container', 'smaller', ['bigger']);
+			setBigs(false, true);
+		}  else {
+			setWidth('#presentation-container', null, null, ['bigger']);
+			setWidth('#composite-container', null, null, ['smaller']);
+			setBigs(false, false);
+		}
 	};
 
+	// Controls part
+	$scope.muted = false;
+	$scope.mute = function() {
+		$('video').prop('muted', true);
+		this.muted = true;
+	};
+
+	$scope.unmute = function() {
+		$('video').prop('muted', false);
+		this.muted = false;
+	};
 }

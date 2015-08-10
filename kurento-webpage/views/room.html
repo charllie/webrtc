@@ -1,16 +1,17 @@
 <div class="header-bar card bgc-blue-grey-500 tc-white">
 	<div class="toolbar">
 		<div class="toolbar__left mr+++">
-			<button class="btn btn--l btn--white btn--icon" lx-ripple>
-				<i class="mdi mdi-menu"></i>
+			<button class="btn btn--l btn--white btn--icon" lx-ripple ng-click="leave()">
+				<i class="mdi mdi-arrow-left"></i>
 			</button>
 		</div>
 
-		<span class="toolbar__label fs-title">Rooms &rsaquo; {{ roomName }}</span>
+		<span class="toolbar__label fs-title">Room {{ roomName }}</span>
 
 		<div class="toolbar__right">
 
-			<lx-dropdown position="right" from-top>
+			<!-- Share -->
+			<lx-dropdown position="right" from-top ng-show="canPresent()">
 				<button class="btn btn--l btn--white btn--icon" lx-ripple lx-dropdown-toggle>
 					<i class="mdi mdi-share"></i>
 				</button>
@@ -25,6 +26,7 @@
 				</lx-dropdown-menu>
 			</lx-dropdown>
 
+			<!-- Users -->
 			<lx-dropdown position="right" from-top>
 				<button class="btn btn--l btn--white btn--icon" lx-ripple lx-dropdown-toggle>
 					<i class="mdi mdi-account-network"></i>
@@ -37,6 +39,16 @@
 					</ul>
 				</lx-dropdown-menu>
 			</lx-dropdown>
+
+			<!-- Mute -->
+			<button class="btn btn--l btn--white btn--icon" lx-ripple ng-click="mute()" ng-show="!muted">
+				<i class="mdi mdi-volume-off"></i>
+			</button>
+
+			<!-- Unmute -->
+			<button class="btn btn--l btn--white btn--icon" lx-ripple ng-click="unmute()" ng-show="muted">
+				<i class="mdi mdi-volume-high"></i>
+			</button>
 		</div>
 	</div>
 </div>
@@ -44,14 +56,19 @@
 <div class="header-padding"></div>
 
 <div class="text-center">
-	<div id="composite-container" class="video-room noPresentation" ng-click="getBiggerComposite()">
+	<!-- Composite -->
+	<div id="composite-container" class="container video-room noPresentation" ng-click="changeCompositeSize()">
 		<video id="composite" height="auto" autoplay></video>
 		<div class="overlay">
 			<table></table>
 		</div>
 	</div>
-	<video id="presentation" class="video-room noPresentation" height="auto" autoplay ng-click="getBiggerPresentation()"></video>
+
+	<!-- Presentation -->
+	<div id="presentation-container" class="container video-room noPresentation" ng-click="changePresentationSize()">
+		<video id="presentation" height="auto" autoplay poster="img/transparent.png"></video>
+		<div class="underlay" id="progress" style="color: #000">OKapi</div>
+	</div>
 </div>
 
 <button ng-click="stopPresenting()">Stop</button>
-<button ng-click="leave()">Leave room</button>

@@ -73,9 +73,16 @@ app.factory('constraints', ['deviceDetector', function(device) {
 		chromeExtensionInstalled = true;
 	};
 
+	var isChromeExtensionInstalled = function() {
+		return chromeExtensionInstalled;
+	};
+
 	return {
 		browserIsChrome: (browser == 'chrome'),
+		browserIsFirefox: (browser == 'firefox'),
 		chromeExtensionDetected: chromeExtensionDetected,
+		isChromeExtensionInstalled: isChromeExtensionInstalled,
+		canPresent: canPresent,
 		setId: setId,
 		getCurrent: getCurrent,
 		setCurrent: setCurrent,

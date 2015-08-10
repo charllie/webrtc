@@ -12,6 +12,10 @@ app.factory('socket', ['$window', function($window) {
 		return socket;
 	};
 
+	var isOpen = function() {
+		return (socket.readyState == 1);
+	};
+
 	$window.onbeforeunload = function() {
 		send({ id: 'leaveRoom' });
 		socket.close();
@@ -19,6 +23,7 @@ app.factory('socket', ['$window', function($window) {
 
 	return {
 		send: send,
-		get: get
+		get: get,
+		isOpen: isOpen
 	};
 }]);
