@@ -12,7 +12,16 @@
  * Lesser General Public License for more details.
  *
  */
-var ws = new WebSocket('wss://webrtc.ml/groupcall');
+messageResource.init({
+  // path to directory containing message resource files(.properties files),
+  // give empty string or discard this configuration if files are in the
+  // same directory as that of html file.
+  filePath : '/webrtc/kurento-agent/application.properties'
+});
+messageResource.load('config', function(){});
+var value = messageResource.get('client.ws', 'config');
+
+var ws = new WebSocket(value);
 var inRoom = false;
 var participants = {};
 var name;
