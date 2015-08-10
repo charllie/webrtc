@@ -114,6 +114,8 @@ app.factory('participants', ['socket', function(socket) {
 
 			delete participants[key];
 		}
+
+		name = null;
 	};
 
 	return {

@@ -1,4 +1,4 @@
-<div class="card bgc-blue-grey-500 tc-white">
+<div class="header-bar card bgc-blue-grey-500 tc-white">
 	<div class="toolbar">
 		<div class="toolbar__left mr+++">
 			<button class="btn btn--l btn--white btn--icon" lx-ripple>
@@ -33,7 +33,7 @@
 					<ul>
 						<li><a class="dropdown-link dropdown-link--is-header">Online users</a></li>
 						<li class="dropdown-divider"></li>
-						<li><a class="dropdown-link">Charlie</a></li>
+						<li ng-repeat="participant in participantNames"><a class="dropdown-link">{{ participant }}</a></li>
 					</ul>
 				</lx-dropdown-menu>
 			</lx-dropdown>
@@ -41,9 +41,16 @@
 	</div>
 </div>
 
+<div class="header-padding"></div>
+
 <div class="text-center">
-	<video id="composite" class="video-room noPresentation" height="auto" autoplay controls></video>
-	<video id="presentation" class="video-room noPresentation" height="auto" autoplay controls></video>
+	<div id="composite-container" class="video-room noPresentation" ng-click="getBiggerComposite()">
+		<video id="composite" height="auto" autoplay></video>
+		<div class="overlay">
+			<table></table>
+		</div>
+	</div>
+	<video id="presentation" class="video-room noPresentation" height="auto" autoplay ng-click="getBiggerPresentation()"></video>
 </div>
 
 <button ng-click="stopPresenting()">Stop</button>

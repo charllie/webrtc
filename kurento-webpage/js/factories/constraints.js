@@ -9,8 +9,8 @@ app.factory('constraints', ['deviceDetector', function(device) {
 	var constraintWebcam = {
 		audio: true,
 		video: {
-			width: { min: 160 },
-			height: { min: 90 }
+			width: { min: 160, ideal: 160, max: 160 },
+			height: { min: 120, ideal: 120, max: 120 }
 		}
 	};
 

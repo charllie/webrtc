@@ -1,9 +1,11 @@
-function RoomCtrl($scope, $location, $params, socket, constraints, participants) {
+function RoomCtrl($scope, $location, $params, socket, constraints, notifications, participants) {
 
 	if (participants.isEmpty())
 		$location.path('/');
 
 	$scope.roomName = $params.roomName;
+	$scope.presentation = false;
+	$scope.participantNames = [];
 
 	//$scope.participants = participants.getAll();
 
@@ -102,9 +104,6 @@ function RoomCtrl($scope, $location, $params, socket, constraints, participants)
 			participant.rtcPeer['presentation'] = null;
 		}
 
-		//enableButton('screen');
-		//enableButton('window');
-
 		constraints.setCurrent('composite');
 		socket.send({ id: 'stopPresenting' });
 	};
@@ -132,9 +131,6 @@ function RoomCtrl($scope, $location, $params, socket, constraints, participants)
 
 			}
 
-			//enableAllButtons();
-			//disableButton(type);
-
 			constraints.setCurrent(type);
 
 			//refresh();
@@ -149,11 +145,13 @@ function RoomCtrl($scope, $location, $params, socket, constraints, participants)
 
 	$scope.leave = function() {
 		socket.send({ id: 'leaveRoom' });
+		constraints.setCurrent('composite');
 		participants.clear();
 		$location.path('/');
 	};
 
 	$scope.$on('$destroy', function() {
+		constraints.setCurrent('composite');
 		participants.clear();
 	});
 
@@ -165,9 +163,6 @@ function RoomCtrl($scope, $location, $params, socket, constraints, participants)
 		var participant = participants.get(sender);
 		
 		var type = (!isScreensharer) ? 'composite' : 'presentation';
-
-		//var offerToReceive = 'participant.offerToReceive' + suffix;
-		//var rtcPeer = 'participant.rtcPeer' + suffix;
 
 		var options = {
 			remoteVideo: document.getElementById(type),
@@ -189,14 +184,16 @@ function RoomCtrl($scope, $location, $params, socket, constraints, participants)
 		var participant = participants.me();
 
 		var options = {
-			//remoteVideo: document.getElementById(type),
 			mediaConstraints: constraints.get(),
 			onicecandidate: participant.onIceCandidate[type].bind(participant)
 		};
 
-		if (type == 'composite')
+		if (type == 'composite') {
+			$scope.participantNames = message.data;
+			$scope.participantNames.push(participant.name);
+			generateTableNames($scope.participantNames);
 			options.remoteVideo = document.getElementById(type);
-		else
+		} else
 			options.localVideo = document.getElementById(type);
 
 		participant.rtcPeer[type] = new kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options,
@@ -205,8 +202,6 @@ function RoomCtrl($scope, $location, $params, socket, constraints, participants)
 			});
 
 		if (message.existingScreensharer && type == 'composite') {
-			//disableButton('window');
-			//disableButton('screen');
 			enablePresentationClass();
 			receiveVideo(message.screensharer, true);
 		}
@@ -219,9 +214,6 @@ function RoomCtrl($scope, $location, $params, socket, constraints, participants)
 
 		if (message.presenter != participants.me().name) {
 			receiveVideo(message.presenter, true);
-
-			//disableButton('screen');
-			//disableButton('window');
 		}
 	}
 
@@ -234,15 +226,18 @@ function RoomCtrl($scope, $location, $params, socket, constraints, participants)
 		if (message.presenter != participants.me().name) {
 			if (participants.get(message.presenter) !== undefined)
 				participants.get(message.presenter).rtcPeer['presentation'].dispose();
-
-			//enableButton('screen');
-			//enableButton('window');
 		}
 	}
 
 	function onNewParticipant(request) {
 
 		participants.add(request.name);
+		$scope.participantNames.push(request.name);
+
+		generateTableNames($scope.participantNames);
+
+		notifications.notify(request.name + ' has joined the room', 'account-plus');
+
 		console.log(request.name + " has just arrived");
 
 	}
@@ -260,6 +255,11 @@ function RoomCtrl($scope, $location, $params, socket, constraints, participants)
 		}
 
 		participants.remove(request.name);
+
+		notifications.notify(request.name + ' has left the room', 'account-remove');
+
+		$scope.participantNames = request.data;
+		generateTableNames($scope.participantNames);
 	}
 
 	function receiveVideoResponse(result) {
@@ -269,33 +269,86 @@ function RoomCtrl($scope, $location, $params, socket, constraints, participants)
 		});
 	}
 
+	function generateTableNames(array) {
+
+		var i = 0;
+		var html = '';
+
+		for (i; i < array.length; i++) {
+			if ((i % 2) === 0)
+				html += '<tr>';
+
+			html += '<td>' + array[i] + '</td>';
+		}
+
+		if ((i % 2) == 1) {
+			html += '<td></td></tr>';
+		}
+
+		$('.overlay > table').html(html);
+
+	}
+
+	// CSS part
+	angular.element(document).ready(function () {
+		adaptCompositeContainer();
+
+		$(window).resize(function() {
+			adaptCompositeContainer();
+		});
+
+		$('#composite').resize(function() {
+			adaptCompositeContainer();
+		});
+	});
+
+	function adaptCompositeContainer() {
+		$('video').css('max-height', $(window).height() - 70 + 'px');
+		$('#composite-container > .overlay > table').css('height', $('#composite').height());
+		$('#composite-container > .overlay > table').css('width', $('#composite').width());
+	}
+
 	function enablePresentationClass() {
-		$('.video-room').removeClass('noPresentation').addClass('hasPresentation');
+		$scope.presentation = true;
+		setWidth('.video-room', null, 'hasPresentation', ['noPresentation']);
 	}
 
 	function disablePresentationClass() {
-		$('.video-room').removeClass('hasPresentation').addClass('noPresentation');
+
+		setWidth('.video-room', null, 'noPresentation', ['hasPresentation', 'bigger', 'smaller']);
+		$scope.presentation = false;
+
 	}
 
-}
+	function setWidth(elt1, elt2, elt1Class, elt2Classes) {
+		if ($scope.presentation) {
+			$(elt1).animate({
+				opacity: 1
+			}, {
+				duration: 500,
+				start: function() {
+					for (var k in elt2Classes) {
+						$(elt1).removeClass(elt2Classes[k]);
+					}
 
-/*function sendPresentation(msg) {
+					$(elt1).addClass(elt1Class);
+				},
+				progress: adaptCompositeContainer
+			});
 
-	var options = {
-		localVideo: document.getElementById('remote_screenshare'),
-		mediaConstraints: constraints,
-		onicecandidate: participant.onIceCandidatePresentation.bind(participant)
+			$(elt2).removeClass(elt1Class);
+
+			for (var k in elt2Classes)
+				$(elt2).addClass(elt2Classes[k]);
+		}
+	}
+
+	$scope.getBiggerComposite = function() {
+		setWidth('#composite-container', '#presentation', 'bigger', ['smaller']);
 	};
 
-	participant.rtcPeerPresentation = new kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options,
-		function(error) {
-			if ((currentButton == 'window' || currentButton == 'screen') && location.protocol === 'http:' && error)
-				alert('Please use https to try screenshare.');
-			else if ((currentButton == 'window' || currentButton == 'screen') && error && isFirefox)
-				alert('You need to enable the appropriate flag:\n - Open about:config and set media.getusermedia.screensharing.enabled to true \n - In about:config, add our address to media.getusermedia.screensharing.allowed_domains (e.g: "webrtc.ml" )');
-			if (error) {
-				return console.error(error);
-			}
-			this.generateOffer(participant.offerToReceivePresentation.bind(participant));
-		});
-}*/
+	$scope.getBiggerPresentation = function() {
+		setWidth('#composite-container', '#presentation', 'smaller', ['bigger']);
+	};
+
+}
