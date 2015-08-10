@@ -65,14 +65,21 @@ video {
 
 #presentation-container .underlay {
 	position: absolute;
-	top: 0;
-	left: 0;
+	top: 50%;
+	left: 50%;
 	z-index: -1;
+}
+
+.stop-overlay {
+	position: absolute;
+	top: 100%;
+	left: 45%;
+	z-index: 1;
 }
 
 #presentation-container.noPresentation {
 	width: 0;
-	opacity: 0;
+	opacity: 0 !important;
 }
 
 .hasPresentation {
@@ -86,6 +93,10 @@ video {
 
 .smaller {
 	max-width: 30% !important;
+}
+
+.dialog__content {
+	font-size: .9em;
 }
 
 video {

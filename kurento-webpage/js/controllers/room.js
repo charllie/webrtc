@@ -1,4 +1,4 @@
-function RoomCtrl($scope, $location, $params, socket, constraints, notifications, participants) {
+function RoomCtrl($scope, $location, $params, socket, constraints, notifications, progress, participants) {
 
 	if (participants.isEmpty())
 		$location.path('/');
@@ -6,8 +6,7 @@ function RoomCtrl($scope, $location, $params, socket, constraints, notifications
 	$scope.roomName = $params.roomName;
 	$scope.presentation = false;
 	$scope.participantNames = [];
-
-	//$scope.participants = participants.getAll();
+	$scope.isPresenting = false;
 
 	socket.get().onmessage = function(message) {
 
@@ -104,6 +103,7 @@ function RoomCtrl($scope, $location, $params, socket, constraints, notifications
 			participant.rtcPeer['presentation'] = null;
 		}
 
+		$scope.isPresenting = false;
 		constraints.setCurrent('composite');
 		socket.send({ id: 'stopPresenting' });
 	};
@@ -141,6 +141,8 @@ function RoomCtrl($scope, $location, $params, socket, constraints, notifications
 			if (noProblem) {
 
 				constraints.setCurrent(type);
+				$scope.isPresenting = true;
+
 				socket.send({
 					id: 'newPresenter',
 					name: participants.me().name,
@@ -175,6 +177,9 @@ function RoomCtrl($scope, $location, $params, socket, constraints, notifications
 
 		if (participants.get(sender) === undefined)
 			participants.add(sender);
+
+		if (isScreensharer)
+			progress.circular.show('#2196F3', '#progress');
 
 		var participant = participants.get(sender);
 		
@@ -214,6 +219,23 @@ function RoomCtrl($scope, $location, $params, socket, constraints, notifications
 
 		participant.rtcPeer[type] = new kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options,
 			function(error) {
+
+				if (constraints.browserIsFirefox && error && type != 'composite') {
+
+					var warning = {
+						title: 'Firefox needs to be configured (about:config)',
+						content: 'Set media.getusermedia.screensharing.enabled to true and add our address to media.getusermedia.screensharing.allowed_domains'
+					};
+
+					notifications.alert(warning.title, warning.content, 'Ok', function(answer) {
+						// This should be handled by lumx (it must be a bug)
+						// May be removed in the future
+						$('.dialog-filter').remove();
+						$('.dialog').remove();
+					});
+
+					$scope.isPresenting = false;
+				}
 
 				this.generateOffer(participant.offerToReceive[type].bind(participant));
 			});
@@ -316,10 +338,13 @@ function RoomCtrl($scope, $location, $params, socket, constraints, notifications
 
 		$('#composite').resize(function() {
 			adaptCompositeContainer();
+		}).on('play', function() {
+			$(this).addClass('playing');
 		});
 
-		$('video').on('play', function() {
+		$('#presentation').on('play', function() {
 			$(this).addClass('playing');
+			progress.circular.hide();
 		});
 	});
 
@@ -396,12 +421,12 @@ function RoomCtrl($scope, $location, $params, socket, constraints, notifications
 	// Controls part
 	$scope.muted = false;
 	$scope.mute = function() {
-		$('video').prop('muted', true);
+		$('#composite').prop('muted', true);
 		this.muted = true;
 	};
 
 	$scope.unmute = function() {
-		$('video').prop('muted', false);
+		$('#composite').prop('muted', false);
 		this.muted = false;
 	};
 }
