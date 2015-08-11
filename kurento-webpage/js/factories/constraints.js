@@ -8,8 +8,8 @@ app.factory('constraints', ['$window', 'deviceDetector', 'upload', function($win
 	var constraintWebcam = {
 		audio: true,
 		video: {
-			width: { min: 160, ideal: 160, max: 160 },
-			height: { min: 120, ideal: 120, max: 120 }
+			width: { min: 160 },
+			height: { min: 120 }
 		}
 	};
 
@@ -48,10 +48,13 @@ app.factory('constraints', ['$window', 'deviceDetector', 'upload', function($win
 		} else {
 
 			constraints = constraintWebcam;
-			
-			if (upload.speed >= 0.5) {
+
+			if (upload.speed() >= 0.5) {
 				consMaxWidth = 320;
 				consMaxHeight = 240;
+			} else {
+				consMaxWidth = 160;
+				consMaxHeight = 120;
 			}
 
 			constraints.video.width.max = constraints.video.width.ideal = consMaxWidth;
