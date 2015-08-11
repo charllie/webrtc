@@ -183,7 +183,7 @@ function upload(uploadSize) {
 	speed = 2 * speed / uploadNb;
 	speed = Math.round(speed * 100) / 100;
 
-	if (speed >= 2 && window.mobilecheck == false ) {
+	if (speed >= 2 && window.mobilecheck() == false ) {
 		for (var i = 0; i < uploadNb; i++) {
 			$.ajax('https://webrtc.ml/upload', {
 				data: {
