@@ -4,7 +4,19 @@ app.factory('constraints', ['$window', 'deviceDetector', 'upload', function($win
 	var browser = device.browser;
 	var chromeExtensionInstalled = false;
 	var canPresent = (device.isDesktop() && (browser == 'chrome' || browser == 'firefox')) && ($window.location.protocol == 'https:');
-	
+
+	// Configuration for the extension if it is Chrome
+	if (browser == 'chrome') {
+		$window.addEventListener('message', function(event) {
+			if (event.origin != $window.location.origin) return;
+
+			// content-script will send a 'SS_PING' msg if extension is installed
+			if (event.data.type && (event.data.type === 'SS_PING'))
+				chromeExtensionInstalled = true;
+		});
+	}
+
+
 	var constraintWebcam = {
 		audio: true,
 		video: {

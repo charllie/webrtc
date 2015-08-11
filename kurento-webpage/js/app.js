@@ -17,4 +17,4 @@ app.config(['$routeProvider', function($routeProvider) {
 
 // Injections
 app.controller('UserCtrl', ['$scope', '$location', 'socket', 'constraints', 'LxNotificationService', 'participants', UserCtrl]);
-app.controller('RoomCtrl', ['$scope', '$location', '$routeParams', 'socket', 'constraints', 'LxNotificationService', 'LxProgressService', 'participants', RoomCtrl]);
+app.controller('RoomCtrl', ['$scope', '$location', '$window', '$routeParams', 'socket', 'constraints', 'LxNotificationService', 'LxProgressService', 'participants', RoomCtrl]);

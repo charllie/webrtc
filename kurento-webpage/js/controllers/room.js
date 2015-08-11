@@ -1,4 +1,4 @@
-function RoomCtrl($scope, $location, $params, socket, constraints, notifications, progress, participants) {
+function RoomCtrl($scope, $location, $window, $params, socket, constraints, notifications, progress, participants) {
 
 	if (participants.isEmpty())
 		$location.path('/');
@@ -20,7 +20,8 @@ function RoomCtrl($scope, $location, $params, socket, constraints, notifications
 				break;
 
 			case 'presentationInfo':
-				sendStream(parsedMessage, 'presentation');
+				if (constraints.browserIsFirefox)
+					sendStream(parsedMessage, 'presentation');
 				break;
 
 			case 'presenterReady':
@@ -73,23 +74,17 @@ function RoomCtrl($scope, $location, $params, socket, constraints, notifications
 
 	// Configuration for the extension if it is Chrome
 	if (constraints.browserIsChrome) {
-		window.addEventListener('message', function(event) {
-			if (event.origin != window.location.origin) return;
-
-			// content-script will send a 'SS_PING' msg if extension is installed
-			if (event.data.type && (event.data.type === 'SS_PING')) {
-				constraints.chromeExtensionDetected();
-			}
+		$window.addEventListener('message', function(event) {
 
 			// user chose a stream
 			if (event.data.type && (event.data.type === 'SS_DIALOG_SUCCESS')) {
 				constraints.setId(event.data.streamId);
-				sendPresentation(null);
+				sendStream({}, 'presentation');
 			}
 
 			// user clicked on 'cancel' in choose media dialog
 			if (event.data.type && (event.data.type === 'SS_DIALOG_CANCEL')) {
-				console.log('User cancelled!');
+				$scope.stopPresenting();
 			}
 		});
 	}
@@ -111,7 +106,7 @@ function RoomCtrl($scope, $location, $params, socket, constraints, notifications
 	$scope.share = function(type) {
 
 		var currentType = constraints.getType();
-		var noProblem = true;
+		var success = true;
 
 		if (type != currentType && constraints.canPresent) {
 
@@ -128,17 +123,18 @@ function RoomCtrl($scope, $location, $params, socket, constraints, notifications
 					
 					notifications.confirm(warning.title, warning.content, { cancel: 'Cancel', ok: 'Download'}, function(answer) {
 						if (answer === true)
-							window.location = '/extension.crx';
+							$window.location = '/extension.crx';
 					});
-					
-					noProblem = false;
-				}
 
-				window.postMessage({ type: 'SS_UI_REQUEST', text: 'start' }, '*');
+					success = false;
+					
+				} else {
+					$window.postMessage({ type: 'SS_UI_REQUEST', text: 'start' }, '*');
+				}
 
 			}
 
-			if (noProblem) {
+			if (success) {
 
 				constraints.setType(type);
 				$scope.isPresenting = true;
@@ -155,7 +151,6 @@ function RoomCtrl($scope, $location, $params, socket, constraints, notifications
 	};
 
 	$scope.canPresent = function() {
-
 		return constraints.canPresent;
 	};
 
