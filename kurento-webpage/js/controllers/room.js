@@ -104,13 +104,13 @@ function RoomCtrl($scope, $location, $params, socket, constraints, notifications
 		}
 
 		$scope.isPresenting = false;
-		constraints.setCurrent('composite');
+		constraints.setType('composite');
 		socket.send({ id: 'stopPresenting' });
 	};
 
 	$scope.share = function(type) {
 
-		var currentType = constraints.getCurrent();
+		var currentType = constraints.getType();
 		var noProblem = true;
 
 		if (type != currentType && constraints.canPresent) {
@@ -140,7 +140,7 @@ function RoomCtrl($scope, $location, $params, socket, constraints, notifications
 
 			if (noProblem) {
 
-				constraints.setCurrent(type);
+				constraints.setType(type);
 				$scope.isPresenting = true;
 
 				socket.send({
@@ -156,20 +156,18 @@ function RoomCtrl($scope, $location, $params, socket, constraints, notifications
 
 	$scope.canPresent = function() {
 
-		// TODO: test https
-
 		return constraints.canPresent;
 	};
 
 	$scope.leave = function() {
 		socket.send({ id: 'leaveRoom' });
-		constraints.setCurrent('composite');
+		constraints.setType('composite');
 		participants.clear();
 		$location.path('/');
 	};
 
 	$scope.$on('$destroy', function() {
-		constraints.setCurrent('composite');
+		constraints.setType('composite');
 		participants.clear();
 	});
 

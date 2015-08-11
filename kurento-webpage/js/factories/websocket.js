@@ -1,11 +1,11 @@
-app.factory('socket', ['$window', function($window) {
+app.factory('socket', ['$window', 'variables', function($window, variables) {
 
 	var uri;
 	var socket = {
 		readyState: 0
 	};
 
-	$.get('/config.json', function(data) {
+	variables.get().then(function(data) {
 		uri = ($window.location.protocol == 'https:') ? data.wss_uri : data.ws_uri;
 		socket = new WebSocket(uri);
 	});

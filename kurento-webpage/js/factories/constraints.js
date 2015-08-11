@@ -1,9 +1,9 @@
-app.factory('constraints', ['$window', 'deviceDetector', function($window, device) {
+app.factory('constraints', ['$window', 'deviceDetector', 'upload', function($window, device, upload) {
 
 	var type = 'composite';
 	var browser = device.browser;
 	var chromeExtensionInstalled = false;
-	var canPresent = (device.isDesktop() && (browser == 'chrome' || browser == 'firefox')) && ($window.location.protocol == 'https');
+	var canPresent = (device.isDesktop() && (browser == 'chrome' || browser == 'firefox')) && ($window.location.protocol == 'https:');
 	
 	var constraintWebcam = {
 		audio: true,
@@ -48,7 +48,14 @@ app.factory('constraints', ['$window', 'deviceDetector', function($window, devic
 		} else {
 
 			constraints = constraintWebcam;
-			// TODO
+			
+			if (upload.speed >= 0.5) {
+				consMaxWidth = 320;
+				consMaxHeight = 240;
+			}
+
+			constraints.video.width.max = constraints.video.width.ideal = consMaxWidth;
+			constraints.video.height.max = constraints.video.height.ideal = consMaxHeight;
 
 		}
 
@@ -56,11 +63,11 @@ app.factory('constraints', ['$window', 'deviceDetector', function($window, devic
 
 	};
 
-	var getCurrent = function() {
+	var getType = function() {
 		return type;
 	};
 
-	var setCurrent = function(t) {
+	var setType = function(t) {
 		type = t;
 	};
 
@@ -84,8 +91,8 @@ app.factory('constraints', ['$window', 'deviceDetector', function($window, devic
 		isChromeExtensionInstalled: isChromeExtensionInstalled,
 		canPresent: canPresent,
 		setId: setId,
-		getCurrent: getCurrent,
-		setCurrent: setCurrent,
+		getType: getType,
+		setType: setType,
 		get: get
 	};
 }]);
