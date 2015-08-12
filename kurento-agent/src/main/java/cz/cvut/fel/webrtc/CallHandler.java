@@ -132,6 +132,16 @@ public class CallHandler extends TextWebSocketHandler {
 			room.setScreensharer(user);
 			user.isScreensharer(true);
 			
+		} else {
+			
+			JsonObject msg = new JsonObject();
+			WebSocketSession session = user.getSession();
+			
+			msg.addProperty("id", "existingPresentation");
+			synchronized (session) {
+				session.sendMessage(new TextMessage(msg.toString()));
+			}
+			
 		}
 	}
 
