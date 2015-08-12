@@ -4,6 +4,7 @@ app.factory('constraints', ['$window', 'deviceDetector', 'upload', function($win
 	var browser = device.browser;
 	var chromeExtensionInstalled = false;
 	var canPresent = (device.isDesktop() && (browser == 'chrome' || browser == 'firefox')) && ($window.location.protocol == 'https:');
+	var warning = null;
 
 	// Configuration for the extension if it is Chrome
 	if (browser == 'chrome') {
@@ -15,7 +16,6 @@ app.factory('constraints', ['$window', 'deviceDetector', 'upload', function($win
 				chromeExtensionInstalled = true;
 		});
 	}
-
 
 	var constraintWebcam = {
 		audio: true,
@@ -98,6 +98,14 @@ app.factory('constraints', ['$window', 'deviceDetector', 'upload', function($win
 		return chromeExtensionInstalled;
 	};
 
+	var getWarning = function() {
+		return warning;
+	};
+
+	var setWarning = function(w) {
+		warning = w;
+	};
+
 	return {
 		browser: browser,
 		browserIsChrome: (browser == 'chrome'),
@@ -108,6 +116,8 @@ app.factory('constraints', ['$window', 'deviceDetector', 'upload', function($win
 		setId: setId,
 		getType: getType,
 		setType: setType,
-		get: get
+		get: get,
+		getWarning: getWarning,
+		setWarning: setWarning
 	};
 }]);

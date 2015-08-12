@@ -10,25 +10,25 @@
 
 		<div class="toolbar__right">
 
-			<!-- Presentation -->
-			<lx-dropdown position="right" from-top ng-show="canPresent()">
-				<button class="btn btn--l btn--white btn--icon" lx-ripple lx-dropdown-toggle>
+			<!-- Presentation (Firefox) -->
+			<lx-dropdown position="right" from-top ng-show="canPresent('firefox')">
+				<button class="btn btn--l btn--white btn--icon" ng-disabled="presentation.disabled.general" lx-ripple lx-dropdown-toggle>
 					<i class="mdi mdi-presentation"></i>
 				</button>
 
-				<lx-dropdown-menu>
+				<lx-dropdown-menu ng-hide="presentation.disabled.general">
 					<ul>
 						<li><a class="dropdown-link dropdown-link--is-header">Give a presentation</a></li>
 						
 						<li class="dropdown-divider"></li>
 						
-						<li>
+						<li ng-hide="presentation.disabled.screen">
 							<a class="dropdown-link" ng-click="share('screen')">
 								<i class="mdi mdi-laptop"></i>
 								<span>Screenshare</span>
 							</a>
 						</li>
-						<li>
+						<li ng-hide="presentation.disabled.window">
 							<a class="dropdown-link" ng-click="share('window')">
 								<i class="mdi mdi-window-restore"></i>
 								<span>Window share</span>
@@ -37,6 +37,11 @@
 					</ul>
 				</lx-dropdown-menu>
 			</lx-dropdown>
+
+			<!-- Presentation (Chrome) -->
+			<button class="btn btn--l btn--white btn--icon" lx-ripple ng-click="share('window')" ng-show="canPresent('chrome')" ng-disabled="presentation.disabled.general">
+				<i class="mdi mdi-presentation"></i>
+			</button>
 
 			<!-- Users -->
 			<lx-dropdown position="right" from-top>
@@ -52,14 +57,9 @@
 				</lx-dropdown-menu>
 			</lx-dropdown>
 
-			<!-- Mute -->
-			<button class="btn btn--l btn--white btn--icon" lx-ripple ng-click="mute()" ng-show="!muted">
-				<i class="mdi mdi-volume-high"></i>
-			</button>
-
-			<!-- Unmute -->
-			<button class="btn btn--l btn--white btn--icon" lx-ripple ng-click="unmute()" ng-show="muted">
-				<i class="mdi mdi-volume-off"></i>
+			<!-- Mute / unmute -->
+			<button class="btn btn--l btn--white btn--icon" lx-ripple ng-click="volume.change()">
+				<i class="mdi {{ volume.icon }}"></i>
 			</button>
 		</div>
 	</div>
@@ -80,7 +80,7 @@
 	<div id="presentation-container" class="container video-room noPresentation" ng-click="changePresentationSize()">
 		<video id="presentation" height="auto" autoplay poster="img/transparent.png"></video>
 		<div class="underlay" id="progress"></div>
-		<div class="stop-overlay" ng-show="isPresenting">
+		<div class="stop-overlay" ng-show="presentation.presenterIsMe">
 			<button class="btn btn--m btn--red btn--fab" lx-ripple ng-click="stopPresenting()">
 				<i class="mdi mdi-stop"></i>
 			</button>

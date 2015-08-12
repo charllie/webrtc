@@ -4,8 +4,33 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 		$location.path('/');
 
 	$scope.roomName = $params.roomName;
-	$scope.presentation = false;
-	$scope.isPresenting = false;
+
+	$scope.presentation = {
+		active: false,
+		presenterIsMe: false,
+		disabled: {
+			all: function() {
+				this.general = true;
+				this.screen = true;
+				this.window = true;
+				_.defer(function() {
+					$scope.$apply();
+				});
+			},
+			general: false,
+			screen: false,
+			window: false,
+			none: function() {
+				this.general = false;
+				this.screen = false;
+				this.window = false;
+				_.defer(function() {
+					$scope.$apply();
+				});
+			}
+		}
+	};
+
 	$scope.participantNames = [];
 
 	socket.get().onmessage = function(message) {
@@ -44,12 +69,28 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 				receiveVideoResponse(parsedMessage);
 				break;
 			
-			case 'existingScreensharer':
-				// errorReload("A user' screen is currently being shared.");
+			case 'existingPresentation':
+				
+				var warning = {
+					title: 'Someone is currently presenting',
+					content: 'You cannot present until the current presentation has finished.'
+				};
+
+				notifications.alert(warning.title, warning.content, 'Ok', function(answer) {
+					// This should be handled by lumx (it must be a bug)
+					// May be removed in the future
+					$('.dialog-filter').remove();
+					$('.dialog').remove();
+				});
+
+				$scope.stopPresenting();
 				break;
 			
 			case 'existingName':
-				// errorReload("This username already exists.");
+
+				constraints.setWarning(true);
+				$scope.leave();
+
 				break;
 			
 			case 'iceCandidate':
@@ -98,7 +139,7 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 			participant.rtcPeer['presentation'] = null;
 		}
 
-		$scope.isPresenting = false;
+		$scope.presentation.presenterIsMe = false;
 		constraints.setType('composite');
 		socket.send({ id: 'stopPresenting' });
 	};
@@ -108,7 +149,12 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 		var currentType = constraints.getType();
 		var success = true;
 
-		if (type != currentType && constraints.canPresent) {
+		// if there is already a presenter who is not me
+		if ($scope.presentation.active && !$scope.presentation.presenterIsMe)
+			return;
+
+		// on Chrome, the extension handles window or screen
+		if ((type != currentType || constraints.browserIsChrome) && constraints.canPresent) {
 
 			if (currentType != 'composite')
 				this.stopPresenting();
@@ -137,7 +183,8 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 			if (success) {
 
 				constraints.setType(type);
-				$scope.isPresenting = true;
+
+				$scope.presentation.presenterIsMe = true;
 
 				socket.send({
 					id: 'newPresenter',
@@ -150,8 +197,10 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 		}
 	};
 
-	$scope.canPresent = function() {
-		return constraints.canPresent;
+	$scope.canPresent = function(browser) {
+		
+		return (constraints.canPresent && browser == constraints.browser);
+
 	};
 
 	$scope.leave = function() {
@@ -171,8 +220,10 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 		if (participants.get(sender) === undefined)
 			participants.add(sender);
 
-		if (isScreensharer)
+		if (isScreensharer) {
 			progress.circular.show('#2196F3', '#progress');
+			$scope.presentation.disabled.all();
+		}
 
 		var participant = participants.get(sender);
 		
@@ -207,8 +258,10 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 			$scope.participantNames.push(participant.name);
 			generateTableNames($scope.participantNames);
 			options.remoteVideo = document.getElementById(type);
-		} else
+		} else {
 			options.localVideo = document.getElementById(type);
+			$scope.presentation.disabled[constraints.getType()] = true;
+		}
 
 		participant.rtcPeer[type] = new kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options,
 			function(error) {
@@ -227,7 +280,7 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 						$('.dialog').remove();
 					});
 
-					$scope.isPresenting = false;
+					$scope.presentation.presenterIsMe = false;
 				}
 
 				this.generateOffer(participant.offerToReceive[type].bind(participant));
@@ -333,7 +386,7 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 			adaptCompositeContainer();
 		});
 
-		$('#composite').resize(function() {
+		$('video').resize(function() {
 			adaptCompositeContainer();
 		}).on('play', function() {
 			$(this).addClass('playing');
@@ -352,18 +405,19 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 	}
 
 	function enablePresentationClass() {
-		$scope.presentation = true;
+		$scope.presentation.active = true;
 		setWidth('.video-room', null, 'hasPresentation', ['noPresentation']);
 	}
 
 	function disablePresentationClass() {
 		setWidth('.video-room', null, 'noPresentation', ['hasPresentation', 'bigger', 'smaller']);
 		$('#presentation').removeClass('playing');
-		$scope.presentation = false;
+		$scope.presentation.active = false;
+		$scope.presentation.disabled.none();
 	}
 
 	function setWidth(elt1, elt2, elt1Class, elt2Classes) {
-		if ($scope.presentation) {
+		if ($scope.presentation.active) {
 			$(elt1).animate({
 				opacity: 1
 			}, {
@@ -415,15 +469,14 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 		}
 	};
 
-	// Controls part
-	$scope.muted = false;
-	$scope.mute = function() {
-		$('#composite').prop('muted', true);
-		this.muted = true;
-	};
-
-	$scope.unmute = function() {
-		$('#composite').prop('muted', false);
-		this.muted = false;
+	// Volume part
+	$scope.volume = {
+		muted: false,
+		icon: 'mdi-volume-high',
+		change: function() {
+			this.muted = !this.muted;
+			this.icon = (this.muted) ? 'mdi-volume-off' : 'mdi-volume-high';
+			$('#composite').prop('muted', this.muted);
+		}
 	};
 }

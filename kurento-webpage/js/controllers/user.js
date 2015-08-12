@@ -62,4 +62,22 @@ function UserCtrl($scope, $location, socket, constraints, notifications, partici
 			}
 		}
 	};
+
+	if (constraints.getWarning()) {
+
+		var warning = {
+			title: 'Username already taken',
+			content: 'Please choose another username.'
+		};
+
+		notifications.alert(warning.title, warning.content, 'Ok', function(answer) {
+			// This should be handled by lumx (it must be a bug)
+			// May be removed in the future
+			$('.dialog-filter').remove();
+			$('.dialog').remove();
+		});
+
+		constraints.setWarning(null);
+
+	}
 }
