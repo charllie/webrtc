@@ -169,11 +169,13 @@ public class CallHandler extends TextWebSocketHandler {
 	}
 
 	private void leaveRoom(UserSession user) throws IOException {
-		final Room room = roomManager.getRoom(user.getRoomName());
-		room.leave(user);
-		if (room.getParticipants().isEmpty()) {
-			roomManager.removeRoom(room);
+		if (user != null) {
+			final Room room = roomManager.getRoom(user.getRoomName());
+			room.leave(user);
+			if (room.getParticipants().isEmpty()) {
+				roomManager.removeRoom(room);
+			}
+			registry.removeBySession(user.getSession());
 		}
-		registry.removeBySession(user.getSession());
 	}
 }
