@@ -44,7 +44,7 @@ app.factory('constraints', ['$window', 'deviceDetector', 'upload', function($win
 		}
 	};
 
-	var get = function() {
+	function get() {
 
 		var constraints;
 
@@ -76,35 +76,35 @@ app.factory('constraints', ['$window', 'deviceDetector', 'upload', function($win
 
 		return constraints;
 
-	};
+	}
 
-	var getType = function() {
+	function getType() {
 		return type;
-	};
+	}
 
-	var setType = function(t) {
+	function setType(t) {
 		type = t;
-	};
+	}
 
-	var setId = function(id) {
+	function setId(id) {
 		chromeConstraintPresentation.video.mandatory.chromeMediaSourceId = id;
-	};
+	}
 
-	var chromeExtensionDetected = function() {
+	function chromeExtensionDetected() {
 		chromeExtensionInstalled = true;
-	};
+	}
 
-	var isChromeExtensionInstalled = function() {
+	function isChromeExtensionInstalled() {
 		return chromeExtensionInstalled;
-	};
+	}
 
-	var getWarning = function() {
+	function getWarning() {
 		return warning;
-	};
+	}
 
-	var setWarning = function(w) {
+	function setWarning(w) {
 		warning = w;
-	};
+	}
 
 	return {
 		browser: browser,

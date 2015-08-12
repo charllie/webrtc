@@ -1,10 +1,10 @@
 app.factory('variables', ['$http', function($http) {
 
-	var get = function() {
+	function get() {
 		return $http.get('/config.json').then(function(result) {
 			return result.data;
 		});
-	};
+	}
 
 	return { get: get };
 }]);

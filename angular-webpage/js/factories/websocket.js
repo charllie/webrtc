@@ -4,25 +4,42 @@ app.factory('socket', ['$window', 'variables', function($window, variables) {
 	var socket = {
 		readyState: 0
 	};
+	var messagePrepared = null;
 
 	variables.get().then(function(data) {
 		uri = ($window.location.protocol == 'https:') ? data.wss_uri : data.ws_uri;
 		socket = new WebSocket(uri);
+
+		socket.onopen = function(event) {
+			setInterval(function() {
+				send({ id: 'stay-alive' });
+			}, 30000);
+		};
 	});
 
-	var send = function(message) {
+	function send(message) {
 		var jsonMessage = JSON.stringify(message);
 		console.log('Sending message: ' + jsonMessage);
 		socket.send(jsonMessage);
-	};
+	}
 
-	var get = function() {
+	function get() {
 		return socket;
-	};
+	}
 
-	var isOpen = function() {
+	function prepareJoiningRoom(m) {
+		messagePrepared = m;
+	}
+
+	function roomReady() {
+		if (messagePrepared !== null)
+			send(messagePrepared);
+		messagePrepared = null;
+	}
+
+	function isOpen() {
 		return (socket.readyState == 1);
-	};
+	}
 
 	$window.onbeforeunload = function() {
 		send({ id: 'leaveRoom' });
@@ -32,6 +49,8 @@ app.factory('socket', ['$window', 'variables', function($window, variables) {
 	return {
 		send: send,
 		get: get,
+		prepareJoiningRoom: prepareJoiningRoom,
+		roomReady: roomReady,
 		isOpen: isOpen
 	};
 }]);

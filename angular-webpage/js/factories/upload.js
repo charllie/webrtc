@@ -89,10 +89,10 @@ app.factory('upload', ['$http', 'deviceDetector', 'variables', function($http, d
 
 	});
 
-	var abort = function() {
+	function abort() {
 		if (request !== null)
 			request.abort();
-	};
+	}
 
 	return {
 		speed: function() {

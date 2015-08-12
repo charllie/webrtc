@@ -36,7 +36,7 @@ function UserCtrl($scope, $location, socket, constraints, notifications, partici
 
 				participants.add(participant.name);
 
-				socket.send({
+				socket.prepareJoiningRoom({
 					id: 'joinRoom',
 					name: participant.name,
 					room: participant.room,

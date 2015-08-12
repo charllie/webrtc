@@ -3,6 +3,8 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 	if (participants.isEmpty())
 		$location.path('/');
 
+	socket.roomReady();
+
 	$scope.roomName = $params.roomName;
 
 	$scope.presentation = {
@@ -108,10 +110,6 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 				console.error('Unrecognized message', parsedMessage);
 		}
 	};
-
-	setInterval(function() {
-		socket.send({ id: 'stay-alive' });
-	}, 30000);
 
 	// Configuration for the extension if it is Chrome
 	if (constraints.browserIsChrome) {

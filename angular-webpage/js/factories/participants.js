@@ -3,7 +3,7 @@ app.factory('participants', ['socket', function(socket) {
 	var participants = {};
 	var name = null;
 
-	var add = function(n) {
+	function add(n) {
 
 		var participant = {
 			name: n,
@@ -89,25 +89,25 @@ app.factory('participants', ['socket', function(socket) {
 
 		if (name === null)
 			name = n;
-	};
+	}
 
-	var get = function(name) {
+	function get(name) {
 		return participants[name];
-	};
+	}
 
-	var remove = function(name) {
+	function remove(name) {
 		delete participants[name];
-	};
+	}
 
-	var me = function() {
+	function me() {
 		return participants[name];
-	};
+	}
 
-	var isEmpty = function() {
+	function isEmpty() {
 		return _.isEmpty(participants);
-	};
+	}
 
-	var clear = function() {
+	function clear() {
 		for (var key in participants) {
 			if (participants[key] !== undefined)
 				participants[key].dispose();
@@ -116,7 +116,7 @@ app.factory('participants', ['socket', function(socket) {
 		}
 
 		name = null;
-	};
+	}
 
 	return {
 		add: add,
