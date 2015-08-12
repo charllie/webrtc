@@ -1,0 +1,130 @@
+body, input, textarea {
+	font-family: 'Roboto';
+	font-weight: 400;
+}
+
+.header-bar {
+	z-index: 999;
+	position: fixed;
+	width: 100%;
+}
+
+.width--100 {
+	width: 100%;
+}
+
+.video-room {
+	transition: all .5s ease-in-out;
+	-webkit-transition: all .5s ease-in-out;
+	-moz-transition: all .5s ease-in-out;
+	-o-transition: all .5s ease-in-out;
+	display: inline-block;
+	margin-left: auto;
+	margin-right: auto;
+	opacity: 1;
+}
+
+.container {
+	position: relative;
+}
+
+#composite-container {
+	max-width: 640px;
+}
+
+#composite-container.noPresentation {
+	width: 90%;
+}
+
+video {
+	position: relative;
+	z-index: 0;
+}
+
+#composite-container .overlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 1;
+	width: 100%;
+	height: 100%;
+}
+
+#composite-container table {
+	margin: 0 auto;
+	width: 100%;
+	height: 100%;
+}
+
+#composite-container table td {
+	color: #eee;
+	vertical-align: bottom;
+	padding-bottom: 3%;
+	width: 50%;
+}
+
+.alone {
+	width: 100% !important;
+}
+
+#presentation-container .underlay {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	z-index: -1;
+}
+
+.stop-overlay {
+	position: absolute;
+	top: 100%;
+	left: 45%;
+	z-index: 1;
+}
+
+#presentation-container.noPresentation {
+	width: 0;
+	opacity: 0 !important;
+}
+
+.hasPresentation {
+	max-width: 45%;
+	opacity: 1;
+}
+
+.bigger {
+	max-width: 90% !important;
+}
+
+.smaller {
+	max-width: 30% !important;
+}
+
+.dialog__content {
+	font-size: .9em;
+}
+
+video {
+	max-width: 90%;
+}
+
+.playing {
+	border-radius: 2px;
+	overflow: hidden;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, .3);
+	background: #000;
+}
+
+@media screen and (max-width: 1023px) {
+	.header-padding {
+		height: 75px;
+		padding-top: 8px;
+		padding-bottom: 8px;
+	}
+}
+@media screen and (min-width: 1024px) {
+	.header-padding {
+		height: 87px;
+		padding-top: 12px;
+		padding-bottom: 12px;
+	}
+}

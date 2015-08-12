@@ -1,0 +1,31 @@
+<div flex-container="row">
+	<div flex-item="3" flex-item-order="1"></div>
+	<div flex-item="6" flex-item-order="2" class="p++">
+
+		<span class="fs-headline display-block text-center">WebRTC Video Conference</span>
+
+		<div class="text-center fs-body-1 card p+ mt++ mb+ bgc-amber-100 tc-grey-800" ng-show="isIncompatible()">
+			<p>Your browser may not support WebRTC yet. Please use Mozilla Firefox, Google Chrome or Opera instead.</p>
+		</div>
+
+		<form ng-submit="join(participant)">
+			<!-- Name -->
+			<lx-text-field label="Name" error="!checked.name">
+				<input type="name" ng-model="participant.name">
+			</lx-text-field>
+			<span class="text-field-error" ng-if="!checked.name">Name can't be empty</span>
+
+			<!-- Room -->
+			<lx-text-field label="Room" error="!checked.room">
+				<input type="room" ng-model="participant.room">
+			</lx-text-field>
+			<span class="text-field-error" ng-if="!checked.room">Room can't be empty</span>
+
+			<div class="pt+++" flex-container="row">
+				<button type="submit" class="width--100 btn btn--m btn--{{ color }} btn--raised" flex-item="12" lx-ripple>Join!</button>
+			</div>
+		</form>
+
+	</div>
+	<div flex-item="3" flex-item-order="3"></div>
+</div>
