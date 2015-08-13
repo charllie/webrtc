@@ -55,21 +55,13 @@ This little nodejs module enables to do an upload speed test to adapt the qualit
 Web interface (Port 80)
 ----------------------------
 
-1. Installation
+1. Configuration (config.json)
 
-	> docker build --file=kurento-webpage -t kurento-webpage:6 . 
+2. Installation
+
+	> docker build --file=angular-webpage -t angular-webpage:1 . 
 	
-	> docker run --net=host --name=kurento-webpage kurento-webpage:6
-
-2. Configuration (js/conferenceroom.js)
-	
-	* Kurento Client
-
-		> var ws = new WebSocket(*WS_URL_TO_GROUPCALL*);
-
-	* Upload speed tester
-
-		> $.ajax(*HTTP_URL_TO_UPLOAD_SPEED_TESTER*, {...});
+	> docker run --net=host --name=angular-webpage -v /root/conf:/conf/ angular-webpage:1
 
 
 
