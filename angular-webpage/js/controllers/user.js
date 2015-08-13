@@ -5,7 +5,7 @@ function UserCtrl($scope, $location, socket, constraints, notifications, partici
 		room: ''
 	};
 
-	$scope.color = 'blue';
+	$scope.color = 'blue-grey';
 
 	$scope.checked = {
 		name: true,

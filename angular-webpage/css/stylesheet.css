@@ -114,6 +114,18 @@ video {
 	background: #000;
 }
 
+.text-field:after {
+	background-color: #607d8b;
+}
+
+.text-field.text-field--has-error:after {
+	background-color: #f44336;
+}
+
+.text-field--is-focused .text-field__label,.text-field--is-focused.text-field--dark-theme .text-field__label {
+	color: #607d8b !important;
+}
+
 @media screen and (max-width: 1023px) {
 	.header-padding {
 		height: 75px;
