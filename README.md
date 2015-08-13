@@ -33,15 +33,13 @@ Kurento Client (Port 8080)
 --------------------------------
 A Kurento Client is needed to process the information given by the users. In this project, the Kurento client mixes all user streams into 1 stream. It also enables 1 person in a room to do a screenshare.
 
-1. Configuration (cz.cvut.fel.webrtc.GroupCallApp)
-
-	> final static String DEFAULT_KMS_WS_URI = *WS_URL_TO_KMS*;
+1. Configuration (application.properties)
 
 2. Installation
 
 	> docker build --file=kurento-agent -t kurento-agent:6 . 
 
-	> docker run --net=host --name=kurento-agent kurento-agent:6
+	> docker run --net=host --name=kurento-agent -v /root/conf:/conf/ kurento-agent:6
 
 
 
