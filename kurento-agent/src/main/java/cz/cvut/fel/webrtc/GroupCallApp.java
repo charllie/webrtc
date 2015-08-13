@@ -34,7 +34,7 @@ import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
  * @since 4.3.1
  */
 @Configuration
-@PropertySource("classpath:/conf/application.properties")
+@PropertySource("file:/root/webrtc/kurento-agent/conf/application.properties")
 @EnableWebSocket
 @EnableAutoConfiguration
 public class GroupCallApp implements WebSocketConfigurer {
