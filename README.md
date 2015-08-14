@@ -23,10 +23,7 @@ This project depends on Kurento so it has to be installed first.
 
 	> docker build --file=kms6 -t kms:6 . 
 	
-	> docker run --net=host --name=kms6 kms:6
-
- 2. Configuration (vim /etc/kurento/kurento.conf.json)
-
+	> docker run --restart=always --net=host --name=kms6 kms:6
 
 
 Kurento Client (Port 8080)
@@ -39,7 +36,7 @@ A Kurento Client is needed to process the information given by the users. In thi
 
 	> docker build --file=kurento-agent -t kurento-agent:6 . 
 
-	> docker run --net=host --name=kurento-agent -v /root/conf:/webrtc/kurento-agent/config/ kurento-agent:6
+	> docker run --restart=always --net=host --name=kurento-agent -v /root/conf:/webrtc/kurento-agent/config/ kurento-agent:6
 
 
 
@@ -49,7 +46,7 @@ This little nodejs module enables to do an upload speed test to adapt the qualit
 
 > docker build --file=upload-speed-tester -t upload-speed-tester:1 . 
 
-> docker run --net=host --name=upload-speed-tester upload-speed-tester:1
+> docker run --restart=always --net=host --name=upload-speed-tester upload-speed-tester:1
 
 
 Web interface (Port 80)
@@ -61,7 +58,7 @@ Web interface (Port 80)
 
 	> docker build --file=angular-webpage -t angular-webpage:1 . 
 	
-	> docker run --net=host --name=angular-webpage -v /root/conf:/conf/ angular-webpage:1
+	> docker run --restart=always --net=host --name=angular-webpage -v /root/conf:/conf/ angular-webpage:1
 
 
 
