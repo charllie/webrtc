@@ -22,11 +22,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
-
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 
 /**
  * 
@@ -34,7 +30,6 @@ import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
  * @since 4.3.1
  */
 @Configuration
-@PropertySource("file:/conf/application.properties")
 @EnableWebSocket
 @EnableAutoConfiguration
 public class GroupCallApp implements WebSocketConfigurer {

@@ -89,11 +89,15 @@ public class CallHandler extends TextWebSocketHandler {
 			
 		case "receiveVideoFrom":
 			final String senderName = jsonMessage.get("sender").getAsString();
-			final UserSession sender = registry.getByName(senderName);
 			final Room room = roomManager.getRoom(user.getRoomName());
-			final String sdpOffer = jsonMessage.get("sdpOffer").getAsString();
-			final String type = jsonMessage.get("type").getAsString();
-			user.receiveVideoFrom(sender, type, sdpOffer, room);
+			final UserSession sender = room.getParticipant(senderName);
+			
+			if (sender != null) {
+				final String sdpOffer = jsonMessage.get("sdpOffer").getAsString();
+				final String type = jsonMessage.get("type").getAsString();
+				user.receiveVideoFrom(sender, type, sdpOffer, room);
+			}
+			
 			break;
 		
 		case "leaveRoom":
