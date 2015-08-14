@@ -34,7 +34,7 @@ import org.springframework.beans.factory.annotation.Value;
 @EnableAutoConfiguration
 public class GroupCallApp implements WebSocketConfigurer {
 
-	@Value("${kms.ws}")
+	@Value("${kms.ws:ws://webrtc.ml:8888/kurento}")
 	private String kms_uri;
 
 	@Bean
@@ -54,6 +54,7 @@ public class GroupCallApp implements WebSocketConfigurer {
 
 	@Bean
 	public KurentoClient kurentoClient() {
+		System.out.println(kms_uri);
 		return KurentoClient.create(System.getProperty("kms.ws.uri", kms_uri));
 	}
 	
