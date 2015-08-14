@@ -46,7 +46,8 @@ public class Room implements Closeable {
 	private final Logger log = LoggerFactory.getLogger(Room.class);
 
 	private final ConcurrentMap<String, UserSession> participants = new ConcurrentSkipListMap<>();
-	private final MediaPipeline pipeline;
+	private final MediaPipeline presentationPipeline;
+	private final MediaPipeline compositePipeline;
 	private final Composite composite;
 	private final String name;
 	private UserSession screensharer;
@@ -58,10 +59,11 @@ public class Room implements Closeable {
 		return name;
 	}
 
-	public Room(String roomName, MediaPipeline pipeline) {
+	public Room(String roomName, MediaPipeline compositePipeline, MediaPipeline presentationPipeline) {
 		this.name = roomName;
-		this.pipeline = pipeline;
-		this.composite = new Composite.Builder(pipeline).build();
+		this.compositePipeline = compositePipeline;
+		this.presentationPipeline = presentationPipeline;
+		this.composite = new Composite.Builder(compositePipeline).build();
 		log.info("ROOM {} has been created", roomName);
 	}
 
@@ -74,8 +76,7 @@ public class Room implements Closeable {
 			throws IOException {
 		log.info("ROOM {}: adding participant {}", userName, userName);
 
-		final UserSession participant = new UserSession(userName, this.name,
-				session, this.pipeline, this.composite);
+		final UserSession participant = new UserSession(userName, this.name, session, this.compositePipeline, this.presentationPipeline, this.composite);
 		
 		joinRoom(participant);
 		participants.put(participant.getName(), participant);
@@ -225,16 +226,30 @@ public class Room implements Closeable {
 
 		participants.clear();
 
-		pipeline.release(new Continuation<Void>() {
+		compositePipeline.release(new Continuation<Void>() {
 
 			@Override
 			public void onSuccess(Void result) throws Exception {
-				log.trace("ROOM {}: Released Pipeline", Room.this.name);
+				log.trace("ROOM {}: Released Composite Pipeline", Room.this.name);
 			}
 
 			@Override
 			public void onError(Throwable cause) throws Exception {
-				log.warn("PARTICIPANT {}: Could not release Pipeline",
+				log.warn("PARTICIPANT {}: Could not release Composite Pipeline",
+						Room.this.name);
+			}
+		});
+		
+		presentationPipeline.release(new Continuation<Void>() {
+
+			@Override
+			public void onSuccess(Void result) throws Exception {
+				log.trace("ROOM {}: Released Presentation Pipeline", Room.this.name);
+			}
+
+			@Override
+			public void onError(Throwable cause) throws Exception {
+				log.warn("PARTICIPANT {}: Could not release Presentation Pipeline",
 						Room.this.name);
 			}
 		});
@@ -242,8 +257,12 @@ public class Room implements Closeable {
 		log.debug("Room {} closed", this.name);
 	}
 	
-	public MediaPipeline getPipeline() {
-		return pipeline;
+	public MediaPipeline getCompositePipeline() {
+		return compositePipeline;
+	}
+	
+	public MediaPipeline getPresentationPipeline() {
+		return presentationPipeline;
 	}
 	
 	public void setScreensharer(UserSession user) {

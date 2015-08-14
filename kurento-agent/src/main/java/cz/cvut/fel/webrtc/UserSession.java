@@ -49,7 +49,8 @@ public class UserSession implements Closeable {
 	private final String name;
 	private final WebSocketSession session;
 	
-	private final MediaPipeline pipeline;
+	private final MediaPipeline compositePipeline;
+	private final MediaPipeline presentationPipeline;
 
 	private final String roomName;
 	
@@ -61,14 +62,15 @@ public class UserSession implements Closeable {
 	private boolean isScreensharer = false;
 	
 	public UserSession(final String name, String roomName,
-			final WebSocketSession session, MediaPipeline pipeline, Hub hub){
+			final WebSocketSession session, MediaPipeline compositePipeline, MediaPipeline presentationPipeline, Hub hub){
 
-		this.pipeline = pipeline;
+		this.compositePipeline = compositePipeline;
+		this.presentationPipeline = presentationPipeline;
 		this.name = name;
 		this.session = session;
 		this.roomName = roomName;
 		
-		this.outgoingMedia = new WebRtcEndpoint.Builder(pipeline).build();
+		this.outgoingMedia = new WebRtcEndpoint.Builder(compositePipeline).build();
 
 		this.outgoingMedia
 				.addOnIceCandidateListener(new EventListener<OnIceCandidateEvent>() {
@@ -92,7 +94,7 @@ public class UserSession implements Closeable {
 					}
 				});
 		
-		ImageOverlayFilter imageOverlayFilter = new ImageOverlayFilter.Builder(this.pipeline).build();
+		ImageOverlayFilter imageOverlayFilter = new ImageOverlayFilter.Builder(this.compositePipeline).build();
 		
 		imageOverlayFilter.addImage("username",  "https://webrtc.ml/names/" + UrlEscapers.urlPathSegmentEscaper().escape(name).replace(";",""), 0F, 0F, 1F, 1F, false, true);
 		
@@ -178,7 +180,7 @@ public class UserSession implements Closeable {
 			if ((this.isScreensharer && this.equals(sender)) || (sender.isScreensharer)) {
 				
 				if (this.sharingMedia == null) {
-					this.sharingMedia = new WebRtcEndpoint.Builder(pipeline).build();
+					this.sharingMedia = new WebRtcEndpoint.Builder(presentationPipeline).build();
 					
 					final UserSession presenter = (this.isScreensharer) ? this : sender;
 					
