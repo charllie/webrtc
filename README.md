@@ -39,7 +39,7 @@ A Kurento Client is needed to process the information given by the users. In thi
 
 	> docker build --file=kurento-agent -t kurento-agent:6 . 
 
-	> docker run --net=host --name=kurento-agent -v /root/conf:/conf/ kurento-agent:6
+	> docker run --net=host --name=kurento-agent -v /root/conf:/webrtc/kurento-agent/config/ kurento-agent:6
 
 
 
