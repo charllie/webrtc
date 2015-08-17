@@ -181,7 +181,6 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 			if (success) {
 
 				constraints.setType(type);
-
 				$scope.presentation.presenterIsMe = true;
 
 				socket.send({
@@ -254,7 +253,6 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 		if (type == 'composite') {
 			$scope.participantNames = message.data;
 			$scope.participantNames.push(participant.name);
-			generateTableNames($scope.participantNames);
 			options.remoteVideo = document.getElementById(type);
 		} else {
 			options.localVideo = document.getElementById(type);
@@ -263,6 +261,8 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 
 		participant.rtcPeer[type] = new kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options,
 			function(error) {
+				if (error)
+					$scope.presentation.presenterIsMe = false;
 
 				if (constraints.browserIsFirefox && error && type != 'composite') {
 
@@ -277,8 +277,6 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 						$('.dialog-filter').remove();
 						$('.dialog').remove();
 					});
-
-					$scope.presentation.presenterIsMe = false;
 				}
 
 				this.generateOffer(participant.offerToReceive[type].bind(participant));
@@ -286,7 +284,9 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 
 		if (message.existingScreensharer && type == 'composite') {
 			enablePresentationClass();
-			receiveVideo(message.screensharer, true);
+
+			if (message.screensharer != participants.me().name)
+				receiveVideo(message.screensharer, true);
 		}
 
 	}
@@ -317,8 +317,6 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 		participants.add(request.name);
 		$scope.participantNames.push(request.name);
 
-		generateTableNames($scope.participantNames);
-
 		notifications.notify(request.name + ' has joined the room', 'account-plus');
 
 		console.log(request.name + " has just arrived");
@@ -342,38 +340,13 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 		notifications.notify(request.name + ' has left the room', 'account-remove');
 
 		$scope.participantNames = request.data;
-		generateTableNames($scope.participantNames);
 	}
 
 	function receiveVideoResponse(result) {
-
+		
 		participants.get(result.name).rtcPeer[result.type].processAnswer(result.sdpAnswer, function(error) {
 			if (error) return console.error(error);
 		});
-	}
-
-	function generateTableNames(array) {
-
-		if (array.length > 1) {
-			var i = 0;
-			var html = '';
-
-			for (i; i < array.length; i++) {
-				if ((i % 2) === 0)
-					html += '<tr>';
-
-				html += '<td>' + array[i] + '</td>';
-			}
-
-			if ((i % 2) == 1) {
-				html += '<td></td></tr>';
-			}
-
-			$('.overlay > table').html(html);
-		} else {
-			$('.overlay > table').html('<tr><td class="alone">' + array[0] + '</td></tr>');
-		}
-
 	}
 
 	// CSS part
@@ -398,8 +371,6 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 
 	function adaptCompositeContainer() {
 		$('video').css('max-height', $(window).height() - 90 + 'px');
-		$('#composite-container > .overlay > table').css('height', $('#composite').height());
-		$('#composite-container > .overlay > table').css('width', $('#composite').width());
 	}
 
 	function enablePresentationClass() {
