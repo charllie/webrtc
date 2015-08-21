@@ -1,0 +1,24 @@
+kms6:
+  build: ./kms6
+  restart: always
+  net: "host"
+  container_name: kms6
+kurento-agent:
+  build: ./kurento-agent
+  restart: always
+  net: "host"
+  container_name: kurento-agent
+  volumes:
+    - /root/conf:/webrtc/kurento-agent/config/
+upload-speed-tester:
+  build: ./upload-speed-tester
+  restart: always
+  net: "host"
+  container_name: upload-speed-tester
+angular-webpage:
+  build: ./angular-webpage
+  restart: always
+  net: "host"
+  container_name: angular-webpage
+  volumes:
+    - /root/conf:/conf/
