@@ -29,6 +29,7 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 import org.springframework.beans.factory.annotation.Value;
 
 import cz.cvut.fel.webrtc.db.RoomManager;
+import cz.cvut.fel.webrtc.db.SipRegistry;
 import cz.cvut.fel.webrtc.db.UserRegistry;
 import cz.cvut.fel.webrtc.handlers.SipHandler;
 import cz.cvut.fel.webrtc.handlers.WebHandler;
@@ -43,10 +44,10 @@ import cz.cvut.fel.webrtc.handlers.WebHandler;
 @EnableAutoConfiguration
 public class GroupCallApp implements WebSocketConfigurer {
 
-	@Value("${kms.ws}")
+	@Value("${kurento.websocket}")
 	private String kms_uri;
 	
-	@Value("${ast.ws}")
+	@Value("${asterisk.websocket}")
 	private String ast_uri;
 
 	@Bean
@@ -67,6 +68,11 @@ public class GroupCallApp implements WebSocketConfigurer {
 	@Bean
 	public SipHandler sipHandler() {
 		return new SipHandler();
+	}
+	
+	@Bean
+	public SipRegistry sipRegistry() {
+		return new SipRegistry();
 	}
 	
 	@Bean

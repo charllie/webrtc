@@ -16,12 +16,18 @@ import javax.sip.message.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import cz.cvut.fel.webrtc.db.SipRegistry;
+
 public class SipHandler extends TextWebSocketHandler {
+	
+	@Autowired
+	private SipRegistry sipRegistry;
 
 	protected Logger log = LoggerFactory.getLogger(SipHandler.class);
 
