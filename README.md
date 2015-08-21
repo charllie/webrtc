@@ -122,4 +122,5 @@ An easy way to install the project is using docker-compose.
 First install docker-compose : https://docs.docker.com/compose/install/
 
 Installation in the docker-compose folder :
+
 	> docker-compose up 
