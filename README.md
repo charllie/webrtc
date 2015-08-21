@@ -6,13 +6,12 @@ WebRTC Conferencing Project
  3. Upload Speed tester
  4. Web interface
  5. nginx configuration
+ 6. docker-compose
 
 
 
 To edit files in a Docker, first enter in the docker with this command:
 > docker exec -i -t DOCKER_NAME /bin/bash
-
-
 
 Kurento Media Server 6 (Port 8888)
 ------------------------------------------
@@ -113,3 +112,12 @@ nginx may be needed to redirect ports and/or to enable SSL on the domain (which 
                 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         }
 	}
+
+
+docker-compose
+---------------
+
+An easy way to install the project is using docker-compose.
+First install docker-compose : https://docs.docker.com/compose/install/
+Installation in the docker-compose folder :
+	> docker-compose up 
