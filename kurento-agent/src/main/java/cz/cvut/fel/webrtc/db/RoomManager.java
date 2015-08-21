@@ -12,7 +12,7 @@
  * Lesser General Public License for more details.
  *
  */
-package cz.cvut.fel.webrtc;
+package cz.cvut.fel.webrtc.db;
 
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,6 +22,8 @@ import org.kurento.client.KurentoClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import cz.cvut.fel.webrtc.resources.Room;
 
 /**
  * @author Ivan Gracia (izanmail@gmail.com)

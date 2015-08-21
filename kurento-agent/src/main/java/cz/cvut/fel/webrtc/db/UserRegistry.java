@@ -12,11 +12,13 @@
  * Lesser General Public License for more details.
  *
  */
-package cz.cvut.fel.webrtc;
+package cz.cvut.fel.webrtc.db;
 
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.web.socket.WebSocketSession;
+
+import cz.cvut.fel.webrtc.resources.UserSession;
 
 /**
  * Map of users registered in the system. This class has a concurrent hash map

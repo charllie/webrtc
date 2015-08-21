@@ -12,7 +12,7 @@
  * Lesser General Public License for more details.
  *
  */
-package cz.cvut.fel.webrtc;
+package cz.cvut.fel.webrtc.resources;
 
 import java.io.Closeable;
 import java.io.IOException;

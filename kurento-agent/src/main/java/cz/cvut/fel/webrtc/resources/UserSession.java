@@ -12,16 +12,21 @@
  * Lesser General Public License for more details.
  *
  */
-package cz.cvut.fel.webrtc;
+package cz.cvut.fel.webrtc.resources;
 
 import java.io.Closeable;
 import java.io.IOException;
 
-import com.google.common.net.UrlEscapers;
+/*
+ * For ImageOverlay
+ * 
+ * import com.google.common.net.UrlEscapers;
+ * import org.kurento.client.ImageOverlayFilter; 
+ * 
+ */
 
 import org.kurento.client.Continuation;
 import org.kurento.client.EventListener;
-import org.kurento.client.ImageOverlayFilter; 
 import org.kurento.client.Hub;
 import org.kurento.client.HubPort;
 import org.kurento.client.IceCandidate;
@@ -49,7 +54,6 @@ public class UserSession implements Closeable {
 	private final String name;
 	private final WebSocketSession session;
 	
-	private final MediaPipeline compositePipeline;
 	private final MediaPipeline presentationPipeline;
 
 	private final String roomName;
@@ -57,14 +61,12 @@ public class UserSession implements Closeable {
 	private final WebRtcEndpoint outgoingMedia;
 	private WebRtcEndpoint sharingMedia; 
 	
-	//private final ConcurrentHashMap<String, WebRtcEndpoint> incomingMedia = new ConcurrentHashMap<String, WebRtcEndpoint>();
 	private final HubPort hubPort;
 	private boolean isScreensharer = false;
 	
 	public UserSession(final String name, String roomName,
 			final WebSocketSession session, MediaPipeline compositePipeline, MediaPipeline presentationPipeline, Hub hub){
 
-		this.compositePipeline = compositePipeline;
 		this.presentationPipeline = presentationPipeline;
 		this.name = name;
 		this.session = session;
@@ -94,14 +96,24 @@ public class UserSession implements Closeable {
 					}
 				});
 		
-		ImageOverlayFilter imageOverlayFilter = new ImageOverlayFilter.Builder(this.compositePipeline).build();
 		
+		/*
+		 * For ImageOverlay
+		 * 
+		ImageOverlayFilter imageOverlayFilter = new ImageOverlayFilter.Builder(this.compositePipeline).build();
 		imageOverlayFilter.addImage("username",  "https://webrtc.ml/names/" + UrlEscapers.urlPathSegmentEscaper().escape(name).replace(";",""), 0F, 0F, 1F, 1F, false, true);
 		
 		this.hubPort = new HubPort.Builder(hub).build();
 		outgoingMedia.connect(imageOverlayFilter);
 		imageOverlayFilter.connect(hubPort);
 		hubPort.connect(outgoingMedia);
+		
+		 */
+		
+		this.hubPort = new HubPort.Builder(hub).build();
+		outgoingMedia.connect(hubPort);
+		hubPort.connect(outgoingMedia);
+		
 		
 	}
 
@@ -221,93 +233,7 @@ public class UserSession implements Closeable {
 		}
 		
 		return outgoingMedia;
-		
-		
-		
-		/*WebRtcEndpoint incoming = incomingMedia.get(sender.getName());
-		if (incoming == null) {
-			incoming = new WebRtcEndpoint.Builder(pipeline).build();
-			
-			log.info("PARTICIPANT {}: creating new endpoint for {}", this.name, sender.getName());
-	
-			incoming.addOnIceCandidateListener(new EventListener<OnIceCandidateEvent>() {
-	
-				@Override
-				public void onEvent(OnIceCandidateEvent event) {
-					JsonObject response = new JsonObject();
-					response.addProperty("id", "iceCandidate");
-					response.addProperty("name", sender.getName());
-					response.add("candidate", JsonUtils.toJsonObject(event.getCandidate()));
-					try {
-						synchronized (session) {
-							session.sendMessage(new TextMessage(response.toString()));
-						}
-					} catch (IOException e) {
-						log.debug(e.getMessage());
-					}
-				}
-			});
-			
-			incomingMedia.put(sender.getName(), incoming);
-		}
-
-		log.info("PARTICIPANT {}: obtained endpoint for {}", this.name, sender.getName());
-		
-		sender.getOutgoingWebRtcPeer().connect(incoming);
-		
-		if (isScreensharer && !this.equals(sender)) {
-			hubPort.connect(incoming);
-			incoming.connect(hubPort);
-		}
-		
-		return incoming;
-
-		/*log.info("PARTICIPANT {}: receiving video from {}", this.name,
-				sender.getName());
-
-		WebRtcEndpoint incoming = incomingMedia.get(sender.getName());
-		if (incoming == null) {
-			log.info("PARTICIPANT {}: creating new endpoint for {}",
-					this.name, sender.getName());
-			incoming = new WebRtcEndpoint.Builder(pipeline).build();
-
-			incoming.addOnIceCandidateListener(new EventListener<OnIceCandidateEvent>() {
-
-				@Override
-				public void onEvent(OnIceCandidateEvent event) {
-					JsonObject response = new JsonObject();
-					response.addProperty("id", "iceCandidate");
-					response.addProperty("name", sender.getName());
-					response.add("candidate",
-							JsonUtils.toJsonObject(event.getCandidate()));
-					try {
-						synchronized (session) {
-							session.sendMessage(new TextMessage(response
-									.toString()));
-						}
-					} catch (IOException e) {
-						log.debug(e.getMessage());
-					}
-				}
-			});
-
-			incomingMedia.put(sender.getName(), incoming);
-		}
-
-		log.info("PARTICIPANT {}: obtained endpoint for {}", this.name,
-				sender.getName());
-		sender.getOutgoingWebRtcPeer().connect(incoming);
-
-		return incoming;*/
 	}
-
-	/**
-	 * @param sender
-	 *            the participant
-	 */
-	/*public void cancelVideoFrom(final UserSession sender) {
-		this.cancelVideoFrom(sender.getName());
-	}*/
 
 	/**
 	 * @param senderName
@@ -317,9 +243,6 @@ public class UserSession implements Closeable {
 		log.debug("PARTICIPANT {}: canceling presentation reception", this.name);
 
 		log.debug("PARTICIPANT {}: removing endpoint", this.name);
-
-		//this.hubPort.disconnect(outgoingMedia);
-		//this.outgoingMedia.disconnect(hubPort);
 		
 		if (sharingMedia != null) {
 			sharingMedia.release(new Continuation<Void>() {
@@ -346,32 +269,6 @@ public class UserSession implements Closeable {
 	public void close() throws IOException {
 		
 		log.debug("PARTICIPANT {}: Releasing resources", this.name);
-		
-		/*for (final String remoteParticipantName : incomingMedia.keySet()) {
-
-			log.info("PARTICIPANT {}: Released incoming EP for {}", this.name,
-					remoteParticipantName);
-
-			final WebRtcEndpoint ep = this.incomingMedia
-					.get(remoteParticipantName);
-			
-			if (ep != null) {
-				ep.release(new Continuation<Void>() {
-	
-					@Override
-					public void onSuccess(Void result) throws Exception {
-						log.trace(
-								"PARTICIPANT {}: Released successfully incoming EP for {}",
-								UserSession.this.name, remoteParticipantName);
-					}
-	
-					@Override
-					public void onError(Throwable cause) throws Exception {
-						log.warn("PARTICIPANT {}: Could not release incoming EP for {}", UserSession.this.name, remoteParticipantName);
-					}
-				});
-			}
-		}*/
 		
 		hubPort.release();
 		

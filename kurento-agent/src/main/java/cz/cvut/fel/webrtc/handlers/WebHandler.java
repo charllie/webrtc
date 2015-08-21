@@ -12,7 +12,7 @@
  * Lesser General Public License for more details.
  *
  */
-package cz.cvut.fel.webrtc;
+package cz.cvut.fel.webrtc.handlers;
 
 import java.io.IOException;
 
@@ -29,15 +29,19 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
+import cz.cvut.fel.webrtc.db.RoomManager;
+import cz.cvut.fel.webrtc.db.UserRegistry;
+import cz.cvut.fel.webrtc.resources.Room;
+import cz.cvut.fel.webrtc.resources.UserSession;
+
 /**
  * 
  * @author Ivan Gracia (izanmail@gmail.com)
  * @since 4.3.1
  */
-public class CallHandler extends TextWebSocketHandler {
+public class WebHandler extends TextWebSocketHandler {
 
-	private static final Logger log = LoggerFactory
-			.getLogger(CallHandler.class);
+	private static final Logger log = LoggerFactory.getLogger(WebHandler.class);
 
 	private static final Gson gson = new GsonBuilder().create();
 

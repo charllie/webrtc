@@ -14,15 +14,24 @@
  */
 package cz.cvut.fel.webrtc;
 
+import java.util.ArrayList;
+
 import org.kurento.client.KurentoClient;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.socket.client.WebSocketConnectionManager;
+import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 import org.springframework.beans.factory.annotation.Value;
+
+import cz.cvut.fel.webrtc.db.RoomManager;
+import cz.cvut.fel.webrtc.db.UserRegistry;
+import cz.cvut.fel.webrtc.handlers.SipHandler;
+import cz.cvut.fel.webrtc.handlers.WebHandler;
 
 /**
  * 
@@ -34,8 +43,11 @@ import org.springframework.beans.factory.annotation.Value;
 @EnableAutoConfiguration
 public class GroupCallApp implements WebSocketConfigurer {
 
-	@Value("${kms.ws:ws://webrtc.ml:8888/kurento}")
+	@Value("${kms.ws}")
 	private String kms_uri;
+	
+	@Value("${ast.ws}")
+	private String ast_uri;
 
 	@Bean
 	public UserRegistry registry() {
@@ -48,18 +60,28 @@ public class GroupCallApp implements WebSocketConfigurer {
 	}
 
 	@Bean
-	public CallHandler groupCallHandler() {
-		return new CallHandler();
+	public WebHandler webHandler() {
+		return new WebHandler();
+	}
+
+	@Bean
+	public SipHandler sipHandler() {
+		return new SipHandler();
+	}
+	
+	@Bean
+	public WebSocketConnectionManager asteriskConnection() {
+		ArrayList<String> protocols = new ArrayList<String>();
+		protocols.add("sip");
+		WebSocketConnectionManager manager = new WebSocketConnectionManager(new StandardWebSocketClient(), sipHandler(), ast_uri);
+		manager.setSubProtocols(protocols);
+		manager.setAutoStartup(true);
+		return manager;
 	}
 
 	@Bean
 	public KurentoClient kurentoClient() {
-		return KurentoClient.create(System.getProperty("kms.ws.uri", kms_uri));
-	}
-	
-	@Bean
-	public ImageController imageController() {
-		return new ImageController();
+		return KurentoClient.create(kms_uri);
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -68,6 +90,14 @@ public class GroupCallApp implements WebSocketConfigurer {
 
 	@Override
 	public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-		registry.addHandler(groupCallHandler(), "/groupcall");
+		registry.addHandler(webHandler(), "/groupcall");
 	}
+	
+	/*
+	 * For ImageOverlay
+	 * 
+	 * @Bean
+	public ImageController imageController() {
+		return new ImageController();
+	}*/
 }
