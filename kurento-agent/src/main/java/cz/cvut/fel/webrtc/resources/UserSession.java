@@ -397,7 +397,7 @@ public class UserSession implements Closeable {
 	            
 	            if (m.find()) {
 	            	try {
-		            	e = new IceCandidate(m.group(1), "audio", 0);
+		            	e = new IceCandidate("candidate:" + m.group(1), "audio", 0);
 		            	addCandidate(e, "composite");
 	            	} catch (Exception ex) {}
 	            }
