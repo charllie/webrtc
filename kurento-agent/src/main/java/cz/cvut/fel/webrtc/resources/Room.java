@@ -18,8 +18,9 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-
 import java.util.List;
+import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -38,11 +39,14 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
+import cz.cvut.fel.webrtc.db.SipRegistry.Account;
+
 /**
  * @author Ivan Gracia (izanmail@gmail.com)
  * @since 4.3.1
  */
 public class Room implements Closeable {
+
 	private final Logger log = LoggerFactory.getLogger(Room.class);
 
 	private final ConcurrentMap<String, UserSession> participants = new ConcurrentSkipListMap<>();
@@ -50,6 +54,11 @@ public class Room implements Closeable {
 	private final MediaPipeline compositePipeline;
 	private final Composite composite;
 	private final String name;
+	
+	private Account account = null;
+	private final String callId;
+	private long cseq;
+	
 	private UserSession screensharer;
 	
 	/**
@@ -61,6 +70,8 @@ public class Room implements Closeable {
 
 	public Room(String roomName, MediaPipeline compositePipeline, MediaPipeline presentationPipeline) {
 		this.name = roomName;
+		this.cseq = (new Random()).nextInt(100);
+		this.callId = UUID.randomUUID().toString();
 		this.compositePipeline = compositePipeline;
 		this.presentationPipeline = presentationPipeline;
 		this.composite = new Composite.Builder(compositePipeline).build();
@@ -72,8 +83,7 @@ public class Room implements Closeable {
 		this.close();
 	}
 
-	public UserSession join(String userName, WebSocketSession session)
-			throws IOException {
+	public UserSession join(String userName, WebSocketSession session) throws IOException {
 		log.info("ROOM {}: adding participant {}", userName, userName);
 
 		final UserSession participant = new UserSession(userName, this.name, session, this.compositePipeline, this.presentationPipeline, this.composite);
@@ -95,6 +105,13 @@ public class Room implements Closeable {
 		
 		user.close();
 		
+	}
+	
+	public void leave(String username) throws IOException {
+		UserSession user = participants.get(username);
+		
+		if (user != null)
+			leave(user);
 	}
 
 	/**
@@ -253,7 +270,7 @@ public class Room implements Closeable {
 						Room.this.name);
 			}
 		});
-
+		
 		log.debug("Room {} closed", this.name);
 	}
 	
@@ -271,6 +288,28 @@ public class Room implements Closeable {
 
 	public boolean hasScreensharer() {
 		return (screensharer != null);
+	}
+
+	public long setCSeq(long cseq) {
+		this.cseq = cseq;
+		return cseq;
+	}
+
+	public long getCSeq() {
+		return this.cseq;
+	}
+
+	public Account getAccount() {
+		return this.account;
+	}
+	
+	public String getCallId() {
+		return this.callId;
+	}
+
+	public Account setAccount(Account account) {
+		this.account = account;
+		return this.account;
 	}
 
 }

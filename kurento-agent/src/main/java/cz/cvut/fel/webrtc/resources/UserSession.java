@@ -25,6 +25,10 @@ import java.io.IOException;
  * 
  */
 
+import java.util.HashSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.kurento.client.Continuation;
 import org.kurento.client.EventListener;
 import org.kurento.client.Hub;
@@ -32,6 +36,7 @@ import org.kurento.client.HubPort;
 import org.kurento.client.IceCandidate;
 import org.kurento.client.MediaPipeline;
 import org.kurento.client.OnIceCandidateEvent;
+import org.kurento.client.RtpEndpoint;
 import org.kurento.client.WebRtcEndpoint;
 import org.kurento.jsonrpc.JsonUtils;
 import org.slf4j.Logger;
@@ -58,6 +63,8 @@ public class UserSession implements Closeable {
 
 	private final String roomName;
 	
+	private final HashSet<String> iceCandidates = new HashSet<String> ();
+	
 	private final WebRtcEndpoint outgoingMedia;
 	private WebRtcEndpoint sharingMedia; 
 	
@@ -79,6 +86,9 @@ public class UserSession implements Closeable {
 
 					@Override
 					public void onEvent(OnIceCandidateEvent event) {
+						
+						iceCandidates.add(event.getCandidate().getCandidate());
+						
 						JsonObject response = new JsonObject();
 						response.addProperty("id", "iceCandidate");
 						response.addProperty("name", name);
@@ -179,6 +189,14 @@ public class UserSession implements Closeable {
 		this.sendMessage(scParams);
 		log.debug("gather candidates");
 		ep.gatherCandidates();
+	}
+	
+	public String getOutgoingSdpAnswer(String sdpOffer) {
+		final String sdpAnswer = outgoingMedia.processOffer(sdpOffer);
+		outgoingMedia.gatherCandidates();
+		
+		log.trace("USER {}: SdpAnswer for outgoing media is {}", this.name, sdpAnswer);
+		return sdpAnswer;
 	}
 
 	/**
@@ -313,6 +331,7 @@ public class UserSession implements Closeable {
 	}
 
 	public void addCandidate(IceCandidate e, String type) {
+		
 		WebRtcEndpoint ep = (type.equals("composite")) ? outgoingMedia : sharingMedia;
 		
 		if (ep != null)
@@ -358,5 +377,32 @@ public class UserSession implements Closeable {
 
 	public void isScreensharer(boolean b) {
 		this.isScreensharer = b;
+	}
+
+	public HashSet<String> getCandidates() {
+		return iceCandidates;
+	}
+
+	public void addCandidates(String sdpOffer) {
+		final String regex = "a=candidate:(.*)";
+		Pattern p = Pattern.compile(regex);
+		Matcher m;
+		IceCandidate e;
+		
+		String[] lines = sdpOffer.replace("\r\n", "\n").split("\n");
+		
+		if (lines != null) {
+			for (String line : lines) {
+	            m = p.matcher(line);
+	            
+	            if (m.find()) {
+	            	try {
+		            	e = new IceCandidate(m.group(1), "audio", 0);
+		            	addCandidate(e, "composite");
+	            	} catch (Exception ex) {}
+	            }
+	        }
+		}
+		
 	}
 }

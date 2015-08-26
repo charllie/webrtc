@@ -161,11 +161,9 @@ public class WebHandler extends TextWebSocketHandler {
 		if (user != null) {
 			leaveRoom(user);
 		}
-		//roomManager.getRoom(user.getRoomName()).leave(user); déjà fait a priori dans leaveRoom
 	}
 
-	private void joinRoom(JsonObject params, WebSocketSession session)
-			throws IOException {
+	private void joinRoom(JsonObject params, WebSocketSession session) throws IOException {
 		final String roomName = params.get("room").getAsString();
 		final String name = params.get("name").getAsString();
 		final JsonObject scParams;

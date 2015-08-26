@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import cz.cvut.fel.webrtc.handlers.SipHandler;
 import cz.cvut.fel.webrtc.resources.Room;
 
 /**
@@ -35,6 +36,12 @@ public class RoomManager {
 
 	@Autowired
 	private KurentoClient kurento;
+	
+	@Autowired
+	private SipHandler sipHandler;
+	
+	@Autowired
+	private SipRegistry sipRegistry;
 
 	private final ConcurrentMap<String, Room> rooms = new ConcurrentHashMap<>();
 
@@ -51,8 +58,14 @@ public class RoomManager {
 		if (room == null) {
 			log.debug("Room {} not existent. Will create now!", roomName);
 			room = new Room(roomName, kurento.createMediaPipeline(), kurento.createMediaPipeline());
+			try {
+				sipHandler.register(room, null);
+			} catch (Exception e) {
+				log.info("Room {} cannot be bound to Asterisk", roomName);
+			}
 			rooms.put(roomName, room);
 		}
+		
 		log.debug("Room {} found!", roomName);
 		return room;
 	}
@@ -65,9 +78,15 @@ public class RoomManager {
 	 */
 	public void removeRoom(Room room) {
 		this.rooms.remove(room.getName());
+		
 		room.getCompositePipeline().release();
 		room.getPresentationPipeline().release();
+		
+		if (room.getAccount() != null)
+			sipRegistry.releaseAccount(room.getAccount().getUsername());
+		
 		room.close();
+		
 		log.info("Room {} removed and closed", room.getName());
 	}
 
