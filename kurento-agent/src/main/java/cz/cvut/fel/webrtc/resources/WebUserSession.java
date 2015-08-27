@@ -24,11 +24,60 @@ public class WebUserSession extends UserSession {
 	private WebRtcEndpoint sharingMedia;
 	private boolean isScreensharer = false;
 
+	protected final WebRtcEndpoint outgoingMedia;
 	private final MediaPipeline presentationPipeline;
 	
-	public WebUserSession(String name, String roomName, WebSocketSession session, MediaPipeline compositePipeline, MediaPipeline presentationPipeline, Hub hub) {
+	public WebUserSession(final String name, String roomName, final WebSocketSession session, MediaPipeline compositePipeline, MediaPipeline presentationPipeline, Hub hub) {
 		super(name, roomName, session, compositePipeline, presentationPipeline, hub);
+		this.outgoingMedia = new WebRtcEndpoint.Builder(compositePipeline).build();
+
+		this.outgoingMedia
+				.addOnIceCandidateListener(new EventListener<OnIceCandidateEvent>() {
+
+					@Override
+					public void onEvent(OnIceCandidateEvent event) {
+						
+						//iceCandidates.add(event.getCandidate().getCandidate());
+						
+						JsonObject response = new JsonObject();
+						response.addProperty("id", "iceCandidate");
+						response.addProperty("name", name);
+						response.addProperty("type", "composite");
+						response.add("candidate",
+								JsonUtils.toJsonObject(event.getCandidate()));
+						try {
+							synchronized (session) {
+								session.sendMessage(new TextMessage(response
+										.toString()));
+							}
+						} catch (IOException e) {
+							log.debug(e.getMessage());
+						}
+					}
+				});
+
+		
+		
+		/*
+		 * For ImageOverlay
+		 * 
+		ImageOverlayFilter imageOverlayFilter = new ImageOverlayFilter.Builder(this.compositePipeline).build();
+		imageOverlayFilter.addImage("username",  "https://webrtc.ml/names/" + UrlEscapers.urlPathSegmentEscaper().escape(name).replace(";",""), 0F, 0F, 1F, 1F, false, true);
+		
+		outgoingMedia.connect(imageOverlayFilter);
+		imageOverlayFilter.connect(hubPort);
+		hubPort.connect(outgoingMedia);
+		
+		 */
+
+		outgoingMedia.connect(hubPort);
+		hubPort.connect(outgoingMedia);
+		
 		this.presentationPipeline = presentationPipeline;
+	}
+	
+	public WebRtcEndpoint getOutgoingWebRtcPeer() {
+		return outgoingMedia;
 	}
 
 	public void setSharingMedia(WebRtcEndpoint sharingMedia) {
@@ -168,6 +217,21 @@ public class WebUserSession extends UserSession {
 		
 		log.debug("PARTICIPANT {}: Releasing resources", this.getName());
 		release();
+		
+		this.getOutgoingWebRtcPeer().release(new Continuation<Void>() {
+			
+			@Override
+			public void onSuccess(Void result) throws Exception {
+				log.trace("PARTICIPANT {}: Released outgoing EP",
+						WebUserSession.this.getName());
+			}
+
+			@Override
+			public void onError(Throwable cause) throws Exception {
+				log.warn("USER {}: Could not release outgoing EP",
+						WebUserSession.this.getName());
+			}
+		});
 		
 		if (sharingMedia != null) {
 			sharingMedia.release(new Continuation<Void>() {

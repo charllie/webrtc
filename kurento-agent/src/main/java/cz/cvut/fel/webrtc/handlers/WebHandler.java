@@ -51,10 +51,12 @@ public class WebHandler extends TextWebSocketHandler {
 
 	@Autowired
 	private UserRegistry registry;
+	
+	@Autowired
+	private SipHandler sipHandler;
 
 	@Override
-	public void handleTextMessage(WebSocketSession session, TextMessage message)
-			throws Exception {
+	public void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
 		
 		final JsonObject jsonMessage = gson.fromJson(message.getPayload(),
 				JsonObject.class);
@@ -71,6 +73,16 @@ public class WebHandler extends TextWebSocketHandler {
 		}
 
 		switch (jsonMessage.get("id").getAsString()) {
+		case "invite":
+			if (user != null) {
+				String callee = jsonMessage.get("callee").getAsString();
+				Room room = roomManager.getRoom(user.getRoomName());
+				
+				if (room.getAccount() != null)
+					invite(room, callee);
+			}
+			break;
+
 		case "joinRoom":
 			joinRoom(jsonMessage, session);
 			break;
@@ -131,6 +143,10 @@ public class WebHandler extends TextWebSocketHandler {
 		default:
 			break;
 		}
+	}
+
+	private void invite(Room room, String callee) {
+		sipHandler.generateInviteRequest(room, callee);
 	}
 
 	private void stopPresenting(WebUserSession user) throws IOException {

@@ -17,23 +17,9 @@ package cz.cvut.fel.webrtc.resources;
 import java.io.Closeable;
 import java.io.IOException;
 
-/*
- * For ImageOverlay
- * 
- * import com.google.common.net.UrlEscapers;
- * import org.kurento.client.ImageOverlayFilter; 
- * 
- */
-
-
-import org.kurento.client.Continuation;
-import org.kurento.client.EventListener;
 import org.kurento.client.Hub;
 import org.kurento.client.HubPort;
 import org.kurento.client.MediaPipeline;
-import org.kurento.client.OnIceCandidateEvent;
-import org.kurento.client.WebRtcEndpoint;
-import org.kurento.jsonrpc.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.socket.TextMessage;
@@ -57,8 +43,6 @@ public abstract class UserSession implements Closeable {
 	
 	//private final HashSet<String> iceCandidates = new HashSet<String> ();
 	
-	protected final WebRtcEndpoint outgoingMedia;
-	
 	protected final HubPort hubPort;
 	
 	public UserSession(final String name, String roomName,
@@ -68,57 +52,10 @@ public abstract class UserSession implements Closeable {
 		this.session = session;
 		this.roomName = roomName;
 		
-		this.outgoingMedia = new WebRtcEndpoint.Builder(compositePipeline).build();
-
-		this.outgoingMedia
-				.addOnIceCandidateListener(new EventListener<OnIceCandidateEvent>() {
-
-					@Override
-					public void onEvent(OnIceCandidateEvent event) {
-						
-						//iceCandidates.add(event.getCandidate().getCandidate());
-						
-						JsonObject response = new JsonObject();
-						response.addProperty("id", "iceCandidate");
-						response.addProperty("name", name);
-						response.addProperty("type", "composite");
-						response.add("candidate",
-								JsonUtils.toJsonObject(event.getCandidate()));
-						try {
-							synchronized (session) {
-								session.sendMessage(new TextMessage(response
-										.toString()));
-							}
-						} catch (IOException e) {
-							log.debug(e.getMessage());
-						}
-					}
-				});
-		
-		
-		/*
-		 * For ImageOverlay
-		 * 
-		ImageOverlayFilter imageOverlayFilter = new ImageOverlayFilter.Builder(this.compositePipeline).build();
-		imageOverlayFilter.addImage("username",  "https://webrtc.ml/names/" + UrlEscapers.urlPathSegmentEscaper().escape(name).replace(";",""), 0F, 0F, 1F, 1F, false, true);
-		
-		this.hubPort = new HubPort.Builder(hub).build();
-		outgoingMedia.connect(imageOverlayFilter);
-		imageOverlayFilter.connect(hubPort);
-		hubPort.connect(outgoingMedia);
-		
-		 */
-		
-		this.hubPort = new HubPort.Builder(hub).build();
-		outgoingMedia.connect(hubPort);
-		hubPort.connect(outgoingMedia);
-		
+		this.hubPort = new HubPort.Builder(hub).build();		
 		
 	}
 
-	public WebRtcEndpoint getOutgoingWebRtcPeer() {
-		return outgoingMedia;
-	}
 	
 	/**
 	 * @return the name
@@ -223,20 +160,5 @@ public abstract class UserSession implements Closeable {
 	
 	protected void release() {
 		hubPort.release();
-		
-		this.getOutgoingWebRtcPeer().release(new Continuation<Void>() {
-			
-			@Override
-			public void onSuccess(Void result) throws Exception {
-				log.trace("PARTICIPANT {}: Released outgoing EP",
-						UserSession.this.getName());
-			}
-
-			@Override
-			public void onError(Throwable cause) throws Exception {
-				log.warn("USER {}: Could not release outgoing EP",
-						UserSession.this.getName());
-			}
-		});
 	}
 }
