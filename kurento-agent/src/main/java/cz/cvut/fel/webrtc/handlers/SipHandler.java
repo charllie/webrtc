@@ -6,19 +6,16 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Random;
-import java.util.Vector;
 
-import javax.sdp.Attribute;
 import javax.sdp.SdpFactory;
-import javax.sdp.SessionDescription;
 import javax.sip.*;
 import javax.sip.address.*;
 import javax.sip.header.*;
 import javax.sip.message.*;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +28,7 @@ import cz.cvut.fel.webrtc.db.RoomManager;
 import cz.cvut.fel.webrtc.db.SipRegistry;
 import cz.cvut.fel.webrtc.db.SipRegistry.Account;
 import cz.cvut.fel.webrtc.resources.Room;
-import cz.cvut.fel.webrtc.resources.UserSession;
+import cz.cvut.fel.webrtc.resources.SoftUserSession;
 
 public class SipHandler extends TextWebSocketHandler {
 	
@@ -127,14 +124,22 @@ public class SipHandler extends TextWebSocketHandler {
 		switch(response.getStatusCode()) {
 		case 401:
 			try {
+				CSeqHeader cSeqHeader = (CSeqHeader) response.getHeader("CSeq");
+				String method = cSeqHeader.getMethod();
+				FromHeader fromHeader = (FromHeader) response.getHeader("From");
+				Room room = roomManager.getRoom(fromHeader.getAddress().getDisplayName());
+
+				if (room != null) {
+					if (method.equals(Request.REGISTER))
+						register(room, response);
+					if (method.equals(Request.INVITE)) {
+						generateInviteRequest(room, response);
+					}
+				}
 				
-				ToHeader toHeader = (ToHeader)response.getHeader("To");
-				Room room = sipRegistry.getRoomBySipURI(toHeader.getAddress().getURI().toString());
-				
-				if (room != null)
-					register(room, response);
-				
-			} catch (Exception e) {}
+			} catch (Exception e) {
+				log.info("Cannot process a 401 response {}", e);
+			}
 			break;
 
 		default:
@@ -252,6 +257,120 @@ public class SipHandler extends TextWebSocketHandler {
 		}
 	}
 	
+	public void generateInviteRequest(Room room, String callee) {
+		
+		try {
+			
+			String sipAddress = String.format("sip:%s@%s", callee, asteriskIp);
+			Address address = addressFactory.createAddress(sipAddress);
+			address.setDisplayName(callee);
+			ToHeader toHeader = headerFactory.createToHeader(address, null);
+
+			final SoftUserSession user = (SoftUserSession) room.join(callee, session, SoftUserSession.class);
+			
+			if (user != null)
+				generateInviteRequest(room, user, toHeader, null);
+		
+		} catch (Exception e) {
+			log.info("Cannot create INVITE request: {}", e);
+		}
+	}
+	
+	public void generateInviteRequest(Room room, Response response) {
+		
+		try {
+			
+			ToHeader toHeader = (ToHeader) response.getHeader("To");
+			String callee = toHeader.getAddress().getDisplayName();
+			final SoftUserSession user = (SoftUserSession) room.getParticipant(callee);
+			
+			if (user != null)
+				generateInviteRequest(room, user, toHeader, response);
+			
+		} catch (Exception e) {
+			log.info("Cannot create INVITE request: {}", e);
+		}
+		
+	}
+	
+	@Async
+	public void generateInviteRequest(Room room, SoftUserSession user, ToHeader toHeader, Response response) throws ParseException, InvalidArgumentException, NoSuchAlgorithmException {
+		Account account = room.getAccount();
+		
+		if (account == null)
+			return;
+			
+		if (user == null)
+			return;
+		
+		String sdpOffer = user.getGeneratedOffer();
+		
+		String username = account.getUsername();
+		String password = account.getPassword();
+		String extension = account.getExtension();
+		String sipAddressString = String.format("sip:%s@%s", extension, asteriskIp);
+
+		Address sipAddress = addressFactory.createAddress(sipAddressString);
+		sipAddress.setDisplayName(room.getName());
+
+		URI requestURI = sipAddress.getURI();
+
+		ArrayList<ViaHeader> viaHeaders = new ArrayList<ViaHeader>();
+		ViaHeader viaHeader = headerFactory.createViaHeader(ip, port, protocol, null);
+		viaHeaders.add(viaHeader);
+
+		MaxForwardsHeader maxForwardsHeader = headerFactory.createMaxForwardsHeader(70);
+
+		ContactHeader contactHeader = headerFactory.createContactHeader(sipAddress);
+		contactHeader.setExpires(200);
+
+		CallIdHeader callIdHeader = new CallID(room.getCallId());
+
+		long cseq = (response == null) ? room.setCSeq(room.getCSeq() + 1) : room.setCSeq(((CSeqHeader)response.getHeader("CSeq")).getSeqNumber() + 1);
+		CSeqHeader cSeqHeader = headerFactory.createCSeqHeader(cseq, Request.INVITE);
+
+		FromHeader fromHeader = headerFactory.createFromHeader(sipAddress, String.valueOf(tag));
+		
+		ContentTypeHeader contentTypeHeader = headerFactory.createContentTypeHeader("application", "sdp");
+		
+		// Build the request
+		Request request = messageFactory.createRequest(
+				requestURI,
+				Request.INVITE,
+				callIdHeader,
+				cSeqHeader,
+				fromHeader,
+				toHeader,
+				viaHeaders,
+				maxForwardsHeader,
+				contentTypeHeader,
+				sdpOffer
+				
+		);
+		request.addHeader(contactHeader);
+
+		if (response != null) {
+			WWWAuthenticateHeader authHeader = (WWWAuthenticateHeader)response.getHeader("WWW-Authenticate");
+			AuthorizationHeader authorization = headerFactory.createAuthorizationHeader(authHeader.getScheme());
+			
+			String authResponse = calculateResponse(authHeader, Request.INVITE, sipAddress.getURI().toString(), username, password);
+	
+			if (authResponse != null) {
+				authorization.setUsername(username);
+				authorization.setRealm(authHeader.getRealm());
+				authorization.setNonce(authHeader.getNonce());
+				authorization.setURI(requestURI);	
+				authorization.setResponse(authResponse);
+				
+				request.addHeader(authorization);
+			} else {
+				return;
+			}
+		}
+		
+		sendMessage(request);
+	}
+	
 	@Async
 	private void processInviteRequest(Request request) {
 		try {
@@ -306,14 +425,12 @@ public class SipHandler extends TextWebSocketHandler {
 			if (username == null)
 				username = sender.getURI().toString();
 			
-			UserSession user = room.join(username, session);
-			user.addCandidates(sdpOffer);
+			SoftUserSession user = (SoftUserSession) room.join(username, session, SoftUserSession.class);
 			
-			String sdpAnswer = StringUtils.chomp(user.getOutgoingSdpAnswer(sdpOffer));
+			if (user == null)
+				return;
 			
-			for (String candidate : user.getCandidates())
-				sdpAnswer = sdpAnswer.concat("\r\na=" + candidate);
-			sdpAnswer = sdpAnswer.concat("\r\n");
+			String sdpAnswer = user.getSdpAnswer(sdpOffer);
 			
 			// 200 OK
 			ContentTypeHeader contentTypeHeader = headerFactory.createContentTypeHeader("application", "sdp");

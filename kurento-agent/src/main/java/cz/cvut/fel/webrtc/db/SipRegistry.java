@@ -74,6 +74,7 @@ public class SipRegistry {
 	public static class Account {
 		private String username;
 		private String password;
+		private String extension;
 		
 		public String getUsername() {
 			return username;
@@ -89,6 +90,14 @@ public class SipRegistry {
 		
 		public void setPassword(String password) {
 			this.password = password;
+		}
+		
+		public String getExtension() {
+			return this.extension;
+		}
+		
+		public void setExtension(String extension) {
+			this.extension = extension;
 		}
 	}
 

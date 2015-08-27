@@ -28,6 +28,7 @@ import javax.annotation.PreDestroy;
 
 import org.kurento.client.Composite;
 import org.kurento.client.Continuation;
+import org.kurento.client.Hub;
 //import org.kurento.client.HubPort;
 import org.kurento.client.MediaPipeline;
 import org.slf4j.Logger;
@@ -83,14 +84,37 @@ public class Room implements Closeable {
 		this.close();
 	}
 
-	public UserSession join(String userName, WebSocketSession session) throws IOException {
-		log.info("ROOM {}: adding participant {}", userName, userName);
-
-		final UserSession participant = new UserSession(userName, this.name, session, this.compositePipeline, this.presentationPipeline, this.composite);
+	public UserSession join(String userName, WebSocketSession session, Class<? extends UserSession> sessionClass) throws IOException {
+		log.info("ROOM {}: adding participant {}", name, userName);
 		
-		joinRoom(participant);
-		participants.put(participant.getName(), participant);
-		sendParticipantNames(participant, "compositeInfo");
+		UserSession participant = null;
+		
+		try {
+			
+			participant = sessionClass.getConstructor(
+					String.class,
+					String.class,
+					WebSocketSession.class,
+					MediaPipeline.class,
+					MediaPipeline.class,
+					Hub.class)
+			.newInstance(
+					userName,
+					this.name,
+					session,
+					this.compositePipeline,
+					this.presentationPipeline,
+					this.composite
+			);
+			
+			joinRoom(participant);
+			participants.put(participant.getName(), participant);
+			sendParticipantNames(participant, "compositeInfo");
+			
+		} catch (Exception e) {
+			log.info("ROOM {}: adding participant {} failed: {}", name, userName, e);
+		}
+		
 		return participant;
 	}
 
@@ -118,16 +142,14 @@ public class Room implements Closeable {
 	 * @param participant
 	 * @throws IOException
 	 */
-	private Collection<String> joinRoom(UserSession newParticipant)
-			throws IOException {
+	private void joinRoom(UserSession newParticipant) throws IOException {
 		final JsonObject newParticipantMsg = new JsonObject();
 		newParticipantMsg.addProperty("id", "newParticipantArrived");
 		newParticipantMsg.addProperty("name", newParticipant.getName());
-
-		return broadcast(newParticipantMsg);
+		broadcast(newParticipantMsg);
 	}
 	
-	public Collection<String> broadcast(JsonObject message) {
+	public void broadcast(JsonObject message) {
 
 		final List<String> participantsList = new ArrayList<>(participants.values().size());
 		
@@ -140,8 +162,6 @@ public class Room implements Closeable {
 			}
 			participantsList.add(participant.getName());
 		}
-
-		return participantsList;
 	}
 
 	private void removeParticipant(String name) throws IOException {
@@ -161,13 +181,13 @@ public class Room implements Closeable {
 		
 		for (final UserSession participant : this.getParticipants()) {
 			final JsonElement participantName = new JsonPrimitive(participant.getName());
-				participantsArray.add(participantName);
+			participantsArray.add(participantName);
 		}
 		participantLeftJson.add("data", participantsArray);
 		
 		for (final UserSession participant : participants.values()) {
 			if (isScreensharer)
-				participant.cancelPresentation();
+				((WebUserSession) participant).cancelPresentation();
 			
 			participant.sendMessage(participantLeftJson);
 		}
@@ -181,8 +201,11 @@ public class Room implements Closeable {
 			cancelPresentationMsg.addProperty("presenter", screensharer.getName());
 			
 			for (final UserSession participant : participants.values()) {
-				participant.cancelPresentation();
-				participant.sendMessage(cancelPresentationMsg);
+				if (participant instanceof WebUserSession) {
+					final WebUserSession webParticipant = (WebUserSession) participant;
+					webParticipant.cancelPresentation();
+					webParticipant.sendMessage(cancelPresentationMsg);
+				}
 			}
 			
 			screensharer = null;
