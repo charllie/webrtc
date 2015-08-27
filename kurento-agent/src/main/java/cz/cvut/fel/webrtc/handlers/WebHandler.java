@@ -33,6 +33,7 @@ import cz.cvut.fel.webrtc.db.RoomManager;
 import cz.cvut.fel.webrtc.db.UserRegistry;
 import cz.cvut.fel.webrtc.resources.Room;
 import cz.cvut.fel.webrtc.resources.UserSession;
+import cz.cvut.fel.webrtc.resources.WebUserSession;
 
 /**
  * 
@@ -54,14 +55,17 @@ public class WebHandler extends TextWebSocketHandler {
 	@Override
 	public void handleTextMessage(WebSocketSession session, TextMessage message)
 			throws Exception {
+		
 		final JsonObject jsonMessage = gson.fromJson(message.getPayload(),
 				JsonObject.class);
 
-		final UserSession user = registry.getBySession(session);
-
-		if (user != null) {
-			log.debug("Incoming message from user '{}': {}", user.getName(),
+		final UserSession userSession = registry.getBySession(session);
+		WebUserSession user = null;
+		
+		if (userSession != null) {
+			log.debug("Incoming message from user '{}': {}", userSession.getName(),
 					jsonMessage);
+			user = (WebUserSession) userSession;
 		} else {
 			log.debug("Incoming message from new user: {}", jsonMessage);
 		}
@@ -72,7 +76,8 @@ public class WebHandler extends TextWebSocketHandler {
 			break;
 		
 		case "newPresenter":
-			presenter(user);
+			if (user != null)
+				presenter(user);
 			break;
 			
 		case "presenterReady":
@@ -88,24 +93,29 @@ public class WebHandler extends TextWebSocketHandler {
 			break;
 			
 		case "stopPresenting":
-			stopPresenting(user);
+			if (user != null)
+				stopPresenting(user);
 			break;
 			
 		case "receiveVideoFrom":
-			final String senderName = jsonMessage.get("sender").getAsString();
-			final Room room = roomManager.getRoom(user.getRoomName());
-			final UserSession sender = room.getParticipant(senderName);
-			
-			if (sender != null) {
-				final String sdpOffer = jsonMessage.get("sdpOffer").getAsString();
-				final String type = jsonMessage.get("type").getAsString();
-				user.receiveVideoFrom(sender, type, sdpOffer, room);
+			if (user != null) {
+				final String senderName = jsonMessage.get("sender").getAsString();
+				final Room room = roomManager.getRoom(user.getRoomName());
+				final UserSession sender = room.getParticipant(senderName);
+				
+				if (sender != null && (sender instanceof WebUserSession)) {
+					final WebUserSession webSender = (WebUserSession) sender;
+					final String sdpOffer = jsonMessage.get("sdpOffer").getAsString();
+					final String type = jsonMessage.get("type").getAsString();
+					user.receiveVideoFrom(webSender, type, sdpOffer, room);
+				}
 			}
 			
 			break;
 		
 		case "leaveRoom":
-			leaveRoom(user);
+			if (user != null)
+				leaveRoom(user);
 			break;
 		
 		case "onIceCandidate":
@@ -123,7 +133,7 @@ public class WebHandler extends TextWebSocketHandler {
 		}
 	}
 
-	private void stopPresenting(UserSession user) throws IOException {
+	private void stopPresenting(WebUserSession user) throws IOException {
 		if (user.isScreensharer()) {
 			final Room room = roomManager.getRoom(user.getRoomName());
 			user.isScreensharer(false);
@@ -131,7 +141,7 @@ public class WebHandler extends TextWebSocketHandler {
 		}
 	}
 
-	private void presenter(UserSession user) throws IOException {
+	private void presenter(WebUserSession user) throws IOException {
 		Room room = roomManager.getRoom(user.getRoomName());
 		
 		if (!room.hasScreensharer()) {
@@ -179,8 +189,10 @@ public class WebHandler extends TextWebSocketHandler {
 				session.sendMessage(new TextMessage(scParams.toString()));
 			}
 		} else {
-			final UserSession user = room.join(name, session);
-			registry.register(user);
+			final UserSession user = room.join(name, session, WebUserSession.class);
+			
+			if (user != null)
+				registry.register(user);
 		}
 	}
 

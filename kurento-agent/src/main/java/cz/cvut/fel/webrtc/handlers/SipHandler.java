@@ -8,17 +8,13 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Random;
-import java.util.Vector;
 
-import javax.sdp.Attribute;
 import javax.sdp.SdpFactory;
-import javax.sdp.SessionDescription;
 import javax.sip.*;
 import javax.sip.address.*;
 import javax.sip.header.*;
 import javax.sip.message.*;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +27,7 @@ import cz.cvut.fel.webrtc.db.RoomManager;
 import cz.cvut.fel.webrtc.db.SipRegistry;
 import cz.cvut.fel.webrtc.db.SipRegistry.Account;
 import cz.cvut.fel.webrtc.resources.Room;
-import cz.cvut.fel.webrtc.resources.UserSession;
+import cz.cvut.fel.webrtc.resources.SoftUserSession;
 
 public class SipHandler extends TextWebSocketHandler {
 	
@@ -306,14 +302,16 @@ public class SipHandler extends TextWebSocketHandler {
 			if (username == null)
 				username = sender.getURI().toString();
 			
-			UserSession user = room.join(username, session);
-			user.addCandidates(sdpOffer);
+			SoftUserSession user = (SoftUserSession) room.join(username, session, SoftUserSession.class);
 			
-			String sdpAnswer = StringUtils.chomp(user.getOutgoingSdpAnswer(sdpOffer));
+			if (user == null)
+				return;
 			
-			for (String candidate : user.getCandidates())
+			String sdpAnswer = user.getSdpAnswer(sdpOffer);
+			
+			/*for (String candidate : user.getCandidates())
 				sdpAnswer = sdpAnswer.concat("\r\na=" + candidate);
-			sdpAnswer = sdpAnswer.concat("\r\n");
+			sdpAnswer = sdpAnswer.concat("\r\n");*/
 			
 			// 200 OK
 			ContentTypeHeader contentTypeHeader = headerFactory.createContentTypeHeader("application", "sdp");
