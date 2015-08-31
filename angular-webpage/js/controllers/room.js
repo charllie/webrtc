@@ -200,6 +200,13 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 
 	};
 
+	$scope.invite = function(number) {
+		socket.send({
+			id: 'invite',
+			callee: number
+		});
+	};
+
 	$scope.leave = function() {
 		socket.send({ id: 'leaveRoom' });
 		constraints.setType('composite');

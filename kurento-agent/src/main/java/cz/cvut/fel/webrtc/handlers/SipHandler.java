@@ -9,6 +9,8 @@ import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.sdp.SdpFactory;
 import javax.sip.*;
@@ -28,7 +30,7 @@ import cz.cvut.fel.webrtc.db.RoomManager;
 import cz.cvut.fel.webrtc.db.SipRegistry;
 import cz.cvut.fel.webrtc.db.SipRegistry.Account;
 import cz.cvut.fel.webrtc.resources.Room;
-import cz.cvut.fel.webrtc.resources.SoftUserSession;
+import cz.cvut.fel.webrtc.resources.Softphone;
 
 public class SipHandler extends TextWebSocketHandler {
 	
@@ -81,9 +83,26 @@ public class SipHandler extends TextWebSocketHandler {
 	}
 	
 	@Override
-	public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+	public void afterConnectionEstablished(final WebSocketSession session) throws Exception {
 		this.session = session;
-	}	
+		TimerTask task = new TimerTask() {
+			
+			@Override
+			public void run() {
+				try {
+					log.info("Ping on PBX to keep the websocket alive");
+					session.sendMessage(new TextMessage("stay-alive"));
+				} catch (IOException e) {
+					log.info("Ping on PBX failed");
+				}
+			}
+			
+		};
+		
+		Timer timer = new Timer();
+		timer.scheduleAtFixedRate(task, 0, 20000);
+		
+	}
 
 	@Override
 	public void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
@@ -266,7 +285,7 @@ public class SipHandler extends TextWebSocketHandler {
 			address.setDisplayName(callee);
 			ToHeader toHeader = headerFactory.createToHeader(address, null);
 
-			final SoftUserSession user = (SoftUserSession) room.join(callee, session, SoftUserSession.class);
+			final Softphone user = (Softphone) room.join(callee, session, Softphone.class);
 			
 			if (user != null)
 				generateInviteRequest(room, user, toHeader, null);
@@ -282,7 +301,7 @@ public class SipHandler extends TextWebSocketHandler {
 			
 			ToHeader toHeader = (ToHeader) response.getHeader("To");
 			String callee = toHeader.getAddress().getDisplayName();
-			final SoftUserSession user = (SoftUserSession) room.getParticipant(callee);
+			final Softphone user = (Softphone) room.getParticipant(callee);
 			
 			if (user != null)
 				generateInviteRequest(room, user, toHeader, response);
@@ -294,7 +313,7 @@ public class SipHandler extends TextWebSocketHandler {
 	}
 	
 	@Async
-	public void generateInviteRequest(Room room, SoftUserSession user, ToHeader toHeader, Response response) throws ParseException, InvalidArgumentException, NoSuchAlgorithmException {
+	public void generateInviteRequest(Room room, Softphone user, ToHeader toHeader, Response response) throws ParseException, InvalidArgumentException, NoSuchAlgorithmException {
 		Account account = room.getAccount();
 		
 		if (account == null)
@@ -307,13 +326,12 @@ public class SipHandler extends TextWebSocketHandler {
 		
 		String username = account.getUsername();
 		String password = account.getPassword();
-		String extension = account.getExtension();
-		String sipAddressString = String.format("sip:%s@%s", extension, asteriskIp);
+		String sipAddressString = String.format("sip:%s@%s", username, asteriskIp);
 
 		Address sipAddress = addressFactory.createAddress(sipAddressString);
 		sipAddress.setDisplayName(room.getName());
 
-		URI requestURI = sipAddress.getURI();
+		URI requestURI = toHeader.getAddress().getURI();
 
 		ArrayList<ViaHeader> viaHeaders = new ArrayList<ViaHeader>();
 		ViaHeader viaHeader = headerFactory.createViaHeader(ip, port, protocol, null);
@@ -321,7 +339,7 @@ public class SipHandler extends TextWebSocketHandler {
 
 		MaxForwardsHeader maxForwardsHeader = headerFactory.createMaxForwardsHeader(70);
 
-		ContactHeader contactHeader = headerFactory.createContactHeader(sipAddress);
+		ContactHeader contactHeader = headerFactory.createContactHeader(toHeader.getAddress());
 		contactHeader.setExpires(200);
 
 		CallIdHeader callIdHeader = new CallID(room.getCallId());
@@ -353,7 +371,7 @@ public class SipHandler extends TextWebSocketHandler {
 			WWWAuthenticateHeader authHeader = (WWWAuthenticateHeader)response.getHeader("WWW-Authenticate");
 			AuthorizationHeader authorization = headerFactory.createAuthorizationHeader(authHeader.getScheme());
 			
-			String authResponse = calculateResponse(authHeader, Request.INVITE, sipAddress.getURI().toString(), username, password);
+			String authResponse = calculateResponse(authHeader, Request.INVITE, requestURI.toString(), username, password);
 	
 			if (authResponse != null) {
 				authorization.setUsername(username);
@@ -425,7 +443,7 @@ public class SipHandler extends TextWebSocketHandler {
 			if (username == null)
 				username = sender.getURI().toString();
 			
-			SoftUserSession user = (SoftUserSession) room.join(username, session, SoftUserSession.class);
+			Softphone user = (Softphone) room.join(username, session, Softphone.class);
 			
 			if (user == null)
 				return;

@@ -30,10 +30,10 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
 import cz.cvut.fel.webrtc.db.RoomManager;
-import cz.cvut.fel.webrtc.db.UserRegistry;
+import cz.cvut.fel.webrtc.db.WebRegistry;
 import cz.cvut.fel.webrtc.resources.Room;
-import cz.cvut.fel.webrtc.resources.UserSession;
-import cz.cvut.fel.webrtc.resources.WebUserSession;
+import cz.cvut.fel.webrtc.resources.Participant;
+import cz.cvut.fel.webrtc.resources.WebUser;
 
 /**
  * 
@@ -50,7 +50,7 @@ public class WebHandler extends TextWebSocketHandler {
 	private RoomManager roomManager;
 
 	@Autowired
-	private UserRegistry registry;
+	private WebRegistry registry;
 	
 	@Autowired
 	private SipHandler sipHandler;
@@ -61,13 +61,12 @@ public class WebHandler extends TextWebSocketHandler {
 		final JsonObject jsonMessage = gson.fromJson(message.getPayload(),
 				JsonObject.class);
 
-		final UserSession userSession = registry.getBySession(session);
-		WebUserSession user = null;
+		final Participant userSession = registry.getBySession(session);
+		WebUser user = null;
 		
 		if (userSession != null) {
-			log.debug("Incoming message from user '{}': {}", userSession.getName(),
-					jsonMessage);
-			user = (WebUserSession) userSession;
+			log.debug("Incoming message from user '{}': {}", userSession.getName(), jsonMessage);
+			user = (WebUser) userSession;
 		} else {
 			log.debug("Incoming message from new user: {}", jsonMessage);
 		}
@@ -113,10 +112,10 @@ public class WebHandler extends TextWebSocketHandler {
 			if (user != null) {
 				final String senderName = jsonMessage.get("sender").getAsString();
 				final Room room = roomManager.getRoom(user.getRoomName());
-				final UserSession sender = room.getParticipant(senderName);
+				final Participant sender = room.getParticipant(senderName);
 				
-				if (sender != null && (sender instanceof WebUserSession)) {
-					final WebUserSession webSender = (WebUserSession) sender;
+				if (sender != null && (sender instanceof WebUser)) {
+					final WebUser webSender = (WebUser) sender;
 					final String sdpOffer = jsonMessage.get("sdpOffer").getAsString();
 					final String type = jsonMessage.get("type").getAsString();
 					user.receiveVideoFrom(webSender, type, sdpOffer, room);
@@ -149,7 +148,7 @@ public class WebHandler extends TextWebSocketHandler {
 		sipHandler.generateInviteRequest(room, callee);
 	}
 
-	private void stopPresenting(WebUserSession user) throws IOException {
+	private void stopPresenting(WebUser user) throws IOException {
 		if (user.isScreensharer()) {
 			final Room room = roomManager.getRoom(user.getRoomName());
 			user.isScreensharer(false);
@@ -157,7 +156,7 @@ public class WebHandler extends TextWebSocketHandler {
 		}
 	}
 
-	private void presenter(WebUserSession user) throws IOException {
+	private void presenter(WebUser user) throws IOException {
 		Room room = roomManager.getRoom(user.getRoomName());
 		
 		if (!room.hasScreensharer()) {
@@ -182,7 +181,7 @@ public class WebHandler extends TextWebSocketHandler {
 	@Override
 	public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
 		//UserSession user = registry.removeBySession(session);
-		UserSession user = registry.removeBySession(session);
+		Participant user = registry.removeBySession(session);
 		
 		if (user != null) {
 			leaveRoom(user);
@@ -205,14 +204,14 @@ public class WebHandler extends TextWebSocketHandler {
 				session.sendMessage(new TextMessage(scParams.toString()));
 			}
 		} else {
-			final UserSession user = room.join(name, session, WebUserSession.class);
+			final WebUser user = (WebUser) room.join(name, session, WebUser.class);
 			
 			if (user != null)
 				registry.register(user);
 		}
 	}
 
-	private void leaveRoom(UserSession user) throws IOException {
+	private void leaveRoom(Participant user) throws IOException {
 		if (user != null) {
 			final Room room = roomManager.getRoom(user.getRoomName());
 			room.leave(user);

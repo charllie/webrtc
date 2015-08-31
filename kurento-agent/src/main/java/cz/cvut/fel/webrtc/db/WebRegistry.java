@@ -18,7 +18,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.web.socket.WebSocketSession;
 
-import cz.cvut.fel.webrtc.resources.UserSession;
+import cz.cvut.fel.webrtc.resources.Participant;
+import cz.cvut.fel.webrtc.resources.WebUser;
 
 /**
  * Map of users registered in the system. This class has a concurrent hash map
@@ -29,23 +30,23 @@ import cz.cvut.fel.webrtc.resources.UserSession;
  * @authos Ivan Gracia (izanmail@gmail.com)
  * @since 4.3.1
  */
-public class UserRegistry {
+public class WebRegistry {
 
-	private final ConcurrentHashMap<String, UserSession> usersBySessionId = new ConcurrentHashMap<String, UserSession>();
+	private final ConcurrentHashMap<String, WebUser> users = new ConcurrentHashMap<String, WebUser>();
 
-	public void register(UserSession user) {
-		usersBySessionId.put(user.getSession().getId(), user);
+	public void register(WebUser user) {
+		users.put(user.getSession().getId(), user);
 	}
 	
-	public UserSession getBySession(WebSocketSession session) {
-		return usersBySessionId.get(session.getId());
+	public WebUser getBySession(WebSocketSession session) {
+		return users.get(session.getId());
 	}
 
-	public UserSession removeBySession(WebSocketSession session) {
-		final UserSession user = getBySession(session);
+	public WebUser removeBySession(WebSocketSession session) {
+		final WebUser user = getBySession(session);
 		
 		if (user != null) {
-			usersBySessionId.remove(session.getId());
+			users.remove(session.getId());
 		}
 		
 		return user;

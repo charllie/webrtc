@@ -32,26 +32,23 @@ import com.google.gson.JsonObject;
  * @author Ivan Gracia (izanmail@gmail.com)
  * @since 4.3.1
  */
-public abstract class UserSession implements Closeable {
+public abstract class Participant implements Closeable {
 
-	private static final Logger log = LoggerFactory.getLogger(UserSession.class);
+	private static final Logger log = LoggerFactory.getLogger(Participant.class);
 
-	protected final String name;
+	protected String name;
+	
 	protected final WebSocketSession session;
 
 	protected final String roomName;
 	
-	//private final HashSet<String> iceCandidates = new HashSet<String> ();
-	
 	protected final HubPort hubPort;
 	
-	public UserSession(final String name, String roomName,
-			final WebSocketSession session, MediaPipeline compositePipeline, MediaPipeline presentationPipeline, Hub hub){
+	public Participant(final String name, String roomName, final WebSocketSession session, MediaPipeline compositePipeline, MediaPipeline presentationPipeline, Hub hub) {
 
 		this.name = name;
 		this.session = session;
 		this.roomName = roomName;
-		
 		this.hubPort = new HubPort.Builder(hub).build();		
 		
 	}
@@ -104,10 +101,10 @@ public abstract class UserSession implements Closeable {
 		if (this == obj) {
 			return true;
 		}
-		if (obj == null || !(obj instanceof UserSession)) {
+		if (obj == null || !(obj instanceof Participant)) {
 			return false;
 		}
-		UserSession other = (UserSession) obj;
+		Participant other = (Participant) obj;
 		boolean eq = name.equals(other.name);
 		eq &= roomName.equals(other.roomName);
 		return eq;

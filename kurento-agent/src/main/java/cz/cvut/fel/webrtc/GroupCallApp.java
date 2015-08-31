@@ -30,7 +30,7 @@ import org.springframework.beans.factory.annotation.Value;
 
 import cz.cvut.fel.webrtc.db.RoomManager;
 import cz.cvut.fel.webrtc.db.SipRegistry;
-import cz.cvut.fel.webrtc.db.UserRegistry;
+import cz.cvut.fel.webrtc.db.WebRegistry;
 import cz.cvut.fel.webrtc.handlers.SipHandler;
 import cz.cvut.fel.webrtc.handlers.WebHandler;
 
@@ -51,8 +51,8 @@ public class GroupCallApp implements WebSocketConfigurer {
 	private String ast_uri;
 
 	@Bean
-	public UserRegistry registry() {
-		return new UserRegistry();
+	public WebRegistry registry() {
+		return new WebRegistry();
 	}
 
 	@Bean

@@ -11,18 +11,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.socket.WebSocketSession;
 
-public class SoftUserSession extends UserSession {
+public class Softphone extends Participant {
 	
-	private static final Logger log = LoggerFactory.getLogger(SoftUserSession.class);
+	private static final Logger log = LoggerFactory.getLogger(Softphone.class);
 	
 	private final RtpEndpoint rtpEndpoint;
 	
-	public SoftUserSession(String name, String roomName, WebSocketSession session, MediaPipeline compositePipeline, MediaPipeline presentationPipeline, Hub hub) {
-		super(name, roomName, session, compositePipeline, presentationPipeline, hub);
+	public Softphone(String id, String roomName, WebSocketSession session, MediaPipeline compositePipeline, MediaPipeline presentationPipeline, Hub hub) {
+		super(id, roomName, session, compositePipeline, presentationPipeline, hub);
+
 		rtpEndpoint = new RtpEndpoint.Builder(compositePipeline).build();
 		
 		rtpEndpoint.connect(hubPort);
 		hubPort.connect(rtpEndpoint);
+	}
+	
+	public void setName(String name) {
+		this.name = name;
 	}
 	
 	public String getSdpAnswer(String sdpOffer) {
@@ -59,13 +64,13 @@ public class SoftUserSession extends UserSession {
 			@Override
 			public void onSuccess(Void result) throws Exception {
 				log.trace("PARTICIPANT {}: Released outgoing EP",
-						SoftUserSession.this.getName());
+						Softphone.this.getName());
 			}
 
 			@Override
 			public void onError(Throwable cause) throws Exception {
 				log.warn("USER {}: Could not release outgoing EP",
-						SoftUserSession.this.getName());
+						Softphone.this.getName());
 			}
 		});
 	}

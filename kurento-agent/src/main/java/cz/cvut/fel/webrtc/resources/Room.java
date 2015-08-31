@@ -50,7 +50,7 @@ public class Room implements Closeable {
 
 	private final Logger log = LoggerFactory.getLogger(Room.class);
 
-	private final ConcurrentMap<String, UserSession> participants = new ConcurrentSkipListMap<>();
+	private final ConcurrentMap<String, Participant> participants = new ConcurrentSkipListMap<>();
 	private final MediaPipeline presentationPipeline;
 	private final MediaPipeline compositePipeline;
 	private final Composite composite;
@@ -60,7 +60,7 @@ public class Room implements Closeable {
 	private final String callId;
 	private long cseq;
 	
-	private UserSession screensharer;
+	private WebUser screensharer;
 	
 	/**
 	 * @return the name
@@ -84,10 +84,10 @@ public class Room implements Closeable {
 		this.close();
 	}
 
-	public UserSession join(String userName, WebSocketSession session, Class<? extends UserSession> sessionClass) throws IOException {
+	public Participant join(String userName, WebSocketSession session, Class<? extends Participant> sessionClass) throws IOException {
 		log.info("ROOM {}: adding participant {}", name, userName);
 		
-		UserSession participant = null;
+		Participant participant = null;
 		
 		try {
 			
@@ -107,7 +107,9 @@ public class Room implements Closeable {
 					this.composite
 			);
 			
-			joinRoom(participant);
+			if (sessionClass.isInstance(WebUser.class))
+				joinRoom(participant);
+			
 			participants.put(participant.getName(), participant);
 			sendParticipantNames(participant, "compositeInfo");
 			
@@ -118,7 +120,7 @@ public class Room implements Closeable {
 		return participant;
 	}
 
-	public void leave(UserSession user) throws IOException {
+	public void leave(Participant user) throws IOException {
 
 		log.debug("PARTICIPANT {}: Leaving room {}", user.getName(), this.name);
 		this.removeParticipant(user.getName());
@@ -132,7 +134,7 @@ public class Room implements Closeable {
 	}
 	
 	public void leave(String username) throws IOException {
-		UserSession user = participants.get(username);
+		Participant user = participants.get(username);
 		
 		if (user != null)
 			leave(user);
@@ -142,7 +144,7 @@ public class Room implements Closeable {
 	 * @param participant
 	 * @throws IOException
 	 */
-	private void joinRoom(UserSession newParticipant) throws IOException {
+	private void joinRoom(Participant newParticipant) throws IOException {
 		final JsonObject newParticipantMsg = new JsonObject();
 		newParticipantMsg.addProperty("id", "newParticipantArrived");
 		newParticipantMsg.addProperty("name", newParticipant.getName());
@@ -153,7 +155,7 @@ public class Room implements Closeable {
 
 		final List<String> participantsList = new ArrayList<>(participants.values().size());
 		
-		for (final UserSession participant : participants.values()) {
+		for (final Participant participant : participants.values()) {
 			try {
 				participant.sendMessage(message);
 			} catch (final IOException e) {
@@ -179,15 +181,15 @@ public class Room implements Closeable {
 		
 		final JsonArray participantsArray = new JsonArray();
 		
-		for (final UserSession participant : this.getParticipants()) {
+		for (final Participant participant : this.getParticipants()) {
 			final JsonElement participantName = new JsonPrimitive(participant.getName());
 			participantsArray.add(participantName);
 		}
 		participantLeftJson.add("data", participantsArray);
 		
-		for (final UserSession participant : participants.values()) {
+		for (final Participant participant : participants.values()) {
 			if (isScreensharer)
-				((WebUserSession) participant).cancelPresentation();
+				((WebUser) participant).cancelPresentation();
 			
 			participant.sendMessage(participantLeftJson);
 		}
@@ -200,9 +202,9 @@ public class Room implements Closeable {
 			cancelPresentationMsg.addProperty("id", "cancelPresentation");
 			cancelPresentationMsg.addProperty("presenter", screensharer.getName());
 			
-			for (final UserSession participant : participants.values()) {
-				if (participant instanceof WebUserSession) {
-					final WebUserSession webParticipant = (WebUserSession) participant;
+			for (final Participant participant : participants.values()) {
+				if (participant instanceof WebUser) {
+					final WebUser webParticipant = (WebUser) participant;
 					webParticipant.cancelPresentation();
 					webParticipant.sendMessage(cancelPresentationMsg);
 				}
@@ -212,11 +214,11 @@ public class Room implements Closeable {
 		}
 	}
 
-	public void sendParticipantNames(UserSession user, String id) throws IOException {
+	public void sendParticipantNames(Participant user, String id) throws IOException {
 
 		final JsonArray participantsArray = new JsonArray();
 		
-		for (final UserSession participant : this.getParticipants()) {
+		for (final Participant participant : this.getParticipants()) {
 			if (!participant.equals(user)) {
 				final JsonElement participantName = new JsonPrimitive(
 						participant.getName());
@@ -241,7 +243,7 @@ public class Room implements Closeable {
 	/**
 	 * @return a collection with all the participants in the room
 	 */
-	public Collection<UserSession> getParticipants() {
+	public Collection<Participant> getParticipants() {
 		return participants.values();
 	}
 
@@ -249,13 +251,13 @@ public class Room implements Closeable {
 	 * @param name
 	 * @return the participant from this session
 	 */
-	public UserSession getParticipant(String name) {
+	public Participant getParticipant(String name) {
 		return participants.get(name);
 	}
 
 	@Override
 	public void close() {
-		for (final UserSession user : participants.values()) {
+		for (final Participant user : participants.values()) {
 			try {
 				user.close();
 			} catch (IOException e) {
@@ -305,7 +307,7 @@ public class Room implements Closeable {
 		return presentationPipeline;
 	}
 	
-	public void setScreensharer(UserSession user) {
+	public void setScreensharer(WebUser user) {
 		this.screensharer = user;
 	}
 
