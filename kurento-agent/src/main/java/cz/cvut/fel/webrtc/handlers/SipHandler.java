@@ -4,16 +4,13 @@ import gov.nist.javax.sip.header.CallID;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import javax.sdp.SdpFactory;
 import javax.sip.*;
 import javax.sip.address.*;
 import javax.sip.header.*;
@@ -27,11 +24,14 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import com.google.gson.JsonObject;
+
 import cz.cvut.fel.webrtc.db.RoomManager;
 import cz.cvut.fel.webrtc.db.LineRegistry;
 import cz.cvut.fel.webrtc.resources.Line;
 import cz.cvut.fel.webrtc.resources.Room;
 import cz.cvut.fel.webrtc.resources.Softphone;
+import cz.cvut.fel.webrtc.utils.Digest;
 
 public class SipHandler extends TextWebSocketHandler {
 	
@@ -44,7 +44,6 @@ public class SipHandler extends TextWebSocketHandler {
 	protected Logger log = LoggerFactory.getLogger(SipHandler.class);
 
 	private SipFactory sipFactory;
-	private SdpFactory sdpFactory;
 	private MessageFactory messageFactory;
 	private HeaderFactory headerFactory;
 	private AddressFactory addressFactory;
@@ -71,10 +70,7 @@ public class SipHandler extends TextWebSocketHandler {
 			headerFactory = sipFactory.createHeaderFactory();
 			
 			ip = InetAddress.getLocalHost().getHostAddress();
-			
-			sdpFactory = SdpFactory.getInstance();
-			
-		
+
 		} catch (Exception e) {
 		
 			log.error("{}", e);
@@ -156,8 +152,14 @@ public class SipHandler extends TextWebSocketHandler {
 					break;
 				
 				case Request.REGISTER:
-					if (room.isOnClose())
+					if (room.isClosing()) {
 						roomManager.removeRoom(room);
+					} else if (room.getLine() != null) {
+						final JsonObject message = new JsonObject();
+						message.addProperty("id", "lineAvailable");
+						message.addProperty("extension", room.getLine().getExtension());
+						room.broadcast(message);
+					}
 					break;
 					
 				default:
@@ -266,14 +268,14 @@ public class SipHandler extends TextWebSocketHandler {
 	}
 	
 	public void unregister(Room room) throws Exception {
-		room.setOnClose();
+		room.setClosing();
 		register(room, null);
 	}
 	
 	public void register(Room room, Response response) throws Exception {
 		Line line = room.getLine();
 		
-		int expire = (room.isOnClose()) ? 0 : 604800;
+		int expire = (room.isClosing()) ? 0 : 604800;
 		
 		if (line == null)
 			line = lineRegistry.popLine(room);
@@ -290,7 +292,7 @@ public class SipHandler extends TextWebSocketHandler {
 			address.setDisplayName(room.getName());
 			
 			// URI
-			URI requestURI = address.getURI();
+			javax.sip.address.URI requestURI = address.getURI();
 			
 			// Via
 			ArrayList<ViaHeader> viaHeaders = new ArrayList<ViaHeader>();
@@ -329,18 +331,14 @@ public class SipHandler extends TextWebSocketHandler {
 			request.addHeader(contactHeader);
 			
 			if (response != null) {
-				WWWAuthenticateHeader authHeader = (WWWAuthenticateHeader)response.getHeader("WWW-Authenticate");
-				AuthorizationHeader authorization = headerFactory.createAuthorizationHeader(authHeader.getScheme());
 				
-				String authResponse = calculateResponse(authHeader, Request.REGISTER, sipAddress, username, password);
-		
+				WWWAuthenticateHeader authHeader = (WWWAuthenticateHeader)response.getHeader("WWW-Authenticate");
+				String strAuthHeader = authHeader.toString().replace("WWW-Authenticate: ", "");
+				String authResponse = Digest.getHeaderResponse(Request.REGISTER, requestURI.toString(), strAuthHeader, username, password);
+				
 				if (authResponse != null) {
-					authorization.setUsername(username);
-					authorization.setRealm(authHeader.getRealm());
-					authorization.setNonce(authHeader.getNonce());
-					authorization.setURI(requestURI);	
-					authorization.setResponse(authResponse);
-					
+					AuthorizationHeader authorization = headerFactory.createAuthorizationHeader(authResponse);
+					System.out.println(authorization.toString());
 					request.addHeader(authorization);
 				} else {
 					return;
@@ -388,7 +386,7 @@ public class SipHandler extends TextWebSocketHandler {
 	}
 	
 	@Async
-	public void generateInviteRequest(Room room, Softphone user, ToHeader toHeader, Response response) throws ParseException, InvalidArgumentException, NoSuchAlgorithmException {
+	public void generateInviteRequest(Room room, Softphone user, ToHeader toHeader, Response response) throws ParseException, InvalidArgumentException, NoSuchAlgorithmException, Exception {
 		Line account = room.getLine();
 		
 		if (account == null)
@@ -406,7 +404,7 @@ public class SipHandler extends TextWebSocketHandler {
 		Address sipAddress = addressFactory.createAddress(sipAddressString);
 		sipAddress.setDisplayName(room.getName());
 
-		URI requestURI = toHeader.getAddress().getURI();
+		javax.sip.address.URI requestURI = toHeader.getAddress().getURI();
 
 		ArrayList<ViaHeader> viaHeaders = new ArrayList<ViaHeader>();
 		ViaHeader viaHeader = headerFactory.createViaHeader(ip, port, protocol, null);
@@ -443,18 +441,13 @@ public class SipHandler extends TextWebSocketHandler {
 		request.addHeader(contactHeader);
 
 		if (response != null) {
-			WWWAuthenticateHeader authHeader = (WWWAuthenticateHeader)response.getHeader("WWW-Authenticate");
-			AuthorizationHeader authorization = headerFactory.createAuthorizationHeader(authHeader.getScheme());
 			
-			String authResponse = calculateResponse(authHeader, Request.INVITE, requestURI.toString(), username, password);
-	
+			WWWAuthenticateHeader authHeader = (WWWAuthenticateHeader)response.getHeader("WWW-Authenticate");
+			String strAuthHeader = authHeader.toString().replace("WWW-Authenticate: ", "");
+			String authResponse = Digest.getHeaderResponse(Request.INVITE, requestURI.toString(), strAuthHeader, username, password);
+			
 			if (authResponse != null) {
-				authorization.setUsername(username);
-				authorization.setRealm(authHeader.getRealm());
-				authorization.setNonce(authHeader.getNonce());
-				authorization.setURI(requestURI);	
-				authorization.setResponse(authResponse);
-				
+				AuthorizationHeader authorization = headerFactory.createAuthorizationHeader(authResponse);
 				request.addHeader(authorization);
 			} else {
 				return;
@@ -593,38 +586,5 @@ public class SipHandler extends TextWebSocketHandler {
 				
 			} catch (Exception e) {}
 		}
-	}
-	
-	private static String MD5(String toBeHashed) throws NoSuchAlgorithmException {
-		MessageDigest md = MessageDigest.getInstance("MD5");
-		md.update(toBeHashed.getBytes());
-		
-		byte byteData[] = md.digest();
-		StringBuffer sb = new StringBuffer();
-		for (int i = 0; i < byteData.length; i++)
-			sb.append(Integer.toString((byteData[i] & 0xff) + 0x100, 16).substring(1));
-		
-		return sb.toString();
-	}
-	
-	private static String calculateResponse(WWWAuthenticateHeader authHeader, String method, String uri, String username, String password) throws NoSuchAlgorithmException {
-		String realm = authHeader.getRealm();
-		String qop = authHeader.getQop();
-		String nonce = authHeader.getNonce();
-		
-		String ha1 = MD5(String.format("%s:%s:%s", username, realm, password));
-		String ha2;
-		String response = null;
-		
-		if (qop == null) {
-			ha2 = MD5(String.format("%s:%s", method, uri));
-			response = MD5(String.format("%s:%s:%s", ha1, nonce, ha2));
-		} else if (qop.equals("auth")) {
-			// TODO
-		} else if (qop.equals("auth-int")) {
-			// TODO
-		}
-		
-		return response;
 	}
 }

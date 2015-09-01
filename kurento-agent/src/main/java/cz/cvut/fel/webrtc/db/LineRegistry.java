@@ -15,25 +15,19 @@ import java.util.regex.Pattern;
 import javax.net.ssl.SSLContext;
 
 import org.apache.http.Header;
-import org.apache.http.HttpHost;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.auth.AUTH;
 import org.apache.http.auth.AuthenticationException;
 import org.apache.http.auth.MalformedChallengeException;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.AuthCache;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLContextBuilder;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
-import org.apache.http.impl.auth.DigestScheme;
-import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.message.BasicHeader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
@@ -49,6 +43,7 @@ import com.google.gson.JsonObject;
 
 import cz.cvut.fel.webrtc.resources.Line;
 import cz.cvut.fel.webrtc.resources.Room;
+import cz.cvut.fel.webrtc.utils.Digest;
 
 @Configuration
 @EnableConfigurationProperties
@@ -136,18 +131,9 @@ public class LineRegistry {
 
 	private CloseableHttpResponse processDigest(CloseableHttpClient client, HttpGet get, CloseableHttpResponse response, String login, String password) throws MalformedChallengeException, AuthenticationException, ClientProtocolException, IOException {
 
-		URI uri = get.getURI();
-    	HttpHost host = new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme());
-		DigestScheme authscheme = new DigestScheme();
-		authscheme.processChallenge(response.getFirstHeader(AUTH.WWW_AUTH));
+		String strHeaderResponse = Digest.getHeaderResponse(HttpGet.METHOD_NAME, get.getURI().toString(), response.getFirstHeader(AUTH.WWW_AUTH).getValue(), login, password);
+		Header headerResponse = new BasicHeader(AUTH.WWW_AUTH_RESP, strHeaderResponse);
 		
-		BasicHttpContext localcontext = new BasicHttpContext();
-		AuthCache authCache = new BasicAuthCache();
-		authCache.put(host, authscheme);
-	    localcontext.setAttribute(HttpClientContext.AUTH_CACHE, authCache);
-		
-		Header headerResponse = authscheme.authenticate(new UsernamePasswordCredentials(login, password), get, localcontext);
-
 		get.addHeader(headerResponse);
 		get.addHeader("Cookie", response.getFirstHeader("Set-Cookie").getValue());
 		get.addHeader("Accept", MediaType.APPLICATION_JSON_VALUE);
