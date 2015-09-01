@@ -49,6 +49,15 @@ public class GroupCallApp implements WebSocketConfigurer {
 	
 	@Value("${asterisk.websocket}")
 	private String ast_uri;
+	
+	@Value("${asterisk.rest.uri}")
+	private String ast_rest_uri;
+	
+	@Value("${asterisk.rest.login}")
+	private String ast_rest_login;
+	
+	@Value("${asterisk.rest.password}")
+	private String ast_rest_password;
 
 	@Bean
 	public WebRegistry registry() {
@@ -72,7 +81,7 @@ public class GroupCallApp implements WebSocketConfigurer {
 	
 	@Bean
 	public SipRegistry sipRegistry() {
-		return new SipRegistry();
+		return new SipRegistry(ast_rest_uri, ast_rest_login, ast_rest_password);
 	}
 	
 	@Bean

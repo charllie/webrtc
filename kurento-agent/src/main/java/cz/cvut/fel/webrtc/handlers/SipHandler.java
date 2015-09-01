@@ -28,7 +28,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import cz.cvut.fel.webrtc.db.RoomManager;
 import cz.cvut.fel.webrtc.db.SipRegistry;
-import cz.cvut.fel.webrtc.db.SipRegistry.Account;
+import cz.cvut.fel.webrtc.resources.Line;
 import cz.cvut.fel.webrtc.resources.Room;
 import cz.cvut.fel.webrtc.resources.Softphone;
 
@@ -198,14 +198,14 @@ public class SipHandler extends TextWebSocketHandler {
 	}
 	
 	public void register(Room room, Response response) throws Exception {
-		Account account = room.getAccount();
+		Line account = room.getLine();
 		
 		if (account == null)
-			account = sipRegistry.getFor(room);
+			account = sipRegistry.popLine(room);
 		
 		if (account != null) {
 			String username = account.getUsername();
-			String password = account.getPassword();
+			String password = account.getSecret();
 			String sipAddress = String.format("sip:%s@%s", username, asteriskIp);
 			
 			sipRegistry.addRoomByURI(sipAddress, room.getName());
@@ -314,7 +314,7 @@ public class SipHandler extends TextWebSocketHandler {
 	
 	@Async
 	public void generateInviteRequest(Room room, Softphone user, ToHeader toHeader, Response response) throws ParseException, InvalidArgumentException, NoSuchAlgorithmException {
-		Account account = room.getAccount();
+		Line account = room.getLine();
 		
 		if (account == null)
 			return;
@@ -325,7 +325,7 @@ public class SipHandler extends TextWebSocketHandler {
 		String sdpOffer = user.getGeneratedOffer();
 		
 		String username = account.getUsername();
-		String password = account.getPassword();
+		String password = account.getSecret();
 		String sipAddressString = String.format("sip:%s@%s", username, asteriskIp);
 
 		Address sipAddress = addressFactory.createAddress(sipAddressString);

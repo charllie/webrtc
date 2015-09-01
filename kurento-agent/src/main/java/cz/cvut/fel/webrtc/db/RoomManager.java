@@ -82,8 +82,8 @@ public class RoomManager {
 		room.getCompositePipeline().release();
 		room.getPresentationPipeline().release();
 		
-		if (room.getAccount() != null)
-			sipRegistry.releaseAccount(room.getAccount().getUsername());
+		if (room.getLine() != null)
+			sipRegistry.pushLine(room.getLine());
 		
 		room.close();
 		

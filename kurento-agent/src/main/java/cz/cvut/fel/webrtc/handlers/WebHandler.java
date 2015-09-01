@@ -77,7 +77,7 @@ public class WebHandler extends TextWebSocketHandler {
 				String callee = jsonMessage.get("callee").getAsString();
 				Room room = roomManager.getRoom(user.getRoomName());
 				
-				if (room.getAccount() != null)
+				if (room.getLine() != null)
 					invite(room, callee);
 			}
 			break;
@@ -161,7 +161,7 @@ public class WebHandler extends TextWebSocketHandler {
 		
 		if (!room.hasScreensharer()) {
 			
-			room.sendParticipantNames(user, "presentationInfo");
+			room.sendInformation(user, "presentationInfo");
 			room.setScreensharer(user);
 			user.isScreensharer(true);
 			

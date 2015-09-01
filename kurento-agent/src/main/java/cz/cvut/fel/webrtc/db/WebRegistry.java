@@ -18,7 +18,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.web.socket.WebSocketSession;
 
-import cz.cvut.fel.webrtc.resources.Participant;
 import cz.cvut.fel.webrtc.resources.WebUser;
 
 /**

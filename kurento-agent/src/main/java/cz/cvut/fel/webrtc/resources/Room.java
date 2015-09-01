@@ -40,8 +40,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
-import cz.cvut.fel.webrtc.db.SipRegistry.Account;
-
 /**
  * @author Ivan Gracia (izanmail@gmail.com)
  * @since 4.3.1
@@ -56,7 +54,7 @@ public class Room implements Closeable {
 	private final Composite composite;
 	private final String name;
 	
-	private Account account = null;
+	private Line line;
 	private final String callId;
 	private long cseq;
 	
@@ -111,7 +109,7 @@ public class Room implements Closeable {
 				joinRoom(participant);
 			
 			participants.put(participant.getName(), participant);
-			sendParticipantNames(participant, "compositeInfo");
+			sendInformation(participant, "compositeInfo");
 			
 		} catch (Exception e) {
 			log.info("ROOM {}: adding participant {} failed: {}", name, userName, e);
@@ -214,7 +212,7 @@ public class Room implements Closeable {
 		}
 	}
 
-	public void sendParticipantNames(Participant user, String id) throws IOException {
+	public void sendInformation(Participant user, String id) throws IOException {
 
 		final JsonArray participantsArray = new JsonArray();
 		
@@ -226,18 +224,21 @@ public class Room implements Closeable {
 			}
 		}
 
-		final JsonObject existingParticipantsMsg = new JsonObject();
-		existingParticipantsMsg.addProperty("id", id);
-		existingParticipantsMsg.add("data", participantsArray);
-		existingParticipantsMsg.addProperty("existingScreensharer", (screensharer != null));
+		final JsonObject message = new JsonObject();
+		message.addProperty("id", id);
+		message.add("data", participantsArray);
+		message.addProperty("existingScreensharer", (screensharer != null));
+		
+		if (line != null)
+			message.addProperty("lineExtension", line.getExtension());
 		
 		if (screensharer != null)
-			existingParticipantsMsg.addProperty("screensharer", screensharer.getName());
+			message.addProperty("screensharer", screensharer.getName());
 		
 		log.debug("PARTICIPANT {}: sending a list of {} participants",
 				user.getName(), participantsArray.size());
 		
-		user.sendMessage(existingParticipantsMsg);
+		user.sendMessage(message);
 	}
 
 	/**
@@ -324,17 +325,22 @@ public class Room implements Closeable {
 		return this.cseq;
 	}
 
-	public Account getAccount() {
-		return this.account;
+	public Line getLine() {
+		return this.line;
 	}
 	
 	public String getCallId() {
 		return this.callId;
 	}
 
-	public Account setAccount(Account account) {
-		this.account = account;
-		return this.account;
+	public void setLine(Line line) {
+		this.line = line;
+		
+		final JsonObject message = new JsonObject();
+		message.addProperty("id", "lineAvailable");
+		message.addProperty("extension", line.getExtension());
+		
+		broadcast(message);
 	}
 
 }

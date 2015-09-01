@@ -7,6 +7,8 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 
 	$scope.roomName = $params.roomName;
 
+	$scope.lineExtension = '';
+
 	$scope.presentation = {
 		active: false,
 		presenterIsMe: false,
@@ -104,6 +106,10 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 					}
 				});
 
+				break;
+
+			case 'lineAvailable':
+				setLineExtension(parsedMessage.extension);
 				break;
 
 			default:
@@ -257,6 +263,9 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 			onicecandidate: participant.onIceCandidate[type].bind(participant)
 		};
 
+		if (message.lineExtension)
+			setLineExtension(message.lineExtension);
+
 		if (type == 'composite') {
 			$scope.participantNames = message.data;
 			$scope.participantNames.push(participant.name);
@@ -353,6 +362,13 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 		
 		participants.get(result.name).rtcPeer[result.type].processAnswer(result.sdpAnswer, function(error) {
 			if (error) return console.error(error);
+		});
+	}
+
+	function setLineExtension(extension) {
+		$scope.lineExtension = (extension === '') ? extension : '(' + extension + ')';
+		_.defer(function() {
+			$scope.$apply();
 		});
 	}
 
