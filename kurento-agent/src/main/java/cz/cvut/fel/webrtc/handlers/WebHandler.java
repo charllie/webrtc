@@ -211,12 +211,15 @@ public class WebHandler extends TextWebSocketHandler {
 		}
 	}
 
-	private void leaveRoom(Participant user) throws IOException {
+	private void leaveRoom(Participant user) throws Exception {
 		if (user != null) {
 			final Room room = roomManager.getRoom(user.getRoomName());
 			room.leave(user);
 			if (room.getParticipants().isEmpty()) {
-				roomManager.removeRoom(room);
+				if (room.getLine() == null)
+					roomManager.removeRoom(room);
+				else
+					sipHandler.unregister(room);
 			}
 			registry.removeBySession(user.getSession());
 		}

@@ -77,17 +77,20 @@ public class RoomManager {
 	 * @throws IOException
 	 */
 	public void removeRoom(Room room) {
-		this.rooms.remove(room.getName());
-		
-		room.getCompositePipeline().release();
-		room.getPresentationPipeline().release();
-		
-		if (room.getLine() != null)
-			sipRegistry.pushLine(room.getLine());
-		
-		room.close();
-		
-		log.info("Room {} removed and closed", room.getName());
+		if (room != null) {
+			this.rooms.remove(room.getName());
+			
+			room.getCompositePipeline().release();
+			room.getPresentationPipeline().release();
+			
+			if (room.getLine() != null) {
+				sipRegistry.pushLine(room.getLine());
+			}
+			
+			room.close();
+			
+			log.info("Room {} removed and closed", room.getName());
+		}
 	}
 
 }

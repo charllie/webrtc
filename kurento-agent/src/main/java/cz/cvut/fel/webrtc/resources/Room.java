@@ -57,6 +57,7 @@ public class Room implements Closeable {
 	private Line line;
 	private final String callId;
 	private long cseq;
+	private boolean onClose = false;
 	
 	private WebUser screensharer;
 	
@@ -350,6 +351,14 @@ public class Room implements Closeable {
 		message.addProperty("extension", line.getExtension());
 		
 		broadcast(message);
+	}
+
+	public boolean isOnClose() {
+		return onClose;
+	}
+
+	public void setOnClose() {
+		this.onClose = true;
 	}
 
 }

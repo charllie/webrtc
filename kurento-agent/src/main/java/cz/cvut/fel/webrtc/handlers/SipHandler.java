@@ -144,15 +144,31 @@ public class SipHandler extends TextWebSocketHandler {
 		switch(response.getStatusCode()) {
 		case 200:
 			try {
+				CSeqHeader cSeqHeader = (CSeqHeader) response.getHeader("CSeq");
+				String method = cSeqHeader.getMethod();
 				FromHeader fromHeader = (FromHeader) response.getHeader("From");
 				Room room = roomManager.getRoom(fromHeader.getAddress().getDisplayName());
 
-				if (room != null)
+				switch(method) {
+				
+				case Request.INVITE:
 					processInviteResponse(room, response);
+					break;
+				
+				case Request.REGISTER:
+					if (room.isOnClose())
+						roomManager.removeRoom(room);
+					break;
+					
+				default:
+					break;
+				}
+					
 			} catch (Exception e) {
 				log.info("Cannot process a 200 response {}", e);
 			}
 			break;
+
 		case 401:
 			try {
 				CSeqHeader cSeqHeader = (CSeqHeader) response.getHeader("CSeq");
@@ -160,12 +176,18 @@ public class SipHandler extends TextWebSocketHandler {
 				FromHeader fromHeader = (FromHeader) response.getHeader("From");
 				Room room = roomManager.getRoom(fromHeader.getAddress().getDisplayName());
 
-				if (room != null) {
-					if (method.equals(Request.REGISTER))
-						register(room, response);
-					if (method.equals(Request.INVITE)) {
-						generateInviteRequest(room, response);
-					}
+				switch(method) {
+				
+				case Request.INVITE:
+					generateInviteRequest(room, response);
+					break;
+				
+				case Request.REGISTER:
+					register(room, response);
+					break;
+					
+				default:
+					break;
 				}
 				
 			} catch (Exception e) {
@@ -243,8 +265,15 @@ public class SipHandler extends TextWebSocketHandler {
 		sendMessage(request);
 	}
 	
+	public void unregister(Room room) throws Exception {
+		room.setOnClose();
+		register(room, null);
+	}
+	
 	public void register(Room room, Response response) throws Exception {
 		Line line = room.getLine();
+		
+		int expire = (room.isOnClose()) ? 0 : 604800;
 		
 		if (line == null)
 			line = lineRegistry.popLine(room);
@@ -273,7 +302,7 @@ public class SipHandler extends TextWebSocketHandler {
 			
 			// Contact
 			ContactHeader contactHeader = headerFactory.createContactHeader(address);
-			contactHeader.setExpires(200);
+			contactHeader.setExpires(expire);
 			
 			// Call Id
 			CallIdHeader callIdHeader = new CallID(room.getCallId());
