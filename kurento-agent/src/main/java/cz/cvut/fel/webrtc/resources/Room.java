@@ -142,26 +142,35 @@ public class Room implements Closeable {
 	 * @param participant
 	 * @throws IOException
 	 */
-	private void joinRoom(Participant newParticipant) throws IOException {
+	public void joinRoom(Participant newParticipant) throws IOException {
 		final JsonObject newParticipantMsg = new JsonObject();
 		newParticipantMsg.addProperty("id", "newParticipantArrived");
 		newParticipantMsg.addProperty("name", newParticipant.getName());
-		broadcast(newParticipantMsg);
+		broadcast(newParticipantMsg, newParticipant);
 	}
 	
-	public void broadcast(JsonObject message) {
-
+	private void broadcast(JsonObject message, Participant exception) {
 		final List<String> participantsList = new ArrayList<>(participants.values().size());
 		
 		for (final Participant participant : participants.values()) {
+			
+			if (participant.equals(exception))
+				continue;
+			
 			try {
 				participant.sendMessage(message);
 			} catch (final IOException e) {
 				log.debug("ROOM {}: participant {} could not be notified",
 						name, participant.getName(), e);
 			}
+			
 			participantsList.add(participant.getName());
+			
 		}
+	}
+	
+	public void broadcast(JsonObject message) {
+		broadcast(message, null);
 	}
 
 	private void removeParticipant(String name) throws IOException {

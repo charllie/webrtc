@@ -52,7 +52,7 @@ import cz.cvut.fel.webrtc.resources.Room;
 
 @Configuration
 @EnableConfigurationProperties
-public class SipRegistry {
+public class LineRegistry {
 	
 	@Autowired
 	private RoomManager roomManager;
@@ -62,7 +62,7 @@ public class SipRegistry {
 	
 	private String roomPattern = "Room ([0-9]+)";
 	
-	public SipRegistry(String strUri, String login, String password) {
+	public LineRegistry(String strUri, String login, String password) {
 		
 		if (strUri == null || login == null || password == null)
 			return;
@@ -101,7 +101,7 @@ public class SipRegistry {
 		    Line line = iterator.next();
 		    m = p.matcher(line.getName());
 		    
-		    if (m.matches())
+		    if (!m.matches())
 		    	iterator.remove();
 		}
 	}

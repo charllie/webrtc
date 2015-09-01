@@ -29,7 +29,7 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 import org.springframework.beans.factory.annotation.Value;
 
 import cz.cvut.fel.webrtc.db.RoomManager;
-import cz.cvut.fel.webrtc.db.SipRegistry;
+import cz.cvut.fel.webrtc.db.LineRegistry;
 import cz.cvut.fel.webrtc.db.WebRegistry;
 import cz.cvut.fel.webrtc.handlers.SipHandler;
 import cz.cvut.fel.webrtc.handlers.WebHandler;
@@ -80,8 +80,8 @@ public class GroupCallApp implements WebSocketConfigurer {
 	}
 	
 	@Bean
-	public SipRegistry sipRegistry() {
-		return new SipRegistry(ast_rest_uri, ast_rest_login, ast_rest_password);
+	public LineRegistry sipRegistry() {
+		return new LineRegistry(ast_rest_uri, ast_rest_login, ast_rest_password);
 	}
 	
 	@Bean

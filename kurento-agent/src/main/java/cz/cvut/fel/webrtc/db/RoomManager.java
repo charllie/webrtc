@@ -41,7 +41,7 @@ public class RoomManager {
 	private SipHandler sipHandler;
 	
 	@Autowired
-	private SipRegistry sipRegistry;
+	private LineRegistry sipRegistry;
 
 	private final ConcurrentMap<String, Room> rooms = new ConcurrentHashMap<>();
 

@@ -8,6 +8,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -27,7 +28,7 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import cz.cvut.fel.webrtc.db.RoomManager;
-import cz.cvut.fel.webrtc.db.SipRegistry;
+import cz.cvut.fel.webrtc.db.LineRegistry;
 import cz.cvut.fel.webrtc.resources.Line;
 import cz.cvut.fel.webrtc.resources.Room;
 import cz.cvut.fel.webrtc.resources.Softphone;
@@ -38,7 +39,7 @@ public class SipHandler extends TextWebSocketHandler {
 	private RoomManager roomManager;
 	
 	@Autowired
-	private SipRegistry sipRegistry;
+	private LineRegistry lineRegistry;
 
 	protected Logger log = LoggerFactory.getLogger(SipHandler.class);
 
@@ -100,7 +101,7 @@ public class SipHandler extends TextWebSocketHandler {
 		};
 		
 		Timer timer = new Timer();
-		timer.scheduleAtFixedRate(task, 0, 20000);
+		timer.scheduleAtFixedRate(task, 0, 30000);
 		
 	}
 
@@ -141,6 +142,17 @@ public class SipHandler extends TextWebSocketHandler {
 	private void processResponse(Response response) {
 		
 		switch(response.getStatusCode()) {
+		case 200:
+			try {
+				FromHeader fromHeader = (FromHeader) response.getHeader("From");
+				Room room = roomManager.getRoom(fromHeader.getAddress().getDisplayName());
+
+				if (room != null)
+					processInviteResponse(room, response);
+			} catch (Exception e) {
+				log.info("Cannot process a 200 response {}", e);
+			}
+			break;
 		case 401:
 			try {
 				CSeqHeader cSeqHeader = (CSeqHeader) response.getHeader("CSeq");
@@ -197,18 +209,52 @@ public class SipHandler extends TextWebSocketHandler {
 		}
 	}
 	
+	private void processInviteResponse(Room room, Response response) throws IOException, ParseException, InvalidArgumentException {
+		// Process SDP Answer
+		String sdpAnswer = (String) response.getContent();
+		ToHeader toHeader = (ToHeader) response.getHeader("To");
+		
+		Softphone callee = (Softphone) room.getParticipant(toHeader.getAddress().getDisplayName());
+		callee.getRtpEndpoint().processAnswer(sdpAnswer);
+		room.joinRoom(callee);
+		
+		// Send Ack
+		long cseq = ((CSeqHeader) response.getHeader("CSeq")).getSeqNumber();
+		CSeqHeader cSeqHeader = headerFactory.createCSeqHeader(cseq, Request.ACK);
+		MaxForwardsHeader maxForwardsHeader = headerFactory.createMaxForwardsHeader(70);
+		
+		ViaHeader viaHeaderCallee = (ViaHeader) response.getHeader("Via");
+		ArrayList<ViaHeader> viaHeaders = new ArrayList<ViaHeader>();
+		ViaHeader viaHeader = headerFactory.createViaHeader(ip, port, protocol, null);
+		viaHeaders.add(viaHeader);
+		viaHeaders.add(viaHeaderCallee);
+		
+		Request request = messageFactory.createRequest(
+				toHeader.getAddress().getURI(),
+				Request.ACK,
+				(CallIdHeader) response.getHeader("Call-ID"),
+				cSeqHeader,
+				(FromHeader) response.getHeader("From"),
+				toHeader,
+				viaHeaders,
+				maxForwardsHeader
+		);
+		
+		sendMessage(request);
+	}
+	
 	public void register(Room room, Response response) throws Exception {
-		Line account = room.getLine();
+		Line line = room.getLine();
 		
-		if (account == null)
-			account = sipRegistry.popLine(room);
+		if (line == null)
+			line = lineRegistry.popLine(room);
 		
-		if (account != null) {
-			String username = account.getUsername();
-			String password = account.getSecret();
+		if (line != null) {
+			String username = line.getUsername();
+			String password = line.getSecret();
 			String sipAddress = String.format("sip:%s@%s", username, asteriskIp);
 			
-			sipRegistry.addRoomByURI(sipAddress, room.getName());
+			lineRegistry.addRoomByURI(sipAddress, room.getName());
 			
 			// Address
 			Address address = addressFactory.createAddress(sipAddress);
@@ -398,7 +444,7 @@ public class SipHandler extends TextWebSocketHandler {
 			
 			String sdpOffer = request.getContent().toString();
 			
-			Room room = sipRegistry.getRoomBySipURI(uri);
+			Room room = lineRegistry.getRoomBySipURI(uri);
 			
 			FromHeader fromHeader = headerFactory.createFromHeader(receiver, String.valueOf(tag));
 			ToHeader toHeader = headerFactory.createToHeader(sender, null);
@@ -452,6 +498,7 @@ public class SipHandler extends TextWebSocketHandler {
 			
 			// 200 OK
 			ContentTypeHeader contentTypeHeader = headerFactory.createContentTypeHeader("application", "sdp");
+			room.joinRoom(user);
 			Response okResponse = messageFactory.createResponse(
 					200,
 					callIdHeader,
@@ -478,7 +525,7 @@ public class SipHandler extends TextWebSocketHandler {
 		Address receiver = ((ToHeader) request.getHeader("To")).getAddress();
 		String uri = receiver.getURI().toString();
 		
-		Room room = sipRegistry.getRoomBySipURI(uri);
+		Room room = lineRegistry.getRoomBySipURI(uri);
 		
 		String username = sender.getDisplayName();
 		
