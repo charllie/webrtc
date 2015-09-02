@@ -11,9 +11,9 @@
 		<div class="toolbar__right">
 
 			<lx-text-field id="phone-nb" label="Phone number" fixed-label="true">
-                <input type="text" ng-model="callId">
+                <input type="tel" ng-model="callId">
             </lx-text-field>
-			<button class="btn btn--l btn--white btn--icon" lx-ripple ng-click="invite(callId)">
+			<button class="btn btn--l btn--white btn--icon phone-btn" lx-ripple ng-click="invite(callId)">
 				<i class="mdi mdi-phone"></i>
 			</button>
 
@@ -52,14 +52,21 @@
 
 			<!-- Users -->
 			<lx-dropdown position="right" from-top>
-				<button class="btn btn--l btn--white btn--icon" lx-ripple lx-dropdown-toggle>
+				<button class="btn btn--l btn--white btn--icon btn-network" lx-ripple lx-dropdown-toggle>
 					<i class="mdi mdi-account-network"></i>
+				</button>
+				<button class="btn btn--l btn--white btn--icon btn-info" lx-ripple lx-dropdown-toggle>
+					<i class="mdi mdi-information-outline"></i>
 				</button>
 				<lx-dropdown-menu>
 					<ul>
 						<li><a class="dropdown-link dropdown-link--is-header">Online users</a></li>
 						<li class="dropdown-divider"></li>
 						<li ng-repeat="participant in participantNames"><a class="dropdown-link">{{ participant }}</a></li>
+						<li class="dropdown-divider room-info"></li>
+						<li><a class="dropdown-link dropdown-link--is-header room-info">Room ID</a></li>
+						<li class="dropdown-divider room-info"></li>
+						<li><a class="dropdown-link room-info">{{ roomName }} {{ lineExtension }}</a></li>
 					</ul>
 				</lx-dropdown-menu>
 			</lx-dropdown>

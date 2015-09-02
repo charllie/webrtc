@@ -130,17 +130,55 @@ video {
 	color: #607d8b !important;
 }
 
-@media screen and (max-width: 1023px) {
+@media screen and (min-width: 601px) and (max-width: 1023px) {
 	.header-padding {
 		height: 75px;
 		padding-top: 8px;
 		padding-bottom: 8px;
 	}
+
+	.room-info {
+		display: none;
+	}
+
+	.btn-info {
+		display: none;
+	}
 }
+
 @media screen and (min-width: 1024px) {
 	.header-padding {
 		height: 87px;
 		padding-top: 12px;
 		padding-bottom: 12px;
+	}
+
+	.room-info {
+		display: none;
+	}
+
+	.btn-info {
+		display: none;
+	}
+}
+
+@media only screen and (max-width: 600px) {
+	.header-padding {
+		height: 75px;
+		padding-top: 8px;
+		padding-bottom: 8px;
+	}
+
+	.toolbar__label {
+	display: none;
+	}
+
+	#phone-nb {
+		display: block;
+		width: 48%;
+	}
+
+	.btn-network {
+		display: none;
 	}
 }
