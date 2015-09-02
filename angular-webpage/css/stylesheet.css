@@ -114,6 +114,10 @@ video {
 	background: #000;
 }
 
+#phone-nb .text-field__label {
+	color: rgb(249, 249, 249) !important;
+}
+
 .text-field:after {
 	background-color: #607d8b;
 }

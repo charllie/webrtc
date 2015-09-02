@@ -10,7 +10,9 @@
 
 		<div class="toolbar__right">
 
-			<input type="text" ng-model="callId">
+			<lx-text-field id="phone-nb" label="Phone number" fixed-label="true">
+                <input type="text" ng-model="callId">
+            </lx-text-field>
 			<button class="btn btn--l btn--white btn--icon" lx-ripple ng-click="invite(callId)">
 				<i class="mdi mdi-phone"></i>
 			</button>
@@ -71,8 +73,6 @@
 </div>
 
 <div class="header-padding"></div>
-
-<button ng-click="invite('1111111111')">Call</button>
 
 <div class="text-center">
 	<!-- Composite -->
