@@ -50,7 +50,8 @@ public class SipHandler extends TextWebSocketHandler {
 	
 	private String ip;
 	// TODO
-	private String asteriskIp = "178.62.211.128";
+	private String pbxIp = "178.62.211.128";
+
 	// TODO
 	private int port = 8080;
 	private String protocol = "ws";
@@ -283,7 +284,7 @@ public class SipHandler extends TextWebSocketHandler {
 		if (line != null) {
 			String username = line.getUsername();
 			String password = line.getSecret();
-			String sipAddress = String.format("sip:%s@%s", username, asteriskIp);
+			String sipAddress = String.format("sip:%s@%s", username, pbxIp);
 			
 			lineRegistry.addRoomByURI(sipAddress, room.getName());
 			
@@ -348,20 +349,21 @@ public class SipHandler extends TextWebSocketHandler {
 		}
 	}
 	
-	public void generateInviteRequest(Room room, String callee) {
+	public void generateInviteRequest(Room room, String extension) {
 		
 		try {
+
+			String sipAddress = String.format("sip:%s@%s", extension, pbxIp);
 			
-			String sipAddress = String.format("sip:%s@%s", callee, asteriskIp);
 			Address address = addressFactory.createAddress(sipAddress);
-			address.setDisplayName(callee);
+			address.setDisplayName(extension);
 			ToHeader toHeader = headerFactory.createToHeader(address, null);
 
 			final Softphone user = (Softphone) room.join(sipAddress, session, Softphone.class);
-			user.setName(callee);
+			user.setName(extension);
 			
 			// Find a more appropriate name
-			getName(user, callee);
+			getName(user, extension);
 			
 			if (user != null)
 				generateInviteRequest(room, user, toHeader, null);
@@ -398,9 +400,9 @@ public class SipHandler extends TextWebSocketHandler {
 	
 	@Async
 	public void generateInviteRequest(Room room, Softphone user, ToHeader toHeader, Response response) throws ParseException, InvalidArgumentException, NoSuchAlgorithmException, Exception {
-		Line account = room.getLine();
+		Line line = room.getLine();
 		
-		if (account == null)
+		if (line == null)
 			return;
 			
 		if (user == null)
@@ -408,9 +410,9 @@ public class SipHandler extends TextWebSocketHandler {
 		
 		String sdpOffer = user.getGeneratedOffer();
 		
-		String username = account.getUsername();
-		String password = account.getSecret();
-		String sipAddressString = String.format("sip:%s@%s", username, asteriskIp);
+		String username = line.getUsername();
+		String password = line.getSecret();
+		String sipAddressString = String.format("sip:%s@%s", username, pbxIp);
 
 		Address sipAddress = addressFactory.createAddress(sipAddressString);
 		sipAddress.setDisplayName(room.getName());
@@ -597,5 +599,9 @@ public class SipHandler extends TextWebSocketHandler {
 				
 			} catch (Exception e) {}
 		}
+	}
+
+	public String getPbxIp() {
+		return pbxIp;
 	}
 }

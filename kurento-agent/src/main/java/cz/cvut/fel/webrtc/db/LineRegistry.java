@@ -177,4 +177,17 @@ public class LineRegistry {
 		}
 		return null;
 	}
+
+	public boolean isCallable(String extension) {
+		boolean isCallable = false;
+		
+		for (Line line : lines) {
+			if (line.getExtension().equals(extension)) {
+				isCallable = true;
+				break;
+			}
+		}
+		
+		return isCallable;
+	}
 }

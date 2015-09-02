@@ -29,6 +29,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
+import cz.cvut.fel.webrtc.db.LineRegistry;
 import cz.cvut.fel.webrtc.db.RoomManager;
 import cz.cvut.fel.webrtc.db.WebRegistry;
 import cz.cvut.fel.webrtc.resources.Room;
@@ -53,6 +54,9 @@ public class WebHandler extends TextWebSocketHandler {
 	private WebRegistry registry;
 	
 	@Autowired
+	private LineRegistry lineRegistry;
+	
+	@Autowired
 	private SipHandler sipHandler;
 
 	@Override
@@ -74,11 +78,11 @@ public class WebHandler extends TextWebSocketHandler {
 		switch (jsonMessage.get("id").getAsString()) {
 		case "invite":
 			if (user != null) {
-				String callee = jsonMessage.get("callee").getAsString();
+				String extension = jsonMessage.get("callee").getAsString();
 				Room room = roomManager.getRoom(user.getRoomName());
 				
 				if (room.getLine() != null)
-					invite(room, callee);
+					invite(room, extension);
 			}
 			break;
 
@@ -145,8 +149,20 @@ public class WebHandler extends TextWebSocketHandler {
 		}
 	}
 
-	private void invite(Room room, String callee) {
-		sipHandler.generateInviteRequest(room, callee);
+	private void invite(Room room, String extension) {
+		sipHandler.generateInviteRequest(room, extension);
+		
+		if (!lineRegistry.isCallable(extension)) {
+			// TODO
+			return;
+		}
+		
+		String sipAddress = String.format("sip:%s@%s", extension, sipHandler.getPbxIp());
+		
+		if (room.getParticipant(sipAddress) != null) {
+			// TODO
+			return;
+		}
 	}
 
 	private void stopPresenting(WebUser user) throws IOException {
@@ -181,7 +197,7 @@ public class WebHandler extends TextWebSocketHandler {
 
 	@Override
 	public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-		//UserSession user = registry.removeBySession(session);
+
 		Participant user = registry.removeBySession(session);
 		
 		if (user != null) {
