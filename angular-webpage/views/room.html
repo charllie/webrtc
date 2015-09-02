@@ -10,6 +10,11 @@
 
 		<div class="toolbar__right">
 
+			<input type="text" ng-model="callId">
+			<button class="btn btn--l btn--white btn--icon" lx-ripple ng-click="invite(callId)">
+				<i class="mdi mdi-phone"></i>
+			</button>
+
 			<!-- Presentation (Firefox) -->
 			<lx-dropdown position="right" from-top ng-show="canPresent('firefox')">
 				<button class="btn btn--l btn--white btn--icon" ng-disabled="presentation.disabled.general" lx-ripple lx-dropdown-toggle>
