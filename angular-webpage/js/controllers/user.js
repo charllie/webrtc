@@ -34,10 +34,12 @@ function UserCtrl($scope, $location, socket, constraints, notifications, partici
 
 			if (socket.isOpen()) {
 
-				participants.add(participant.name);
+				var userId = createGuid();
+				participants.add(userId, participant.name);
 
 				socket.prepareJoiningRoom({
 					id: 'joinRoom',
+					userId: userId,
 					name: participant.name,
 					room: participant.room,
 					mediaSource: 'composite'
@@ -80,4 +82,11 @@ function UserCtrl($scope, $location, socket, constraints, notifications, partici
 		constraints.setWarning(null);
 
 	}
+}
+
+function createGuid() {
+	return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+		var r = Math.random()*16|0, v = c === 'x' ? r : (r&0x3|0x8);
+		return v.toString(16);
+	});
 }

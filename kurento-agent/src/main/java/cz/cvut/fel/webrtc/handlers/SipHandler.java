@@ -238,7 +238,7 @@ public class SipHandler extends TextWebSocketHandler {
 		String sdpAnswer = (String) response.getContent();
 		ToHeader toHeader = (ToHeader) response.getHeader("To");
 		
-		Softphone callee = (Softphone) room.getParticipant(toHeader.getAddress().getDisplayName());
+		Softphone callee = (Softphone) room.getParticipant(toHeader.getAddress().getURI().toString());
 		callee.getRtpEndpoint().processAnswer(sdpAnswer);
 		room.joinRoom(callee);
 		
@@ -292,7 +292,7 @@ public class SipHandler extends TextWebSocketHandler {
 			address.setDisplayName(room.getName());
 			
 			// URI
-			javax.sip.address.URI requestURI = address.getURI();
+			URI requestURI = address.getURI();
 			
 			// Via
 			ArrayList<ViaHeader> viaHeaders = new ArrayList<ViaHeader>();
@@ -338,7 +338,6 @@ public class SipHandler extends TextWebSocketHandler {
 				
 				if (authResponse != null) {
 					AuthorizationHeader authorization = headerFactory.createAuthorizationHeader(authResponse);
-					System.out.println(authorization.toString());
 					request.addHeader(authorization);
 				} else {
 					return;
@@ -358,7 +357,11 @@ public class SipHandler extends TextWebSocketHandler {
 			address.setDisplayName(callee);
 			ToHeader toHeader = headerFactory.createToHeader(address, null);
 
-			final Softphone user = (Softphone) room.join(callee, session, Softphone.class);
+			final Softphone user = (Softphone) room.join(sipAddress, session, Softphone.class);
+			user.setName(callee);
+			
+			// Find a more appropriate name
+			getName(user, callee);
 			
 			if (user != null)
 				generateInviteRequest(room, user, toHeader, null);
@@ -368,12 +371,20 @@ public class SipHandler extends TextWebSocketHandler {
 		}
 	}
 	
+	@Async
+	private void getName(Softphone user, String extension) {
+		String name = lineRegistry.getName(extension);
+		
+		if (name != null)
+			user.setName(name);
+	}
+	
 	public void generateInviteRequest(Room room, Response response) {
 		
 		try {
 			
 			ToHeader toHeader = (ToHeader) response.getHeader("To");
-			String callee = toHeader.getAddress().getDisplayName();
+			String callee = toHeader.getAddress().getURI().toString();
 			final Softphone user = (Softphone) room.getParticipant(callee);
 			
 			if (user != null)
@@ -404,7 +415,7 @@ public class SipHandler extends TextWebSocketHandler {
 		Address sipAddress = addressFactory.createAddress(sipAddressString);
 		sipAddress.setDisplayName(room.getName());
 
-		javax.sip.address.URI requestURI = toHeader.getAddress().getURI();
+		URI requestURI = toHeader.getAddress().getURI();
 
 		ArrayList<ViaHeader> viaHeaders = new ArrayList<ViaHeader>();
 		ViaHeader viaHeader = headerFactory.createViaHeader(ip, port, protocol, null);
@@ -506,15 +517,18 @@ public class SipHandler extends TextWebSocketHandler {
 			sendMessage(ringingResponse);
 			
 			// Create a new user
-			String username = sender.getDisplayName();
+			String userId = sender.getURI().toString();
 			
-			if (username == null)
-				username = sender.getURI().toString();
-			
-			Softphone user = (Softphone) room.join(username, session, Softphone.class);
+			Softphone user = (Softphone) room.join(userId, session, Softphone.class);
 			
 			if (user == null)
 				return;
+
+			String name = sender.getDisplayName();
+			if (name == null)
+				name = sender.getURI().toString();
+			
+			user.setName(name);
 			
 			String sdpAnswer = user.getSdpAnswer(sdpOffer);
 			
@@ -549,15 +563,12 @@ public class SipHandler extends TextWebSocketHandler {
 		
 		Room room = lineRegistry.getRoomBySipURI(uri);
 		
-		String username = sender.getDisplayName();
-		
-		if (username == null)
-			username = sender.getURI().toString();
+		String userId = sender.getURI().toString();
 		
 		if (room != null) {
 			try {
 				
-				room.leave(username);
+				room.leave(userId);
 				FromHeader fromHeader = headerFactory.createFromHeader(receiver, String.valueOf(tag));
 			
 				ToHeader toHeader = headerFactory.createToHeader(sender, null);

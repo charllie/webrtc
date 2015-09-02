@@ -53,6 +53,7 @@ public class LineRegistry {
 	private RoomManager roomManager;
 	
 	private Stack<Line> lines = new Stack<Line> ();
+	private Stack<Line> roomLines = new Stack<Line> ();
 	private ConcurrentMap<String, String> roomByURI = new ConcurrentHashMap<>();
 	
 	private String roomPattern = "Room ([0-9]+)";
@@ -92,7 +93,7 @@ public class LineRegistry {
 
 	private void filterLines(Pattern p) {
 		Matcher m;
-		for (Iterator<Line> iterator = lines.iterator(); iterator.hasNext();) {
+		for (Iterator<Line> iterator = roomLines.iterator(); iterator.hasNext();) {
 		    Line line = iterator.next();
 		    m = p.matcher(line.getName());
 		    
@@ -112,7 +113,7 @@ public class LineRegistry {
 		JavaType list = mapper.getTypeFactory().constructCollectionType(Stack.class, Line.class);
 		ObjectReader objectReader = mapper.reader(list);
 		lines = objectReader.readValue(json);
-		
+		roomLines.addAll(lines);
 	}
 
 	private CloseableHttpClient getSSLClient() throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException {
@@ -143,7 +144,7 @@ public class LineRegistry {
 
 	public Line popLine(Room room) {
 	
-		Line line = lines.pop();
+		Line line = roomLines.pop();
 		
 		if (line != null)
 			room.setLine(line);
@@ -152,7 +153,7 @@ public class LineRegistry {
 	}
 	
 	public void pushLine(Line line) {
-		lines.push(line);
+		roomLines.push(line);
 	}
 	
 	public void addRoomByURI(String uri, String room) {
@@ -167,5 +168,13 @@ public class LineRegistry {
 			room = roomManager.getRoom(roomName);
 		
 		return room;
+	}
+	
+	public String getName(String extension) {
+		for (Line line : lines) {
+			if (line.getExtension().equals(extension))
+				return line.getName();
+		}
+		return null;
 	}
 }

@@ -1,7 +1,6 @@
 package cz.cvut.fel.webrtc.resources;
 
 import java.io.IOException;
-
 import org.kurento.client.Continuation;
 import org.kurento.client.EventListener;
 import org.kurento.client.Hub;
@@ -20,16 +19,16 @@ import com.google.gson.JsonObject;
 public class WebUser extends Participant {
 
 	private static final Logger log = LoggerFactory.getLogger(WebUser.class);
-	
+
 	private WebRtcEndpoint sharingMedia;
 	private boolean isScreensharer = false;
 
 	protected final WebRtcEndpoint outgoingMedia;
 	private final MediaPipeline presentationPipeline;
 	
-	public WebUser(final String name, String roomName, final WebSocketSession session, MediaPipeline compositePipeline, MediaPipeline presentationPipeline, Hub hub) {
-		super(name, roomName, session, compositePipeline, presentationPipeline, hub);
-		
+	public WebUser(final String id, String roomName, final WebSocketSession session, MediaPipeline compositePipeline, MediaPipeline presentationPipeline, Hub hub) {
+		super(id, roomName, session, compositePipeline, presentationPipeline, hub);
+
 		this.outgoingMedia = new WebRtcEndpoint.Builder(compositePipeline).build();
 
 		this.outgoingMedia
@@ -42,7 +41,7 @@ public class WebUser extends Participant {
 						
 						JsonObject response = new JsonObject();
 						response.addProperty("id", "iceCandidate");
-						response.addProperty("name", name);
+						response.addProperty("userId", id);
 						response.addProperty("type", "composite");
 						response.add("candidate",
 								JsonUtils.toJsonObject(event.getCandidate()));
@@ -106,6 +105,7 @@ public class WebUser extends Participant {
 		final String ipSdpAnswer = ep.processOffer(sdpOffer);
 		final JsonObject scParams = new JsonObject();
 		scParams.addProperty("id", "receiveVideoAnswer");
+		scParams.addProperty("userId", sender.getId());
 		scParams.addProperty("name", sender.getName());
 		scParams.addProperty("sdpAnswer", ipSdpAnswer);
 		scParams.addProperty("type", type);
@@ -139,6 +139,7 @@ public class WebUser extends Participant {
 							JsonObject response = new JsonObject();
 							response.addProperty("id", "iceCandidate");
 							response.addProperty("name", presenter.getName());
+							response.addProperty("userId", presenter.getId());
 							response.addProperty("type", type);
 							response.add("candidate", JsonUtils.toJsonObject(event.getCandidate()));
 							try {

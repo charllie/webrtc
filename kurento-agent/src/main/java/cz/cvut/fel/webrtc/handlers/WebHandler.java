@@ -98,6 +98,7 @@ public class WebHandler extends TextWebSocketHandler {
 				final JsonObject newPresenterMsg = new JsonObject();
 				newPresenterMsg.addProperty("id", "presenter");
 				newPresenterMsg.addProperty("name", user.getName());
+				newPresenterMsg.addProperty("userId", user.getId());
 				
 				room.broadcast(newPresenterMsg);
 			}
@@ -110,9 +111,9 @@ public class WebHandler extends TextWebSocketHandler {
 			
 		case "receiveVideoFrom":
 			if (user != null) {
-				final String senderName = jsonMessage.get("sender").getAsString();
+				final String senderId = jsonMessage.get("userId").getAsString();
 				final Room room = roomManager.getRoom(user.getRoomName());
-				final Participant sender = room.getParticipant(senderName);
+				final Participant sender = room.getParticipant(senderId);
 				
 				if (sender != null && (sender instanceof WebUser)) {
 					final WebUser webSender = (WebUser) sender;
@@ -190,25 +191,26 @@ public class WebHandler extends TextWebSocketHandler {
 
 	private void joinRoom(JsonObject params, WebSocketSession session) throws IOException {
 		final String roomName = params.get("room").getAsString();
+		final String userId = params.get("userId").getAsString();
 		final String name = params.get("name").getAsString();
 		final JsonObject scParams;
 		
 		log.info("PARTICIPANT {}: trying to join room {}", name, roomName);
 
 		Room room = roomManager.getRoom(roomName);
-		
-		if (room.getParticipant(name) != null) {
+		// TODO
+		/*if (room.getParticipant(name) != null) {
 			scParams = new JsonObject();
 			scParams.addProperty("id", "existingName");
 			synchronized (session) {
 				session.sendMessage(new TextMessage(scParams.toString()));
 			}
-		} else {
-			final WebUser user = (WebUser) room.join(name, session, WebUser.class);
-			
+		} else {*/
+			final WebUser user = (WebUser) room.join(userId, session, WebUser.class);
+			user.setName(name);
 			if (user != null)
 				registry.register(user);
-		}
+		//}
 	}
 
 	private void leaveRoom(Participant user) throws Exception {

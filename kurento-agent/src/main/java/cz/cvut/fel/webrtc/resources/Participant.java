@@ -16,7 +16,6 @@ package cz.cvut.fel.webrtc.resources;
 
 import java.io.Closeable;
 import java.io.IOException;
-
 import org.kurento.client.Hub;
 import org.kurento.client.HubPort;
 import org.kurento.client.MediaPipeline;
@@ -35,18 +34,16 @@ import com.google.gson.JsonObject;
 public abstract class Participant implements Closeable {
 
 	private static final Logger log = LoggerFactory.getLogger(Participant.class);
-
+	
+	private final String id;
 	protected String name;
-	
 	protected final WebSocketSession session;
-
 	protected final String roomName;
-	
 	protected final HubPort hubPort;
 	
-	public Participant(final String name, String roomName, final WebSocketSession session, MediaPipeline compositePipeline, MediaPipeline presentationPipeline, Hub hub) {
+	public Participant(final String id, String roomName, final WebSocketSession session, MediaPipeline compositePipeline, MediaPipeline presentationPipeline, Hub hub) {
 
-		this.name = name;
+		this.id = id;
 		this.session = session;
 		this.roomName = roomName;
 		this.hubPort = new HubPort.Builder(hub).build();		
@@ -59,6 +56,10 @@ public abstract class Participant implements Closeable {
 	 */
 	public String getName() {
 		return name;
+	}
+	
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	/**
@@ -157,5 +158,10 @@ public abstract class Participant implements Closeable {
 	
 	protected void release() {
 		hubPort.release();
+	}
+
+
+	public String getId() {
+		return id;
 	}
 }

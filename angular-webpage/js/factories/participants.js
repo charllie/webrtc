@@ -1,11 +1,13 @@
 app.factory('participants', ['socket', function(socket) {
 
 	var participants = {};
+	var id = null;
 	var name = null;
 
-	function add(n) {
+	function add(userId, n) {
 
 		var participant = {
+			userId: userId,
 			name: n,
 			rtcPeer: {
 				presentation: null,
@@ -20,6 +22,7 @@ app.factory('participants', ['socket', function(socket) {
 
 				var msg = {
 					id: "receiveVideoFrom",
+					userId: userId,
 					sender: n,
 					sdpOffer: offerSdp,
 					type: type
@@ -85,22 +88,24 @@ app.factory('participants', ['socket', function(socket) {
 			writable: true
 		});
 
-		participants[n] = participant;
+		participants[userId] = participant;
 
-		if (name === null)
+		if (name === null) {
+			id = userId;
 			name = n;
+		}
 	}
 
-	function get(name) {
-		return participants[name];
+	function get(userId) {
+		return participants[userId];
 	}
 
-	function remove(name) {
-		delete participants[name];
+	function remove(userId) {
+		delete participants[userId];
 	}
 
 	function me() {
-		return participants[name];
+		return participants[id];
 	}
 
 	function isEmpty() {
@@ -116,6 +121,7 @@ app.factory('participants', ['socket', function(socket) {
 		}
 
 		name = null;
+		id = null;
 	}
 
 	return {

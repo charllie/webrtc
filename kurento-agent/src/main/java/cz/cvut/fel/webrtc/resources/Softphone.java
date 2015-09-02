@@ -19,15 +19,11 @@ public class Softphone extends Participant {
 	
 	public Softphone(String id, String roomName, WebSocketSession session, MediaPipeline compositePipeline, MediaPipeline presentationPipeline, Hub hub) {
 		super(id, roomName, session, compositePipeline, presentationPipeline, hub);
-
+		
 		rtpEndpoint = new RtpEndpoint.Builder(compositePipeline).build();
 		
 		rtpEndpoint.connect(hubPort);
 		hubPort.connect(rtpEndpoint);
-	}
-	
-	public void setName(String name) {
-		this.name = name;
 	}
 	
 	public String getSdpAnswer(String sdpOffer) {
@@ -74,4 +70,5 @@ public class Softphone extends Participant {
 			}
 		});
 	}
+
 }
