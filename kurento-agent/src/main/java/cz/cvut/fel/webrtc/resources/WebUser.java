@@ -102,19 +102,26 @@ public class WebUser extends Participant {
 		
 		WebRtcEndpoint ep = this.getEndpointForUser(sender, type, room);
 		
+		try {
+			if (ep.getLocalSessionDescriptor() != null)
+				return;
+		} catch (Exception e) {}
+		
 		final String ipSdpAnswer = ep.processOffer(sdpOffer);
+
+		log.trace("USER {}: SdpAnswer for {} is {}", this.name,
+				sender.getName(), ipSdpAnswer);
+		
+		log.debug("gather candidates");
+		ep.gatherCandidates();
+		
 		final JsonObject scParams = new JsonObject();
 		scParams.addProperty("id", "receiveVideoAnswer");
 		scParams.addProperty("userId", sender.getId());
 		scParams.addProperty("name", sender.getName());
 		scParams.addProperty("sdpAnswer", ipSdpAnswer);
 		scParams.addProperty("type", type);
-
-		log.trace("USER {}: SdpAnswer for {} is {}", this.name,
-				sender.getName(), ipSdpAnswer);
 		this.sendMessage(scParams);
-		log.debug("gather candidates");
-		ep.gatherCandidates();
 	}
 	
 	/**
@@ -128,6 +135,7 @@ public class WebUser extends Participant {
 			if ((this.isScreensharer && this.equals(sender)) || (sender.isScreensharer)) {
 				
 				if (this.sharingMedia == null) {
+					
 					this.sharingMedia = new WebRtcEndpoint.Builder(presentationPipeline).build();
 					
 					final Participant presenter = (this.isScreensharer) ? this : sender;
@@ -155,6 +163,7 @@ public class WebUser extends Participant {
 					if (this.isScreensharer && this.equals(sender)) {
 						final JsonObject newPresenterMsg = new JsonObject();
 						newPresenterMsg.addProperty("id", "presenterReady");
+						newPresenterMsg.addProperty("userId", this.getId());
 						newPresenterMsg.addProperty("presenter", this.getName());
 						
 						room.broadcast(newPresenterMsg);
