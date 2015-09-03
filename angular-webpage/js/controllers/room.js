@@ -225,17 +225,17 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 		participants.clear();
 	});
 
-	function receiveVideo(sender, isScreensharer) {
+	function receiveVideo(userId, sender, isScreensharer) {
 
-		if (participants.get(sender) === undefined)
-			participants.add(sender);
+		if (participants.get(userId) === undefined)
+			participants.add(userId, sender);
 
 		if (isScreensharer) {
 			progress.circular.show('#2196F3', '#progress');
 			$scope.presentation.disabled.all();
 		}
 
-		var participant = participants.get(sender);
+		var participant = participants.get(userId);
 		
 		var type = (!isScreensharer) ? 'composite' : 'presentation';
 
@@ -301,8 +301,9 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 		if (message.existingScreensharer && type == 'composite') {
 			enablePresentationClass();
 
-			if (message.screensharer != participants.me().userId)
-				receiveVideo(message.screensharer, true);
+			if (message.presenterId != participants.me().userId) {
+				receiveVideo(message.presenterId, message.screensharer, true);
+			}
 		}
 
 	}
@@ -311,8 +312,8 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 
 		enablePresentationClass();
 
-		if (message.presenter != participants.me().userId) {
-			receiveVideo(message.presenter, true);
+		if (message.userId != participants.me().userId) {
+			receiveVideo(message.userId, message.presenter, true);
 		}
 	}
 
@@ -322,9 +323,9 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 
 		disablePresentationClass();
 
-		if (message.presenter != participants.me().userId) {
-			if (participants.get(message.presenter) !== undefined)
-				participants.get(message.presenter).rtcPeer['presentation'].dispose();
+		if (message.userId != participants.me().userId) {
+			if (participants.get(message.userId) !== undefined)
+				participants.get(message.userId).rtcPeer['presentation'].dispose();
 		}
 	}
 
@@ -346,10 +347,10 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 
 		if (request.isScreensharer) {
 			disablePresentationClass();
-
-			if (participant !== undefined)
-				participant.dispose();
 		}
+
+		if (participant !== undefined)
+			participant.dispose();
 
 		participants.remove(request.userId);
 
@@ -359,7 +360,7 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 	}
 
 	function receiveVideoResponse(result) {
-		
+
 		participants.get(result.userId).rtcPeer[result.type].processAnswer(result.sdpAnswer, function(error) {
 			if (error) return console.error(error);
 		});

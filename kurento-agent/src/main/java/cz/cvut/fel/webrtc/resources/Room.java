@@ -207,7 +207,7 @@ public class Room implements Closeable {
 		if (screensharer != null) {
 			final JsonObject cancelPresentationMsg = new JsonObject();
 			cancelPresentationMsg.addProperty("id", "cancelPresentation");
-			cancelPresentationMsg.addProperty("presenter", screensharer.getId());
+			cancelPresentationMsg.addProperty("userId", screensharer.getId());
 			
 			for (final Participant participant : participants.values()) {
 				if (participant instanceof WebUser) {
@@ -241,8 +241,10 @@ public class Room implements Closeable {
 		if (line != null)
 			message.addProperty("lineExtension", line.getExtension());
 		
-		if (screensharer != null)
+		if (screensharer != null) {
+			message.addProperty("presenterId", screensharer.getId());
 			message.addProperty("screensharer", screensharer.getName());
+		}
 		
 		log.debug("PARTICIPANT {}: sending a list of {} participants",
 				user.getName(), participantsArray.size());
