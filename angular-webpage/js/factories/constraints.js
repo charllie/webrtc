@@ -20,7 +20,7 @@ app.factory('constraints', ['$window', 'deviceDetector', 'upload', function($win
 	var constraintWebcam = {
 		audio: true,
 		video: {
-			width: { min: 160 },
+			width: { min: 160 },
 			height: { min: 120 }
 		}
 	};
