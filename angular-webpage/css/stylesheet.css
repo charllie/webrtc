@@ -130,19 +130,74 @@ video {
 	color: #607d8b !important;
 }
 
-@media screen and (min-width: 601px) and (max-width: 1023px) {
+.sidebar {
+	z-index: 998;
+	width: 260px;
+	border-left: solid 1px #ddd;
+	background-color: #fff;
+	-webkit-transition-property: box-shadow, -webkit-transform;
+	-moz-transition-property: box-shadow, -moz-transform;
+	transition-property: box-shadow, transform;
+	-webkit-transition-duration: 0.6s;
+	-moz-transition-duration: 0.6s;
+	transition-duration: 0.6s;
+	-webkit-transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+	-moz-transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+	transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+	overflow: auto;
+	box-shadow: 0 0 6px -3px rgba(0,0,0,0.6);
+	position: fixed;
+	top: 60px;
+	bottom: 0;
+	right: 0;
+}
+
+.call-sidebar .mdi, .participants .mdi {
+	font-size: medium;
+}
+
+.call-sidebar .text-field--with-icon {
+    margin-left: 45px;
+}
+
+.call-sidebar .text-field__icon {
+	top: 0px;
+    left: -44px;
+}
+
+.call-sidebar .text-field--is-focused .text-field__label,.text-field--is-focused.text-field--dark-theme .text-field__label {
+	color: #bbb !important;
+}
+
+.call-sidebar .text-field:after {
+	background-color: #757575;
+}
+
+.call-sidebar .text-field__icon {
+	color: #e0e0e0;
+}
+
+.call-sidebar .text-field--is-focused .text-field__icon {
+	color: #757575;
+}
+
+.participants .list-row__primary {
+	width: 32px;
+}
+
+
+@media screen and (max-width: 1023px) {
 	.header-padding {
 		height: 75px;
 		padding-top: 8px;
 		padding-bottom: 8px;
 	}
 
-	.room-info {
-		display: none;
-	}
-
-	.btn-info {
-		display: none;
+	.sidebar {
+		-ms-transform: translate(266px);
+		-moz-transform: translate(266px);
+		-webkit-transform: translate(266px);
+		transform: translate(266px);
 	}
 }
 
@@ -153,32 +208,18 @@ video {
 		padding-bottom: 12px;
 	}
 
-	.room-info {
+	.sidebar-adaptive {
+		padding-right: 260px;
+	}
+
+	.btn-info-roompage {
 		display: none;
 	}
 
-	.btn-info {
-		display: none;
-	}
-}
-
-@media only screen and (max-width: 600px) {
-	.header-padding {
-		height: 75px;
-		padding-top: 8px;
-		padding-bottom: 8px;
-	}
-
-	.toolbar__label {
-	display: none;
-	}
-
-	#phone-nb {
-		display: block;
-		width: 48%;
-	}
-
-	.btn-network {
-		display: none;
+	.sidebar {
+		-ms-transform: translate(0px) !important;
+		-moz-transform: translate(0px) !important;
+		-webkit-transform: translate(0px) !important;
+		transform: translate(0px) !important;
 	}
 }

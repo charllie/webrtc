@@ -17,9 +17,7 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 				this.general = true;
 				this.screen = true;
 				this.window = true;
-				_.defer(function() {
-					$scope.$apply();
-				});
+				updateScope();
 			},
 			general: false,
 			screen: false,
@@ -28,9 +26,7 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 				this.general = false;
 				this.screen = false;
 				this.window = false;
-				_.defer(function() {
-					$scope.$apply();
-				});
+				updateScope();
 			}
 		}
 	};
@@ -269,6 +265,7 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 		if (type == 'composite') {
 			$scope.participantNames = message.data;
 			$scope.participantNames.push(participant.name);
+			updateScope();
 			options.remoteVideo = document.getElementById(type);
 		} else {
 			options.localVideo = document.getElementById(type);
@@ -333,6 +330,7 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 
 		participants.add(request.userId, request.name);
 		$scope.participantNames.push(request.name);
+		updateScope();
 
 		notifications.notify(request.name + ' has joined the room', 'account-plus');
 
@@ -357,6 +355,7 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 		notifications.notify(request.name + ' has left the room', 'account-remove');
 
 		$scope.participantNames = request.data;
+		updateScope();
 	}
 
 	function receiveVideoResponse(result) {
@@ -368,9 +367,7 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 
 	function setLineExtension(extension) {
 		$scope.lineExtension = (extension === '') ? extension : '(' + extension + ')';
-		_.defer(function() {
-			$scope.$apply();
-		});
+		updateScope();
 	}
 
 	// CSS part
@@ -462,6 +459,25 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 		}
 	};
 
+	$scope.toggleSidebar = function() {
+		var matrix = $(".sidebar").css("-webkit-transform");
+		if (matrix != 'none') {
+			var translation = matrix.match(/-?[\d\.]+/g)[4];
+			if (translation == "0") {
+				translateSidebar(266);
+			} else if (translation == "266") {
+				translateSidebar(0);
+			}
+		}
+	};
+
+	function translateSidebar(value) {
+		$(".sidebar").css("-webkit-transform", "translate("+ value +"px)");
+		$(".sidebar").css("-ms-transform", "translate("+ value +"px)");
+		$(".sidebar").css("-moz-transform", "translate("+ value +"px)");
+		$(".sidebar").css("transform", "translate("+ value +"px)");
+	}
+
 	// Volume part
 	$scope.volume = {
 		muted: false,
@@ -472,4 +488,10 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 			$('#composite').prop('muted', this.muted);
 		}
 	};
+
+	function updateScope() {
+		_.defer(function() {
+			$scope.$apply();
+		});
+	}
 }

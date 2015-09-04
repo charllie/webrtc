@@ -10,13 +10,6 @@
 
 		<div class="toolbar__right">
 
-			<lx-text-field id="phone-nb" label="Phone number" fixed-label="true">
-                <input type="tel" ng-model="callId">
-            </lx-text-field>
-			<button class="btn btn--l btn--white btn--icon phone-btn" lx-ripple ng-click="invite(callId)">
-				<i class="mdi mdi-phone"></i>
-			</button>
-
 			<!-- Presentation (Firefox) -->
 			<lx-dropdown position="right" from-top ng-show="canPresent('firefox')">
 				<button class="btn btn--l btn--white btn--icon" ng-disabled="presentation.disabled.general" lx-ripple lx-dropdown-toggle>
@@ -50,38 +43,52 @@
 				<i class="mdi mdi-presentation"></i>
 			</button>
 
-			<!-- Users -->
-			<lx-dropdown position="right" from-top>
-				<button class="btn btn--l btn--white btn--icon btn-network" lx-ripple lx-dropdown-toggle>
-					<i class="mdi mdi-account-network"></i>
-				</button>
-				<button class="btn btn--l btn--white btn--icon btn-info" lx-ripple lx-dropdown-toggle>
-					<i class="mdi mdi-information-outline"></i>
-				</button>
-				<lx-dropdown-menu>
-					<ul>
-						<li><a class="dropdown-link dropdown-link--is-header">Online users</a></li>
-						<li class="dropdown-divider"></li>
-						<li ng-repeat="participant in participantNames"><a class="dropdown-link">{{ participant }}</a></li>
-						<li class="dropdown-divider room-info"></li>
-						<li><a class="dropdown-link dropdown-link--is-header room-info">Room ID</a></li>
-						<li class="dropdown-divider room-info"></li>
-						<li><a class="dropdown-link room-info">{{ roomName }} {{ lineExtension }}</a></li>
-					</ul>
-				</lx-dropdown-menu>
-			</lx-dropdown>
-
 			<!-- Mute / unmute -->
 			<button class="btn btn--l btn--white btn--icon" lx-ripple ng-click="volume.change()">
 				<i class="mdi {{ volume.icon }}"></i>
+
+			<!-- Users -->
+			<button class="btn btn--l btn--white btn--icon btn-info btn-info-roompage" lx-ripple ng-click="toggleSidebar()">
+				<i class="mdi mdi-information-outline"></i>
 			</button>
 		</div>
 	</div>
 </div>
 
+<div class="sidebar bgc-grey-100">
+	<div class="sidebar-menu">
+		<!-- Make a call -->
+		<span class="fs-subhead display-block p+ bgc-grey-200">Make a call</span>
+        <div class="divider divider--dark"></div>
+
+        <form ng-submit="invite(callId)" class="call-sidebar pr++ fs-subhead">
+			<lx-text-field label="Phone number" fixed-label="true" icon="phone">
+				<input type="text" ng-model="callId">
+			</lx-text-field>
+		</form>
+
+		<div class="divider divider--dark"></div>
+
+        <!-- Participant list -->
+		<span class="fs-subhead display-block p+ bgc-grey-200">Online users</span>
+        <div class="divider divider--dark"></div>
+		<ul class="list mt participants">
+			<li class="list-row" ng-repeat="participant in participantNames">
+				<div class="list-row__primary">
+					<i class="icon icon--s icon--grey icon--flat mdi mdi-message-video"></i>
+				</div>
+
+				<div class="list-row__content">
+					<span class="display-block fs-subhead tc-black-2">{{ participant }}</span>
+				</div>
+			</li>
+		</ul>
+	</div>
+</div>
+
 <div class="header-padding"></div>
 
-<div class="text-center">
+<div class="text-center sidebar-adaptive">
 	<!-- Composite -->
 	<div id="composite-container" class="container video-room noPresentation" ng-click="changeCompositeSize()">
 		<video id="composite" height="auto" autoplay></video>
