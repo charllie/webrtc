@@ -1,13 +1,8 @@
 package cz.cvut.fel.webrtc.handlers;
 
-import gov.nist.javax.sip.header.CallID;
-
 import java.io.IOException;
-import java.net.InetAddress;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -31,7 +26,8 @@ import cz.cvut.fel.webrtc.db.LineRegistry;
 import cz.cvut.fel.webrtc.resources.Line;
 import cz.cvut.fel.webrtc.resources.Room;
 import cz.cvut.fel.webrtc.resources.Softphone;
-import cz.cvut.fel.webrtc.utils.Digest;
+import cz.cvut.fel.webrtc.utils.DigestAuth;
+import cz.cvut.fel.webrtc.utils.SipMessageFactory;
 
 public class SipHandler extends TextWebSocketHandler {
 	
@@ -43,65 +39,38 @@ public class SipHandler extends TextWebSocketHandler {
 
 	protected Logger log = LoggerFactory.getLogger(SipHandler.class);
 
-	private SipFactory sipFactory;
-	private MessageFactory messageFactory;
-	private HeaderFactory headerFactory;
-	private AddressFactory addressFactory;
-	
-	private String ip;
-	// TODO
+	private final SipMessageFactory sipFactory;
+
 	private final String pbxIp;
 
-	// TODO
-	private int port = 8080;
-	private String protocol = "ws";
-	private int tag = (new Random()).nextInt();
-	private WebSocketSession session = null;
+	private WebSocketSession session;
 	
 	public SipHandler(String pbxIp) {
 		
 		this.pbxIp = pbxIp;
+		this.sipFactory = new SipMessageFactory();
 		
-		try {
-			
-			// Configure the SIP listener
-			sipFactory = SipFactory.getInstance();
-			sipFactory.setPathName("gov.nist");
-				
-			messageFactory = sipFactory.createMessageFactory();
-			addressFactory = sipFactory.createAddressFactory();
-			headerFactory = sipFactory.createHeaderFactory();
-			
-			ip = InetAddress.getLocalHost().getHostAddress();
-
-		} catch (Exception e) {
-		
-			log.error("{}", e);
-			System.exit(-1);
-		
-		}
 	}
 	
 	@Override
 	public void afterConnectionEstablished(final WebSocketSession session) throws Exception {
-		this.session = session;
-		TimerTask task = new TimerTask() {
-			
-			@Override
-			public void run() {
-				try {
-					log.info("Ping on PBX to keep the websocket alive");
-					session.sendMessage(new TextMessage("stay-alive"));
-				} catch (IOException e) {
-					log.info("Ping on PBX failed");
+			this.session = session;
+			TimerTask task = new TimerTask() {
+
+				@Override
+				public void run() {
+					try {
+						log.info("Ping on PBX to keep the websocket alive");
+						session.sendMessage(new TextMessage("stay-alive"));
+					} catch (IOException e) {
+						log.info("Ping on PBX failed");
+					}
 				}
-			}
+
+			};
 			
-		};
-		
-		Timer timer = new Timer();
-		timer.scheduleAtFixedRate(task, 0, 30000);
-		
+			Timer timer = new Timer();
+			timer.scheduleAtFixedRate(task, 0, 30000);
 	}
 
 	@Override
@@ -113,27 +82,39 @@ public class SipHandler extends TextWebSocketHandler {
 		
 		// Request
 		try {
-			sipMessage = messageFactory.createRequest(payload);
+			
+			sipMessage = sipFactory.createRequest(payload);
 			sipClass = sipMessage.getClass();
+		
 		} catch (Exception e) {}
 		
 		// Response
 		if (sipClass == null) { 
+		
 			try {
-				sipMessage = messageFactory.createResponse(payload);
+				
+				sipMessage = sipFactory.createResponse(payload);
 				sipClass = sipMessage.getClass();
+				
 			} catch (Exception e) {}
+
 		}
 		
 		// Use the right method (asynchronously)
 		if (Request.class.isAssignableFrom(sipClass)) {
+			
 			log.info("Received a SIP Request Message \n{}", payload);
-			processRequest((Request)sipMessage);
+			processRequest((Request) sipMessage);
+			
 		} else if (Response.class.isAssignableFrom(sipClass)) {
-			processResponse((Response)sipMessage);
+
+			processResponse((Response) sipMessage);
 			log.info("Received a SIP Response Message \n{}", payload);
+
 		} else {
+
 			log.info("Received an unhandled message \n{}", payload);
+
 		}
 	}
 	
@@ -149,11 +130,11 @@ public class SipHandler extends TextWebSocketHandler {
 				Room room = roomManager.getRoom(fromHeader.getAddress().getDisplayName());
 
 				switch(method) {
-				
+
 				case Request.INVITE:
 					processInviteResponse(room, response);
 					break;
-				
+
 				case Request.REGISTER:
 					if (room.isClosing()) {
 						roomManager.removeRoom(room);
@@ -164,9 +145,10 @@ public class SipHandler extends TextWebSocketHandler {
 						room.broadcast(message);
 					}
 					break;
-					
+
 				default:
 					break;
+
 				}
 					
 			} catch (Exception e) {
@@ -237,6 +219,7 @@ public class SipHandler extends TextWebSocketHandler {
 	}
 	
 	private void processInviteResponse(Room room, Response response) throws IOException, ParseException, InvalidArgumentException {
+		
 		// Process SDP Answer
 		String sdpAnswer = (String) response.getContent();
 		ToHeader toHeader = (ToHeader) response.getHeader("To");
@@ -245,28 +228,7 @@ public class SipHandler extends TextWebSocketHandler {
 		callee.getRtpEndpoint().processAnswer(sdpAnswer);
 		room.joinRoom(callee);
 		
-		// Send Ack
-		long cseq = ((CSeqHeader) response.getHeader("CSeq")).getSeqNumber();
-		CSeqHeader cSeqHeader = headerFactory.createCSeqHeader(cseq, Request.ACK);
-		MaxForwardsHeader maxForwardsHeader = headerFactory.createMaxForwardsHeader(70);
-		
-		ViaHeader viaHeaderCallee = (ViaHeader) response.getHeader("Via");
-		ArrayList<ViaHeader> viaHeaders = new ArrayList<ViaHeader>();
-		ViaHeader viaHeader = headerFactory.createViaHeader(ip, port, protocol, null);
-		viaHeaders.add(viaHeader);
-		viaHeaders.add(viaHeaderCallee);
-		
-		Request request = messageFactory.createRequest(
-				toHeader.getAddress().getURI(),
-				Request.ACK,
-				(CallIdHeader) response.getHeader("Call-ID"),
-				cSeqHeader,
-				(FromHeader) response.getHeader("From"),
-				toHeader,
-				viaHeaders,
-				maxForwardsHeader
-		);
-		
+		Request request = sipFactory.createRequest(response, Request.ACK);
 		sendMessage(request);
 	}
 	
@@ -290,57 +252,17 @@ public class SipHandler extends TextWebSocketHandler {
 			
 			lineRegistry.addRoomByURI(sipAddress, room.getName());
 			
-			// Address
-			Address address = addressFactory.createAddress(sipAddress);
-			address.setDisplayName(room.getName());
-			
-			// URI
-			URI requestURI = address.getURI();
-			
-			// Via
-			ArrayList<ViaHeader> viaHeaders = new ArrayList<ViaHeader>();
-			ViaHeader viaHeader = headerFactory.createViaHeader(ip, port, protocol, null);
-			viaHeaders.add(viaHeader);
-			
-			// Max-Forwards
-			MaxForwardsHeader maxForwardsHeader = headerFactory.createMaxForwardsHeader(70);
-			
-			// Contact
-			ContactHeader contactHeader = headerFactory.createContactHeader(address);
-			contactHeader.setExpires(expire);
-			
-			// Call Id
-			CallIdHeader callIdHeader = new CallID(room.getCallId());
-			
-			// CSeq
 			long cseq = (response == null) ? room.getCSeq() : room.setCSeq(((CSeqHeader)response.getHeader("CSeq")).getSeqNumber() + 1);
-			CSeqHeader cSeqHeader = headerFactory.createCSeqHeader(cseq, Request.REGISTER);
-			
-			// From / To
-			FromHeader fromHeader = headerFactory.createFromHeader(address, String.valueOf(tag));
-			ToHeader toHeader = headerFactory.createToHeader(address, null);
-			
-			// Build the request
-			Request request = messageFactory.createRequest(
-					requestURI,
-					Request.REGISTER,
-					callIdHeader,
-					cSeqHeader,
-					fromHeader,
-					toHeader,
-					viaHeaders,
-					maxForwardsHeader
-			);
-			request.addHeader(contactHeader);
+			Request request = sipFactory.createRequest(Request.REGISTER, room.getName(), sipAddress, sipAddress, room.getCallId(), cseq, expire);
 			
 			if (response != null) {
 				
-				WWWAuthenticateHeader authHeader = (WWWAuthenticateHeader)response.getHeader("WWW-Authenticate");
+				WWWAuthenticateHeader authHeader = (WWWAuthenticateHeader) response.getHeader("WWW-Authenticate");
 				String strAuthHeader = authHeader.toString().replace("WWW-Authenticate: ", "");
-				String authResponse = Digest.getHeaderResponse(Request.REGISTER, requestURI.toString(), strAuthHeader, username, password);
+				String authResponse = DigestAuth.getHeaderResponse(Request.REGISTER, sipAddress, strAuthHeader, username, password);
 				
 				if (authResponse != null) {
-					AuthorizationHeader authorization = headerFactory.createAuthorizationHeader(authResponse);
+					AuthorizationHeader authorization = sipFactory.createAuthorizationHeader(authResponse);
 					request.addHeader(authorization);
 				} else {
 					return;
@@ -355,13 +277,10 @@ public class SipHandler extends TextWebSocketHandler {
 		
 		try {
 
-			String sipAddress = String.format("sip:%s@%s", extension, pbxIp);
-			
-			Address address = addressFactory.createAddress(sipAddress);
-			address.setDisplayName(extension);
-			ToHeader toHeader = headerFactory.createToHeader(address, null);
+			String address = String.format("sip:%s@%s", extension, pbxIp);
+			ToHeader toHeader = sipFactory.createToHeader(address, extension);
 
-			final Softphone user = (Softphone) room.join(sipAddress, session, Softphone.class);
+			final Softphone user = (Softphone) room.join(address, session, Softphone.class);
 			user.setName(extension);
 			
 			// Find a more appropriate name
@@ -404,71 +323,38 @@ public class SipHandler extends TextWebSocketHandler {
 	public void generateInviteRequest(Room room, Softphone user, ToHeader toHeader, Response response) throws ParseException, InvalidArgumentException, NoSuchAlgorithmException, Exception {
 		Line line = room.getLine();
 		
-		if (line == null)
+		if ((line == null) || (user == null))
 			return;
-			
-		if (user == null)
-			return;
-		
-		String sdpOffer = user.getGeneratedOffer();
 		
 		String username = line.getUsername();
 		String password = line.getSecret();
-		String sipAddressString = String.format("sip:%s@%s", username, pbxIp);
-
-		Address sipAddress = addressFactory.createAddress(sipAddressString);
-		sipAddress.setDisplayName(room.getName());
-
-		URI requestURI = toHeader.getAddress().getURI();
-
-		ArrayList<ViaHeader> viaHeaders = new ArrayList<ViaHeader>();
-		ViaHeader viaHeader = headerFactory.createViaHeader(ip, port, protocol, null);
-		viaHeaders.add(viaHeader);
-
-		MaxForwardsHeader maxForwardsHeader = headerFactory.createMaxForwardsHeader(70);
-
-		ContactHeader contactHeader = headerFactory.createContactHeader(toHeader.getAddress());
-		contactHeader.setExpires(200);
-
-		CallIdHeader callIdHeader = new CallID(room.getCallId());
-
+		String method = Request.INVITE;
+		String callId = room.getCallId();
+		String sip = String.format("sip:%s@%s", username, pbxIp);
+		
 		long cseq = (response == null) ? room.setCSeq(room.getCSeq() + 1) : room.setCSeq(((CSeqHeader)response.getHeader("CSeq")).getSeqNumber() + 1);
-		CSeqHeader cSeqHeader = headerFactory.createCSeqHeader(cseq, Request.INVITE);
-
-		FromHeader fromHeader = headerFactory.createFromHeader(sipAddress, String.valueOf(tag));
+		FromHeader from = sipFactory.createFromHeader(sip, room.getName());
 		
-		ContentTypeHeader contentTypeHeader = headerFactory.createContentTypeHeader("application", "sdp");
+		Request request = sipFactory.createRequest(method, from, toHeader, callId, cseq, 200);
+		ContentTypeHeader contentTypeHeader = sipFactory.createContentTypeHeader("application", "sdp");
 		
-		// Build the request
-		Request request = messageFactory.createRequest(
-				requestURI,
-				Request.INVITE,
-				callIdHeader,
-				cSeqHeader,
-				fromHeader,
-				toHeader,
-				viaHeaders,
-				maxForwardsHeader,
-				contentTypeHeader,
-				sdpOffer
-				
-		);
-		request.addHeader(contactHeader);
+		String sdpOffer = user.getGeneratedOffer();
+		request.setContent(sdpOffer, contentTypeHeader);
 
 		if (response != null) {
 			
 			WWWAuthenticateHeader authHeader = (WWWAuthenticateHeader)response.getHeader("WWW-Authenticate");
 			String strAuthHeader = authHeader.toString().replace("WWW-Authenticate: ", "");
-			String authResponse = Digest.getHeaderResponse(Request.INVITE, requestURI.toString(), strAuthHeader, username, password);
+			String authResponse = DigestAuth.getHeaderResponse(method, toHeader.getAddress().getURI().toString(), strAuthHeader, username, password);
 			
 			if (authResponse != null) {
-				AuthorizationHeader authorization = headerFactory.createAuthorizationHeader(authResponse);
+				AuthorizationHeader authorization = sipFactory.createAuthorizationHeader(authResponse);
 				request.addHeader(authorization);
 			} else {
 				return;
 			}
 		}
-		
+
 		sendMessage(request);
 	}
 	
@@ -483,73 +369,33 @@ public class SipHandler extends TextWebSocketHandler {
 			
 			Room room = lineRegistry.getRoomBySipURI(uri);
 			
-			FromHeader fromHeader = headerFactory.createFromHeader(receiver, String.valueOf(tag));
-			ToHeader toHeader = headerFactory.createToHeader(sender, null);
-			CallIdHeader callIdHeader = (CallIdHeader) request.getHeader("Call-ID");
-			CSeqHeader cSeqHeader = (CSeqHeader) request.getHeader("CSeq");
-			ViaHeader viaHeaderSender = (ViaHeader) request.getHeader("Via");
-			
-			ArrayList<ViaHeader> viaHeaders = new ArrayList<ViaHeader>();
-			ViaHeader viaHeader = headerFactory.createViaHeader(ip, port, protocol, null);
-			viaHeaders.add(viaHeader);
-			viaHeaders.add(viaHeaderSender);
-			
-			MaxForwardsHeader maxForwardsHeader = headerFactory.createMaxForwardsHeader(70);
-			
 			// Trying
-			Response tryingResponse = messageFactory.createResponse(
-					100,
-					callIdHeader,
-					cSeqHeader,
-					fromHeader,
-					toHeader,
-					viaHeaders,
-					maxForwardsHeader
-			);
+			Response tryingResponse = sipFactory.createResponseFromRequest(request, 100);
 			sendMessage(tryingResponse);
 			
 			// Ringing
-			Response ringingResponse = messageFactory.createResponse(
-					180,
-					callIdHeader,
-					cSeqHeader,
-					fromHeader,
-					toHeader,
-					viaHeaders,
-					maxForwardsHeader
-			);
+			Response ringingResponse = sipFactory.cloneResponseWithAnotherStatusCode(tryingResponse, 180);
 			sendMessage(ringingResponse);
 			
 			// Create a new user
 			String userId = sender.getURI().toString();
-			
 			Softphone user = (Softphone) room.join(userId, session, Softphone.class);
+			String name = sender.getDisplayName();
+			
+			if (name == null)
+				name = sender.getURI().toString();
 			
 			if (user == null)
 				return;
 
-			String name = sender.getDisplayName();
-			if (name == null)
-				name = sender.getURI().toString();
-			
-			user.setName(name);
-			
 			String sdpAnswer = user.getSdpAnswer(sdpOffer);
+			user.setName(name);
+			room.joinRoom(user);
 			
 			// 200 OK
-			ContentTypeHeader contentTypeHeader = headerFactory.createContentTypeHeader("application", "sdp");
-			room.joinRoom(user);
-			Response okResponse = messageFactory.createResponse(
-					200,
-					callIdHeader,
-					cSeqHeader,
-					fromHeader,
-					toHeader,
-					viaHeaders,
-					maxForwardsHeader,
-					contentTypeHeader,
-					sdpAnswer
-			);
+			ContentTypeHeader contentTypeHeader = sipFactory.createContentTypeHeader("application", "sdp");
+			Response okResponse = sipFactory.cloneResponseWithAnotherStatusCode(ringingResponse, 200);
+			okResponse.setContent(sdpAnswer, contentTypeHeader);
 			sendMessage(okResponse);
 			
 		
@@ -564,7 +410,6 @@ public class SipHandler extends TextWebSocketHandler {
 		Address sender = ((FromHeader) request.getHeader("From")).getAddress();
 		Address receiver = ((ToHeader) request.getHeader("To")).getAddress();
 		String uri = receiver.getURI().toString();
-		
 		Room room = lineRegistry.getRoomBySipURI(uri);
 		
 		String userId = sender.getURI().toString();
@@ -573,31 +418,8 @@ public class SipHandler extends TextWebSocketHandler {
 			try {
 				
 				room.leave(userId);
-				FromHeader fromHeader = headerFactory.createFromHeader(receiver, String.valueOf(tag));
-			
-				ToHeader toHeader = headerFactory.createToHeader(sender, null);
-				CallIdHeader callIdHeader = (CallIdHeader) request.getHeader("Call-ID");
-				CSeqHeader cSeqHeader = (CSeqHeader) request.getHeader("CSeq");
-				ViaHeader viaHeaderSender = (ViaHeader) request.getHeader("Via");
-				
-				ArrayList<ViaHeader> viaHeaders = new ArrayList<ViaHeader>();
-				ViaHeader viaHeader = headerFactory.createViaHeader(ip, port, protocol, null);
-				viaHeaders.add(viaHeader);
-				viaHeaders.add(viaHeaderSender);
-				
-				MaxForwardsHeader maxForwardsHeader = headerFactory.createMaxForwardsHeader(70);
-				
-				// Trying
-				Response tryingResponse = messageFactory.createResponse(
-						200,
-						callIdHeader,
-						cSeqHeader,
-						fromHeader,
-						toHeader,
-						viaHeaders,
-						maxForwardsHeader
-				);
-				sendMessage(tryingResponse);
+				Response response = sipFactory.createResponseFromRequest(request, 200);
+				sendMessage(response);
 				
 			} catch (Exception e) {}
 		}

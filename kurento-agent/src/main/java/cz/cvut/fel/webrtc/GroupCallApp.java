@@ -78,7 +78,6 @@ public class GroupCallApp implements WebSocketConfigurer {
 
 	@Bean
 	public SipHandler sipHandler() throws URISyntaxException {
-		
 		URI uri = new URI(xivo_ws);
 		return new SipHandler(uri.getHost());
 	}

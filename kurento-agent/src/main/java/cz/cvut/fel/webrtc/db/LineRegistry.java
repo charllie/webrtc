@@ -43,7 +43,7 @@ import com.google.gson.JsonObject;
 
 import cz.cvut.fel.webrtc.resources.Line;
 import cz.cvut.fel.webrtc.resources.Room;
-import cz.cvut.fel.webrtc.utils.Digest;
+import cz.cvut.fel.webrtc.utils.DigestAuth;
 
 @Configuration
 @EnableConfigurationProperties
@@ -132,7 +132,7 @@ public class LineRegistry {
 
 	private CloseableHttpResponse processDigest(CloseableHttpClient client, HttpGet get, CloseableHttpResponse response, String login, String password) throws MalformedChallengeException, AuthenticationException, ClientProtocolException, IOException {
 
-		String strHeaderResponse = Digest.getHeaderResponse(HttpGet.METHOD_NAME, get.getURI().toString(), response.getFirstHeader(AUTH.WWW_AUTH).getValue(), login, password);
+		String strHeaderResponse = DigestAuth.getHeaderResponse(HttpGet.METHOD_NAME, get.getURI().toString(), response.getFirstHeader(AUTH.WWW_AUTH).getValue(), login, password);
 		Header headerResponse = new BasicHeader(AUTH.WWW_AUTH_RESP, strHeaderResponse);
 		
 		get.addHeader(headerResponse);

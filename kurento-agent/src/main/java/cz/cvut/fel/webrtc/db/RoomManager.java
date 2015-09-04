@@ -57,7 +57,7 @@ public class RoomManager {
 
 		if (room == null) {
 			log.debug("Room {} not existent. Will create now!", roomName);
-			room = new Room(roomName, kurento.createMediaPipeline(), kurento.createMediaPipeline());
+			room = new Room(roomName, kurento);
 			try {
 				sipHandler.register(room, null);
 			} catch (Exception e) {

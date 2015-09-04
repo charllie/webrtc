@@ -27,6 +27,7 @@ import javax.annotation.PreDestroy;
 import org.kurento.client.Composite;
 import org.kurento.client.Continuation;
 import org.kurento.client.Hub;
+import org.kurento.client.KurentoClient;
 //import org.kurento.client.HubPort;
 import org.kurento.client.MediaPipeline;
 import org.slf4j.Logger;
@@ -47,15 +48,15 @@ public class Room implements Closeable {
 	private final Logger log = LoggerFactory.getLogger(Room.class);
 
 	private final ConcurrentMap<String, Participant> participants = new ConcurrentSkipListMap<>();
-	private final MediaPipeline presentationPipeline;
-	private final MediaPipeline compositePipeline;
-	private final Composite composite;
+	private MediaPipeline presentationPipeline;
+	private MediaPipeline compositePipeline;
+	private Composite composite;
 	private final String name;
 	
 	private Line line;
 	private final String callId;
 	private long cseq;
-	private boolean closing = false;
+	private boolean closing;
 	
 	private WebUser screensharer;
 	
@@ -65,14 +66,20 @@ public class Room implements Closeable {
 	public String getName() {
 		return name;
 	}
-
-	public Room(String roomName, MediaPipeline compositePipeline, MediaPipeline presentationPipeline) {
-		this.name = roomName;
-		this.cseq = (new Random()).nextInt(100);
+	
+	protected Room(String roomName) {
 		this.callId = UUID.randomUUID().toString();
-		this.compositePipeline = compositePipeline;
-		this.presentationPipeline = presentationPipeline;
+		this.cseq = (new Random()).nextInt(100);
+		this.name = roomName;
+	}
+
+	public Room(String roomName, KurentoClient kurento) {
+		this(roomName);
+		
+		this.compositePipeline = kurento.createMediaPipeline();
+		this.presentationPipeline = kurento.createMediaPipeline();
 		this.composite = new Composite.Builder(compositePipeline).build();
+		
 		log.info("ROOM {} has been created", roomName);
 	}
 
@@ -107,7 +114,7 @@ public class Room implements Closeable {
 			if (sessionClass.isInstance(WebUser.class))
 				joinRoom(participant);
 			
-			participants.put(participant.getId(), participant);
+			add(participant);
 			sendInformation(participant, "compositeInfo");
 			
 		} catch (Exception e) {
@@ -115,6 +122,11 @@ public class Room implements Closeable {
 		}
 		
 		return participant;
+	}
+	
+	public void add(Participant participant) {
+		if (participant != null)
+			participants.put(participant.getId(), participant);
 	}
 
 	public void leave(Participant user) throws IOException {
@@ -354,6 +366,10 @@ public class Room implements Closeable {
 
 	public void setClosing() {
 		this.closing = true;
+	}
+	
+	public int size() {
+		return participants.size();
 	}
 
 }

@@ -11,7 +11,7 @@ import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicHttpRequest;
 import org.apache.http.protocol.BasicHttpContext;
 
-public class Digest {
+public class DigestAuth {
 
 	public static String getHeaderResponse(String method, String uri, String response, String username, String password) throws AuthenticationException, MalformedChallengeException {
 
