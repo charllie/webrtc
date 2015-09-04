@@ -43,6 +43,8 @@ xivo:
    websocket: XIVO_WEBSOCKET_URI
    rest:
       uri: XIVO_REST_API_URI + /1.1/lines_sip
+      login: XIVO_REST_API_LOGIN
+      password: XIVO_REST_API_PASSWORD
 ```
 
 2. Installation
