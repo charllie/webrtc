@@ -50,7 +50,7 @@ public class SipHandler extends TextWebSocketHandler {
 	
 	private String ip;
 	// TODO
-	private String pbxIp = "178.62.211.128";
+	private final String pbxIp;
 
 	// TODO
 	private int port = 8080;
@@ -58,7 +58,9 @@ public class SipHandler extends TextWebSocketHandler {
 	private int tag = (new Random()).nextInt();
 	private WebSocketSession session = null;
 	
-	public SipHandler() {
+	public SipHandler(String pbxIp) {
+		
+		this.pbxIp = pbxIp;
 		
 		try {
 			

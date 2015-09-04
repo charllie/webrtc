@@ -14,6 +14,8 @@
  */
 package cz.cvut.fel.webrtc;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 
 import org.kurento.client.KurentoClient;
@@ -47,17 +49,17 @@ public class GroupCallApp implements WebSocketConfigurer {
 	@Value("${kurento.websocket}")
 	private String kms_uri;
 	
-	@Value("${asterisk.websocket}")
-	private String ast_uri;
+	@Value("${xivo.websocket}")
+	private String xivo_ws;
 	
-	@Value("${asterisk.rest.uri}")
-	private String ast_rest_uri;
+	@Value("${xivo.rest.uri}")
+	private String xivo_rest_uri;
 	
-	@Value("${asterisk.rest.login}")
-	private String ast_rest_login;
+	@Value("${xivo.rest.login}")
+	private String xivo_rest_login;
 	
-	@Value("${asterisk.rest.password}")
-	private String ast_rest_password;
+	@Value("${xivo.rest.password}")
+	private String xivo_rest_password;
 
 	@Bean
 	public WebRegistry registry() {
@@ -75,20 +77,22 @@ public class GroupCallApp implements WebSocketConfigurer {
 	}
 
 	@Bean
-	public SipHandler sipHandler() {
-		return new SipHandler();
+	public SipHandler sipHandler() throws URISyntaxException {
+		
+		URI uri = new URI(xivo_ws);
+		return new SipHandler(uri.getHost());
 	}
 	
 	@Bean
 	public LineRegistry sipRegistry() {
-		return new LineRegistry(ast_rest_uri, ast_rest_login, ast_rest_password);
+		return new LineRegistry(xivo_rest_uri, xivo_rest_login, xivo_rest_password);
 	}
 	
 	@Bean
-	public WebSocketConnectionManager asteriskConnection() {
+	public WebSocketConnectionManager asteriskConnection() throws URISyntaxException {
 		ArrayList<String> protocols = new ArrayList<String>();
 		protocols.add("sip");
-		WebSocketConnectionManager manager = new WebSocketConnectionManager(new StandardWebSocketClient(), sipHandler(), ast_uri);
+		WebSocketConnectionManager manager = new WebSocketConnectionManager(new StandardWebSocketClient(), sipHandler(), xivo_ws);
 		manager.setSubProtocols(protocols);
 		manager.setAutoStartup(true);
 		return manager;
