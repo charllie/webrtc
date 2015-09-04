@@ -11,7 +11,9 @@ WebRTC Conferencing Project
 
 
 To edit files in a Docker, first enter in the docker with this command:
-> docker exec -i -t DOCKER_NAME /bin/bash
+```bash
+docker exec -i -t DOCKER_NAME /bin/bash
+```
 
 Kurento Media Server 6 (Port 8888)
 ------------------------------------------
@@ -69,9 +71,9 @@ Web interface (Port 80)
 
 ```json
 {
-    "ws_uri": KMS_WEBSOCKET_URI,
-    "wss_uri": KMS_SECURE_WEBSOCKET_URI,
-    "upload_speed_tester_uri": UPLOAD_SPEED_TESTER_URI
+    "ws_uri": "KMS_WEBSOCKET_URI",
+    "wss_uri": "KMS_SECURE_WEBSOCKET_URI",
+    "upload_speed_tester_uri": "UPLOAD_SPEED_TESTER_URI"
 }
 ```
 
@@ -136,6 +138,7 @@ server {
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     }
 }
+```
 
 
 docker-compose
