@@ -77,45 +77,44 @@ public class SipHandler extends TextWebSocketHandler {
 	public void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
 		
 		String payload = message.getPayload();
-		Class<? extends Message> sipClass = null;
 		Message sipMessage = null;
 		
 		// Request
 		try {
-			
 			sipMessage = sipFactory.createRequest(payload);
-			sipClass = sipMessage.getClass();
-		
 		} catch (Exception e) {}
 		
 		// Response
-		if (sipClass == null) { 
-		
+		if (sipMessage == null) { 
 			try {
-				
 				sipMessage = sipFactory.createResponse(payload);
-				sipClass = sipMessage.getClass();
-				
 			} catch (Exception e) {}
-
 		}
 		
 		// Use the right method (asynchronously)
-		if (Request.class.isAssignableFrom(sipClass)) {
-			
-			log.info("Received a SIP Request Message \n{}", payload);
+		if (sipMessage instanceof Request)
 			processRequest((Request) sipMessage);
-			
-		} else if (Response.class.isAssignableFrom(sipClass)) {
-
+		else if (sipMessage instanceof Response)
 			processResponse((Response) sipMessage);
-			log.info("Received a SIP Response Message \n{}", payload);
 
-		} else {
-
-			log.info("Received an unhandled message \n{}", payload);
-
-		}
+		if (sipMessage != null)
+			log.info("Received a SIP Message \n{}", payload);
+	}
+	
+	private String getMethod(Response response) {
+		CSeqHeader cSeqHeader = (CSeqHeader) response.getHeader("CSeq");
+		String method = cSeqHeader.getMethod();
+		return method;
+	}
+	
+	private Room getRoom(Response response) {
+		FromHeader fromHeader = (FromHeader) response.getHeader("From");
+		String roomName = fromHeader.getAddress().getDisplayName();
+		Room room = null;
+		if (roomName != null)
+			room = roomManager.getRoom(roomName, false);
+		
+		return room;
 	}
 	
 	@Async
@@ -124,10 +123,8 @@ public class SipHandler extends TextWebSocketHandler {
 		switch(response.getStatusCode()) {
 		case 200:
 			try {
-				CSeqHeader cSeqHeader = (CSeqHeader) response.getHeader("CSeq");
-				String method = cSeqHeader.getMethod();
-				FromHeader fromHeader = (FromHeader) response.getHeader("From");
-				Room room = roomManager.getRoom(fromHeader.getAddress().getDisplayName());
+				String method = getMethod(response);
+				Room room = getRoom(response);
 
 				switch(method) {
 
@@ -158,10 +155,8 @@ public class SipHandler extends TextWebSocketHandler {
 
 		case 401:
 			try {
-				CSeqHeader cSeqHeader = (CSeqHeader) response.getHeader("CSeq");
-				String method = cSeqHeader.getMethod();
-				FromHeader fromHeader = (FromHeader) response.getHeader("From");
-				Room room = roomManager.getRoom(fromHeader.getAddress().getDisplayName());
+				String method = getMethod(response);
+				Room room = getRoom(response);
 
 				switch(method) {
 				

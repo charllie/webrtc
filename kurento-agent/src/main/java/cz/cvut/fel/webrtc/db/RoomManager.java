@@ -69,6 +69,27 @@ public class RoomManager {
 		log.debug("Room {} found!", roomName);
 		return room;
 	}
+	
+	public Room getRoom(String roomName, boolean create) {
+		log.debug("Searching for room {}", roomName);
+		Room room = rooms.get(roomName);
+
+		if ((room == null) && create) {
+			log.debug("Room {} not existent. Will create now!", roomName);
+			room = new Room(roomName, kurento);
+			try {
+				sipHandler.register(room, null);
+			} catch (Exception e) {
+				log.info("Room {} cannot be bound to Asterisk", roomName);
+			}
+			rooms.put(roomName, room);
+		}
+		
+		if (room != null)
+			log.debug("Room {} found!", roomName);
+		
+		return room;
+	}
 
 	/**
 	 * Removes a room from the list of available rooms
