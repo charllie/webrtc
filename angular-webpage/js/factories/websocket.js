@@ -8,6 +8,10 @@ app.factory('socket', ['$window', 'variables', function($window, variables) {
 
 	variables.get().then(function(data) {
 		uri = ($window.location.protocol == 'https:') ? data.wss_uri : data.ws_uri;
+		start();
+	});
+
+	function start() {
 		socket = new WebSocket(uri);
 
 		socket.onopen = function(event) {
@@ -15,7 +19,18 @@ app.factory('socket', ['$window', 'variables', function($window, variables) {
 				send({ id: 'stay-alive' });
 			}, 30000);
 		};
-	});
+
+		socket.onerror = function(error) {
+			socket.close();
+		};
+
+		socket.onclose = function(event) {
+			// Try to reconnect each 1 second
+			setTimeout(function() {
+				start();
+			}, 1000);
+		};
+	}
 
 	function send(message) {
 		var jsonMessage = JSON.stringify(message);
