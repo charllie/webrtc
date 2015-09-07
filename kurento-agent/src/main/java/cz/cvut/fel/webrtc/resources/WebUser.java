@@ -181,10 +181,6 @@ public class WebUser extends Participant {
 		return this.getOutgoingWebRtcPeer();
 	}
 
-	/**
-	 * @param senderName
-	 *            the participant
-	 */
 	public void cancelPresentation() {
 		log.debug("PARTICIPANT {}: canceling presentation reception", this.getName());
 

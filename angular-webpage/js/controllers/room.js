@@ -472,10 +472,11 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 	};
 
 	function translateSidebar(value) {
-		$(".sidebar").css("-webkit-transform", "translate("+ value +"px)");
-		$(".sidebar").css("-ms-transform", "translate("+ value +"px)");
-		$(".sidebar").css("-moz-transform", "translate("+ value +"px)");
-		$(".sidebar").css("transform", "translate("+ value +"px)");
+		var sidebar = $("sidebar");
+		sidebar.css("-webkit-transform", "translate("+ value +"px)");
+		sidebar.css("-ms-transform", "translate("+ value +"px)");
+		sidebar.css("-moz-transform", "translate("+ value +"px)");
+		sidebar.css("transform", "translate("+ value +"px)");
 	}
 
 	// Volume part

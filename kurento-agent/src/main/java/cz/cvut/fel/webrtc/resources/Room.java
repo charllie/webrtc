@@ -149,10 +149,6 @@ public class Room implements Closeable {
 			leave(user);
 	}
 
-	/**
-	 * @param participant
-	 * @throws IOException
-	 */
 	public void joinRoom(Participant newParticipant) throws IOException {
 		final JsonObject newParticipantMsg = new JsonObject();
 		newParticipantMsg.addProperty("id", "newParticipantArrived");
@@ -271,10 +267,6 @@ public class Room implements Closeable {
 		return participants.values();
 	}
 
-	/**
-	 * @param userId
-	 * @return the participant from this session
-	 */
 	public Participant getParticipant(String id) {
 		return participants.get(id);
 	}

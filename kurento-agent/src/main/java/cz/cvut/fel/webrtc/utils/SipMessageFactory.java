@@ -23,8 +23,7 @@ import org.slf4j.LoggerFactory;
 public class SipMessageFactory {
 	
 	protected Logger log = LoggerFactory.getLogger(SipMessageFactory.class);
-	
-	private SipFactory sipFactory;
+
 	private MessageFactory messageFactory;
 	private HeaderFactory headerFactory;
 	private AddressFactory addressFactory;
@@ -37,7 +36,7 @@ public class SipMessageFactory {
 	public SipMessageFactory() {
 		try {
 
-			sipFactory = SipFactory.getInstance();
+			SipFactory sipFactory = SipFactory.getInstance();
 			sipFactory.setPathName("gov.nist");
 				
 			messageFactory = sipFactory.createMessageFactory();
@@ -57,7 +56,7 @@ public class SipMessageFactory {
 	public Response createResponseFromRequest(Request request, int statusCode) throws ParseException, InvalidArgumentException {
 		Address sender = ((FromHeader) request.getHeader("From")).getAddress();
 		Address receiver = ((ToHeader) request.getHeader("To")).getAddress();
-		
+
 		FromHeader fromHeader = headerFactory.createFromHeader(receiver, String.valueOf(tag));
 		ToHeader toHeader = headerFactory.createToHeader(sender, null);
 		CallIdHeader callIdHeader = (CallIdHeader) request.getHeader("Call-ID");
@@ -67,10 +66,12 @@ public class SipMessageFactory {
 		ArrayList<ViaHeader> viaHeaders = new ArrayList<ViaHeader>();
 		ViaHeader viaHeader = headerFactory.createViaHeader(ip, port, protocol, null);
 		viaHeaders.add(viaHeader);
-		viaHeaders.add(viaHeaderSender);
-		
+
+		if (viaHeaderSender != null)
+			viaHeaders.add(viaHeaderSender);
+
 		MaxForwardsHeader maxForwardsHeader = headerFactory.createMaxForwardsHeader(70);
-		
+
 		Response response = messageFactory.createResponse(
 				statusCode,
 				callIdHeader,
@@ -176,5 +177,13 @@ public class SipMessageFactory {
 		Address address = addressFactory.createAddress(sip);
 		address.setDisplayName(displayName);
 		return headerFactory.createFromHeader(address, null);
+	}
+
+	public CallIdHeader createCallIdHeader(String callId) throws ParseException {
+		return headerFactory.createCallIdHeader(callId);
+	}
+
+	public CSeqHeader createCSeqHeader(long cseq, String method) throws ParseException, InvalidArgumentException {
+		return headerFactory.createCSeqHeader(cseq, method);
 	}
 }

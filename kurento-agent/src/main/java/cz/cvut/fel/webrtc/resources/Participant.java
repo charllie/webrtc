@@ -78,12 +78,6 @@ public abstract class Participant implements Closeable {
 		return this.roomName;
 	}
 
-	/**
-	 * @param sender
-	 * @param sdpOffer
-	 * @throws IOException
-	 */	
-
 	public void sendMessage(JsonObject message) throws IOException {
 		log.debug("USER {}: Sending message {}", name, message);
 		synchronized (session) {
