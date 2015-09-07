@@ -111,9 +111,6 @@ public class Room implements Closeable {
 					this.composite
 			);
 			
-			if (sessionClass.isInstance(WebUser.class))
-				joinRoom(participant);
-			
 			add(participant);
 			sendInformation(participant, "compositeInfo");
 			
@@ -158,19 +155,19 @@ public class Room implements Closeable {
 	}
 	
 	private void broadcast(JsonObject message, Participant exception) {
-		
+
 		for (final Participant participant : participants.values()) {
-			
+
 			if (participant.equals(exception) || !(participant instanceof WebUser))
 				continue;
-			
+
 			try {
 				participant.sendMessage(message);
 			} catch (final IOException e) {
 				log.debug("ROOM {}: participant {} could not be notified",
 						name, participant.getName(), e);
 			}
-			
+
 		}
 	}
 	

@@ -224,6 +224,8 @@ public class WebHandler extends TextWebSocketHandler {
 		} else {*/
 			final WebUser user = (WebUser) room.join(userId, session, WebUser.class);
 			user.setName(name);
+			room.joinRoom(user);
+
 			if (user != null)
 				registry.register(user);
 		//}

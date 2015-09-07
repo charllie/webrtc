@@ -100,7 +100,7 @@ public abstract class Participant implements Closeable {
 			return false;
 		}
 		Participant other = (Participant) obj;
-		boolean eq = name.equals(other.name);
+		boolean eq = id.equals(other.id);
 		eq &= roomName.equals(other.roomName);
 		return eq;
 	}
