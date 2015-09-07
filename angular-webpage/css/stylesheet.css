@@ -147,7 +147,6 @@ video {
 	overflow: auto;
 	box-shadow: 0 0 6px -3px rgba(0,0,0,0.6);
 	position: fixed;
-	top: 60px;
 	bottom: 0;
 	right: 0;
 }
@@ -194,6 +193,7 @@ video {
 	}
 
 	.sidebar {
+		top: 48px;
 		-ms-transform: translate(266px);
 		-moz-transform: translate(266px);
 		-webkit-transform: translate(266px);
@@ -217,6 +217,7 @@ video {
 	}
 
 	.sidebar {
+		top: 60px;
 		-ms-transform: translate(0px) !important;
 		-moz-transform: translate(0px) !important;
 		-webkit-transform: translate(0px) !important;

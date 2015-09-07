@@ -460,7 +460,7 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 	};
 
 	$scope.toggleSidebar = function() {
-		var matrix = $(".sidebar").css("-webkit-transform");
+		var matrix = $('.sidebar').css('transform');
 		if (matrix != 'none') {
 			var translation = matrix.match(/-?[\d\.]+/g)[4];
 			if (translation == "0") {
@@ -472,11 +472,12 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 	};
 
 	function translateSidebar(value) {
-		var sidebar = $("sidebar");
-		sidebar.css("-webkit-transform", "translate("+ value +"px)");
-		sidebar.css("-ms-transform", "translate("+ value +"px)");
-		sidebar.css("-moz-transform", "translate("+ value +"px)");
-		sidebar.css("transform", "translate("+ value +"px)");
+		$('.sidebar').css({
+			'-webkit-transform' : 'translate(' + value + 'px)',
+			'-ms-transform' : 'translate(' + value + 'px)',
+			'-moz-transform' : 'translate(' + value + 'px)',
+			'transform' : 'translate(' + value + 'px)'
+		});
 	}
 
 	// Volume part
