@@ -439,26 +439,36 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 		sizeBig['presentation'] = isPresentationBig;
 	}
 
-	function clickHandler(callback_oneClick, callback_twoClicks) {
-		if ($scope.clicked) {
-			$scope.cancelClick = true;
+	$scope.clicked = {
+		composite: false,
+		presentation: false
+	};
+
+	$scope.cancelClick = {
+		composite: false,
+		presentation: false
+	};
+
+	function clickHandler(id, callback_oneClick, callback_twoClicks) {
+		if ($scope.clicked[id]) {
+			$scope.cancelClick[id] = true;
 			callback_twoClicks();
 			return;
 		}
 
-		$scope.clicked = true;
+		$scope.clicked[id] = true;
 
 		$timeout(function() {
-			if ($scope.cancelClick) {
-				$scope.cancelClick = false;
-				$scope.clicked = false;
+			if ($scope.cancelClick[id]) {
+				$scope.cancelClick[id] = false;
+				$scope.clicked[id] = false;
 				return;
 			}
 
 			callback_oneClick();
 
-			$scope.cancelClick = false;
-			$scope.clicked = false;
+			$scope.cancelClick[id] = false;
+			$scope.clicked[id] = false;
 
 		}, 400);
 	}
@@ -504,11 +514,11 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 	}
 
 	$scope.compositeVideoClick = function() {
-		clickHandler(changeCompositeSize, setCompositeFullScreen);
+		clickHandler('composite', changeCompositeSize, setCompositeFullScreen);
 	};
 
-	$scope.compositeVideoClick = function() {
-		clickHandler(changePresentationSize, setPresentationFullScreen);
+	$scope.presentationVideoClick = function() {
+		clickHandler('presentation', changePresentationSize, setPresentationFullScreen);
 	};
 
 	$scope.toggleSidebar = function() {

@@ -90,7 +90,7 @@ public class LineRegistry {
 		}
 	}
 
-	private void filterLines(Pattern p) {
+	protected void filterLines(Pattern p) {
 		Matcher m;
 		for (Iterator<Line> iterator = roomLines.iterator(); iterator.hasNext();) {
 		    Line line = iterator.next();
