@@ -439,27 +439,46 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 		sizeBig['presentation'] = isPresentationBig;
 	}
 
-	function singleClickDelayed(callback) {
-		if ($scope.singleClicked) {
-			$scope.cancelSingleClick = true;
+	function clickHandler(callback_oneClick, callback_twoClicks) {
+		if ($scope.clicked) {
+			$scope.cancelClick = true;
+			callback_twoClicks();
 			return;
 		}
 
-		$scope.singleClicked = true;
+		$scope.clicked = true;
 
-		$timeout(function () {
-			if ($scope.cancelSingleClick) {
-				$scope.cancelSingleClick = false;
-				$scope.singleClicked = false;
+		$timeout(function() {
+			if ($scope.cancelClick) {
+				$scope.cancelClick = false;
+				$scope.clicked = false;
 				return;
 			}
 
-			callback();
+			callback_oneClick();
 
-			//clean up
-			$scope.cancelSingleClick = false;
-			$scope.singleClicked = false;
+			$scope.cancelClick = false;
+			$scope.clicked = false;
+
 		}, 400);
+	}
+
+	function setFullScreen(id) {
+		var elem = document.getElementById(id);
+		if (elem.requestFullscreen)
+			elem.requestFullscreen();
+		else if (elem.mozRequestFullScreen)
+			elem.mozRequestFullScreen();
+		else if (elem.webkitRequestFullscreen)
+			elem.webkitRequestFullscreen();
+	}
+
+	function setCompositeFullScreen() {
+		setFullScreen('composite');
+	}
+
+	function setPresentationFullScreen() {
+		setFullScreen('presentation');
 	}
 
 	function changeCompositeSize() {
@@ -474,7 +493,6 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 	}
 
 	function changePresentationSize() {
-		console.log("change presentation size");
 		if (!sizeBig['presentation']) {
 			setWidth('#composite-container', '#presentation-container', 'smaller', ['bigger']);
 			setBigs(false, true);
@@ -485,24 +503,12 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 		}
 	}
 
-	$scope.changeCompositeSize = function() {
-		singleClickDelayed(changeCompositeSize);
+	$scope.compositeVideoClick = function() {
+		clickHandler(changeCompositeSize, setCompositeFullScreen);
 	};
 
-	$scope.changePresentationSize = function() {
-		singleClickDelayed(changePresentationSize);
-	};
-
-	$scope.setFullScreen = function(id) {
-		$timeout(function () {
-			var elem = document.getElementById(id);
-			if (elem.requestFullscreen)
-				elem.requestFullscreen();
-			else if (elem.mozRequestFullScreen)
-				elem.mozRequestFullScreen();
-			else if (elem.webkitRequestFullscreen)
-				elem.webkitRequestFullscreen();
-		});
+	$scope.compositeVideoClick = function() {
+		clickHandler(changePresentationSize, setPresentationFullScreen);
 	};
 
 	$scope.toggleSidebar = function() {
