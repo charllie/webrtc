@@ -150,7 +150,9 @@ An easy way to install the project is using docker-compose.
 
 First install docker-compose : https://docs.docker.com/compose/install/
 
-Installation in the docker-compose folder :
+Edit the configuration files in docker-compose/conf/
+
+Launch the project in the docker-compose folder :
 
 ```bash
 docker-compose up 
