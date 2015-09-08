@@ -1,4 +1,4 @@
-function RoomCtrl($scope, $location, $window, $params, socket, constraints, notifications, progress, participants) {
+function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constraints, notifications, progress, participants) {
 
 	if (participants.isEmpty())
 		$location.path('/');
@@ -429,16 +429,41 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 		}
 	}
 
-	var compositeSizeBig = false;
-	var presentationSizeBig = false;
+	var sizeBig = {
+		composite: false,
+		presentation: false
+	};
 
 	function setBigs(isCompositeBig, isPresentationBig) {
-		compositeSizeBig = isCompositeBig;
-		presentationSizeBig = isPresentationBig;
+		sizeBig['composite'] = isCompositeBig;
+		sizeBig['presentation'] = isPresentationBig;
 	}
 
-	$scope.changeCompositeSize = function() {
-		if (!compositeSizeBig) {
+	function singleClickDelayed(callback) {
+		if ($scope.singleClicked) {
+			$scope.cancelSingleClick = true;
+			return;
+		}
+
+		$scope.singleClicked = true;
+
+		$timeout(function () {
+			if ($scope.cancelSingleClick) {
+				$scope.cancelSingleClick = false;
+				$scope.singleClicked = false;
+				return;
+			}
+
+			callback();
+
+			//clean up
+			$scope.cancelSingleClick = false;
+			$scope.singleClicked = false;
+		}, 400);
+	}
+
+	function changeCompositeSize() {
+		if (!sizeBig['composite']) {
 			setWidth('#composite-container', '#presentation-container', 'bigger', ['smaller']);
 			setBigs(true, false);
 		} else {
@@ -446,10 +471,11 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 			setWidth('#presentation-container', null, null, ['smaller']);
 			setBigs(false, false);
 		}
-	};
+	}
 
-	$scope.changePresentationSize = function() {
-		if (!presentationSizeBig) {
+	function changePresentationSize() {
+		console.log("change presentation size");
+		if (!sizeBig['presentation']) {
 			setWidth('#composite-container', '#presentation-container', 'smaller', ['bigger']);
 			setBigs(false, true);
 		}  else {
@@ -457,6 +483,26 @@ function RoomCtrl($scope, $location, $window, $params, socket, constraints, noti
 			setWidth('#composite-container', null, null, ['smaller']);
 			setBigs(false, false);
 		}
+	}
+
+	$scope.changeCompositeSize = function() {
+		singleClickDelayed(changeCompositeSize);
+	};
+
+	$scope.changePresentationSize = function() {
+		singleClickDelayed(changePresentationSize);
+	};
+
+	$scope.setFullScreen = function(id) {
+		$timeout(function () {
+			var elem = document.getElementById(id);
+			if (elem.requestFullscreen)
+				elem.requestFullscreen();
+			else if (elem.mozRequestFullScreen)
+				elem.mozRequestFullScreen();
+			else if (elem.webkitRequestFullscreen)
+				elem.webkitRequestFullscreen();
+		});
 	};
 
 	$scope.toggleSidebar = function() {

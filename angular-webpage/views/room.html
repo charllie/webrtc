@@ -90,7 +90,7 @@
 
 <div class="text-center sidebar-adaptive">
 	<!-- Composite -->
-	<div id="composite-container" class="container video-room noPresentation" ng-click="changeCompositeSize()">
+	<div id="composite-container" class="container video-room noPresentation" ng-click="changeCompositeSize()" ng-dblclick="setFullScreen('composite')">
 		<video id="composite" height="auto" autoplay></video>
 	<!--	<div class="overlay">
 			<table></table>
@@ -98,7 +98,7 @@
 	</div>
 
 	<!-- Presentation -->
-	<div id="presentation-container" class="container video-room noPresentation" ng-click="changePresentationSize()">
+	<div id="presentation-container" class="container video-room noPresentation" ng-click="changePresentationSize()" ng-dblclick="setFullScreen('presentation')">
 		<video id="presentation" height="auto" autoplay poster="img/transparent.png"></video>
 		<div class="underlay" id="progress"></div>
 		<div class="stop-overlay" ng-show="presentation.presenterIsMe">
