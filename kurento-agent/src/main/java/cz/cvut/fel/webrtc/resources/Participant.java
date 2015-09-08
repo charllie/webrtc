@@ -14,8 +14,7 @@
  */
 package cz.cvut.fel.webrtc.resources;
 
-import java.io.Closeable;
-import java.io.IOException;
+import com.google.gson.JsonObject;
 import org.kurento.client.Hub;
 import org.kurento.client.HubPort;
 import org.kurento.client.MediaPipeline;
@@ -24,7 +23,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
-import com.google.gson.JsonObject;
+import java.io.Closeable;
+import java.io.IOException;
 
 /**
  * 
@@ -113,39 +113,10 @@ public abstract class Participant implements Closeable {
 	@Override
 	public int hashCode() {
 		int result = 1;
-		result = 31 * result + name.hashCode();
+		result = 31 * result + id.hashCode();
 		result = 31 * result + roomName.hashCode();
 		return result;
 	}
-
-	/*public HashSet<String> getCandidates() {
-		return iceCandidates;
-	}
-
-	private void addCandidates(String sdpOffer) {
-		/*Pattern p = Pattern.compile("a=candidate:(.*)");
-		Matcher m;
-		IceCandidate e;
-		
-		String[] lines = sdpOffer.replace("\r\n", "\n").split("\n");
-		
-		if (lines != null) {
-			for (String line : lines) {
-	            m = p.matcher(line);
-	            
-	            if (m.find()) {
-	            	try {
-	            		System.out.println("candidate:" + m.group(1));
-		            	e = new IceCandidate("candidate:" + m.group(1), "audio", 0);
-		            	addCandidate(e, "composite");
-	            	} catch (Exception ex) {}
-	            }
-	        }
-		}
-		
-		System.out.println("done");
-		
-	}*/
 
 	@Override
 	public abstract void close() throws IOException;

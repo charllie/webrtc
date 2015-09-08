@@ -14,17 +14,16 @@
  */
 package cz.cvut.fel.webrtc.db;
 
-import java.io.IOException;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-
+import cz.cvut.fel.webrtc.handlers.SipHandler;
+import cz.cvut.fel.webrtc.resources.Room;
 import org.kurento.client.KurentoClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import cz.cvut.fel.webrtc.handlers.SipHandler;
-import cz.cvut.fel.webrtc.resources.Room;
+import java.io.IOException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * @author Ivan Gracia (izanmail@gmail.com)

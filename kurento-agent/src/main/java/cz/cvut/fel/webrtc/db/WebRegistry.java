@@ -14,11 +14,10 @@
  */
 package cz.cvut.fel.webrtc.db;
 
-import java.util.concurrent.ConcurrentHashMap;
-
+import cz.cvut.fel.webrtc.resources.WebUser;
 import org.springframework.web.socket.WebSocketSession;
 
-import cz.cvut.fel.webrtc.resources.WebUser;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Map of users registered in the system. This class has a concurrent hash map

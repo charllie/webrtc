@@ -1,21 +1,17 @@
 package cz.cvut.fel.webrtc.db;
 
-import java.io.IOException;
-import java.net.URI;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.util.Iterator;
-import java.util.Stack;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.net.ssl.SSLContext;
-
-import org.apache.http.Header;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import cz.cvut.fel.webrtc.resources.Line;
+import cz.cvut.fel.webrtc.resources.Room;
+import cz.cvut.fel.webrtc.utils.DigestAuth;
 import org.apache.commons.io.IOUtils;
+import org.apache.http.Header;
 import org.apache.http.auth.AUTH;
 import org.apache.http.auth.AuthenticationException;
 import org.apache.http.auth.MalformedChallengeException;
@@ -33,17 +29,18 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
-
-import cz.cvut.fel.webrtc.resources.Line;
-import cz.cvut.fel.webrtc.resources.Room;
-import cz.cvut.fel.webrtc.utils.DigestAuth;
+import javax.net.ssl.SSLContext;
+import java.io.IOException;
+import java.net.URI;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Iterator;
+import java.util.Stack;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Configuration
 @EnableConfigurationProperties
@@ -57,6 +54,8 @@ public class LineRegistry {
 	private ConcurrentMap<String, String> roomByURI = new ConcurrentHashMap<>();
 	
 	private String roomPattern = "Room ([0-9]+)";
+
+	protected LineRegistry() {}
 	
 	public LineRegistry(String strUri, String login, String password) {
 		
@@ -102,17 +101,21 @@ public class LineRegistry {
 		}
 	}
 
-	private void processContent(CloseableHttpResponse response) throws IllegalStateException, IOException {
-
+	private Stack<Line> getContent(CloseableHttpResponse response) throws IOException {
 		String items = IOUtils.toString(response.getEntity().getContent());
 		Gson gson = new GsonBuilder().create();
 		String json = gson.fromJson(items, JsonObject.class).get("items").toString();
-		
+
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		JavaType list = mapper.getTypeFactory().constructCollectionType(Stack.class, Line.class);
 		ObjectReader objectReader = mapper.reader(list);
-		lines = objectReader.readValue(json);
+		return objectReader.readValue(json);
+	}
+
+	protected void processContent(CloseableHttpResponse response) throws IllegalStateException, IOException {
+
+		lines = getContent(response);
 		roomLines.addAll(lines);
 	}
 

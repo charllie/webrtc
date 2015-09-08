@@ -1,7 +1,5 @@
 package cz.cvut.fel.webrtc.resources;
 
-import java.io.IOException;
-
 import org.kurento.client.Continuation;
 import org.kurento.client.Hub;
 import org.kurento.client.MediaPipeline;
@@ -10,6 +8,8 @@ import org.kurento.client.internal.server.KurentoServerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.socket.WebSocketSession;
+
+import java.io.IOException;
 
 public class Softphone extends Participant {
 	

@@ -1,11 +1,8 @@
 package cz.cvut.fel.webrtc.utils;
 
 import gov.nist.javax.sip.header.CallID;
-
-import java.net.InetAddress;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Random;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.sip.InvalidArgumentException;
 import javax.sip.SipFactory;
@@ -16,9 +13,10 @@ import javax.sip.header.*;
 import javax.sip.message.MessageFactory;
 import javax.sip.message.Request;
 import javax.sip.message.Response;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.net.InetAddress;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Random;
 
 public class SipMessageFactory {
 	

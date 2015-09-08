@@ -14,8 +14,15 @@
  */
 package cz.cvut.fel.webrtc.handlers;
 
-import java.io.IOException;
-
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import cz.cvut.fel.webrtc.db.LineRegistry;
+import cz.cvut.fel.webrtc.db.RoomManager;
+import cz.cvut.fel.webrtc.db.WebRegistry;
+import cz.cvut.fel.webrtc.resources.Participant;
+import cz.cvut.fel.webrtc.resources.Room;
+import cz.cvut.fel.webrtc.resources.WebUser;
 import org.kurento.client.IceCandidate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,16 +32,7 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
-
-import cz.cvut.fel.webrtc.db.LineRegistry;
-import cz.cvut.fel.webrtc.db.RoomManager;
-import cz.cvut.fel.webrtc.db.WebRegistry;
-import cz.cvut.fel.webrtc.resources.Room;
-import cz.cvut.fel.webrtc.resources.Participant;
-import cz.cvut.fel.webrtc.resources.WebUser;
+import java.io.IOException;
 
 /**
  * 

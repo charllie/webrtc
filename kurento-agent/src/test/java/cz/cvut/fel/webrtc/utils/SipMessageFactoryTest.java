@@ -9,10 +9,12 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import javax.sip.InvalidArgumentException;
 import javax.sip.address.Address;
-import javax.sip.header.*;
+import javax.sip.header.CSeqHeader;
+import javax.sip.header.CallIdHeader;
+import javax.sip.header.FromHeader;
+import javax.sip.header.ToHeader;
 import javax.sip.message.Request;
 import javax.sip.message.Response;
-import javax.validation.constraints.Null;
 import java.text.ParseException;
 import java.util.Random;
 import java.util.UUID;
@@ -95,4 +97,6 @@ public class SipMessageFactoryTest {
 			assert(e.toString().contains(NullPointerException.class.getName()));
 		}
 	}
+
+
 }

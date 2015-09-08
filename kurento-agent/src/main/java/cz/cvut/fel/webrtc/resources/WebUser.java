@@ -1,20 +1,14 @@
 package cz.cvut.fel.webrtc.resources;
 
-import java.io.IOException;
-import org.kurento.client.Continuation;
-import org.kurento.client.EventListener;
-import org.kurento.client.Hub;
-import org.kurento.client.IceCandidate;
-import org.kurento.client.MediaPipeline;
-import org.kurento.client.OnIceCandidateEvent;
-import org.kurento.client.WebRtcEndpoint;
+import com.google.gson.JsonObject;
+import org.kurento.client.*;
 import org.kurento.jsonrpc.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
-import com.google.gson.JsonObject;
+import java.io.IOException;
 
 public class WebUser extends Participant {
 

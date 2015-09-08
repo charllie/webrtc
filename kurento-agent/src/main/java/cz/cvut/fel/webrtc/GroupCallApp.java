@@ -14,11 +14,13 @@
  */
 package cz.cvut.fel.webrtc;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-
+import cz.cvut.fel.webrtc.db.LineRegistry;
+import cz.cvut.fel.webrtc.db.RoomManager;
+import cz.cvut.fel.webrtc.db.WebRegistry;
+import cz.cvut.fel.webrtc.handlers.SipHandler;
+import cz.cvut.fel.webrtc.handlers.WebHandler;
 import org.kurento.client.KurentoClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -28,13 +30,10 @@ import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
-import org.springframework.beans.factory.annotation.Value;
 
-import cz.cvut.fel.webrtc.db.RoomManager;
-import cz.cvut.fel.webrtc.db.LineRegistry;
-import cz.cvut.fel.webrtc.db.WebRegistry;
-import cz.cvut.fel.webrtc.handlers.SipHandler;
-import cz.cvut.fel.webrtc.handlers.WebHandler;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
 
 /**
  * 
