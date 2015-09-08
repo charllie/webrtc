@@ -19,7 +19,4 @@ public class LineRegistryTest {
 		MockitoAnnotations.initMocks(this);
 		this.lineRegistry = new LineRegistry();
 	}
-
-	@Test
-	public void
 }
