@@ -12,28 +12,38 @@ Android
   $ cordova create webrtc cz.cvut.fel.webrtc WebRTC
   ```
 
-3. Go to the project folder
+3. Empty *www* folder and copy *angular-webpage* project files in *www* folder
 
-  ```bash
-  $ cd webrtc
-  ```
-
-4. Copy *angular-webpage* project files in *www* folder
-
-5. Add Android platform
+4. Add Android platform
 
   ```bash
   $ cordova platform add android
   ```
 
-6. Edit *www/index.html* and add these lines under section balise
+5. Edit *www/index.html* and add these lines under section balise
 
   ```html
   <script src="cordova.js"></script>
   <script>window.chrome = true;</script>
   ```
 
-7. Add these permissions platforms/android/AndroidManifest.xml
+6. Install *bower* dependencies from *www* folder
+  
+  ```bash
+  $ bower install
+  ```
+
+7. Be sure to have *config.json* in *www* folder
+
+  ```json
+  {
+      "ws_uri": "KMS_WEBSOCKET_URI",
+      "wss_uri": "KMS_SECURE_WEBSOCKET_URI",
+      "upload_speed_tester_uri": "UPLOAD_SPEED_TESTER_URI"
+  }
+  ```
+
+8. Add these permissions platforms/android/AndroidManifest.xml
 
   ```xml
   <uses-permission android:name="android.permission.INTERNET" />
@@ -48,13 +58,13 @@ Android
   <uses-permission android:name="android.permission.CAMERA" />
   ```
 
-8. Add Crosswalk plugin
+9. Add Crosswalk plugin
 
   ```bash
   $ cordova plugin add cordova-plugin-crosswalk-webview
   ```
 
-9. Finally, build the application
+10. Finally, build the application
 
   ```bash
   $ cordova build android
