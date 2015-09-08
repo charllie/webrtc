@@ -1,4 +1,4 @@
-from ubuntu:14.10
+from ubuntu:14.04.3
 
 #RUN apt-get -y install linux-image-virtual linux-image-extra-virtual
 #RUN apt-get update
@@ -10,18 +10,19 @@ from ubuntu:14.10
 RUN apt-get update
 RUN apt-get -y install wget
 RUN apt-get -y install software-properties-common python-software-properties
-#RUN echo "deb http://ubuntu.kurento.org trusty kms6" | tee /etc/apt/sources.list.d/kurento.list
-RUN apt-add-repository http://ubuntu.kurento.org
+RUN echo "deb http://ubuntu.kurento.org trusty-dev kms6" | tee /etc/apt/sources.list.d/kurento-dev.list
+#RUN apt-add-repository http://ubuntu.kurento.org
 RUN wget -O - http://ubuntu.kurento.org/kurento.gpg.key | apt-key add -
 RUN apt-get update
-RUN apt-get install -y kurento-server
+RUN apt-get install -y kurento-media-server-6.0
 
 RUN echo "#!/bin/bash" > start.sh
-RUN mkdir -p /var/log/kurento-media-server
-RUN touch /var/log/kurento-media-server/media-server.log
+#RUN mkdir -p /var/log/kurento-media-server
+#RUN touch /var/log/kurento-media-server/media-server.log
 #RUN echo "service kurento-media-server-6.0 start" >> start.sh
 #RUN echo "tail -f /var/log/kurento-media-server/media-server.log -f" >> start.sh
 RUN echo "kurento-media-server" >> start.sh
+#RUN echo "top" >> start.sh
 RUN chmod +x start.sh
 ENTRYPOINT ["./start.sh"]
 

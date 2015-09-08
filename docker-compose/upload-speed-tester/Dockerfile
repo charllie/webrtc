@@ -3,7 +3,7 @@ from debian:jessie
 RUN apt-get update
 RUN apt-get install -y nodejs npm git
 RUN ln -s /usr/bin/nodejs /usr/bin/node
-RUN git clone -b dev-kurento6 https://github.com/charllie/webrtc
+RUN git clone -b dev-sip https://github.com/charllie/webrtc
 WORKDIR "/webrtc/upload-speed-tester"
 
 RUN echo "#!/bin/bash" > start.sh

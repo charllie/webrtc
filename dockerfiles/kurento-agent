@@ -2,7 +2,7 @@ from debian:jessie
 
 RUN apt-get update
 RUN apt-get install -y git maven openjdk-7-jdk
-RUN echo "no cache" && git clone -b dev-kurento6 https://github.com/charllie/webrtc
+RUN echo "no cache" && git clone -b dev-sip https://github.com/charllie/webrtc
 WORKDIR "/webrtc/kurento-agent"
 RUN echo "#!/bin/bash" > start.sh
 RUN echo "git pull" >> start.sh
