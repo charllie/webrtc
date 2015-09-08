@@ -9,7 +9,7 @@ kurento-agent:
   container_name: kurento-agent
   net: "host"
   volumes:
-    - ./conf:/webrtc/kurento-agent/config/
+    - ./conf/application.yml:/webrtc/kurento-agent/config/application.yml
   volumes_from:
     - kms6
 upload-speed-tester:
