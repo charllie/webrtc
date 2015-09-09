@@ -17,6 +17,7 @@ package cz.cvut.fel.webrtc.db;
 import cz.cvut.fel.webrtc.resources.WebUser;
 import org.springframework.web.socket.WebSocketSession;
 
+import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -34,6 +35,10 @@ public class WebRegistry {
 
 	public void register(WebUser user) {
 		users.put(user.getSession().getId(), user);
+	}
+
+	public Collection<WebUser> getAll() {
+		return users.values();
 	}
 	
 	public WebUser getBySession(WebSocketSession session) {

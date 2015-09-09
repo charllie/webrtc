@@ -33,6 +33,8 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * 
@@ -56,6 +58,27 @@ public class WebHandler extends TextWebSocketHandler {
 	
 	@Autowired
 	private SipHandler sipHandler;
+
+	public WebHandler() {
+		super();
+		TimerTask task = new TimerTask() {
+
+			@Override
+			public void run() {
+				for (WebUser user : registry.getAll()) {
+					if (!user.getSession().isOpen()) {
+						try {
+							leaveRoom(user);
+						} catch (Exception e) {}
+					}
+				}
+			}
+
+		};
+
+		Timer timer = new Timer();
+		timer.scheduleAtFixedRate(task, 0, 30000);
+	}
 
 	@Override
 	public void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
