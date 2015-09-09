@@ -73,7 +73,7 @@
 		<span class="fs-subhead display-block p+ bgc-grey-200">Online users</span>
         <div class="divider divider--dark"></div>
 		<ul class="list mt participants">
-			<li class="list-row" ng-repeat="participant in participantNames">
+			<li class="list-row" ng-repeat="participant in participantNames track by $index">
 				<div class="list-row__primary">
 					<i class="icon icon--s icon--grey icon--flat mdi mdi-message-video"></i>
 				</div>
