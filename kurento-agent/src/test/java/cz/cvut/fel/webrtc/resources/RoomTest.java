@@ -25,7 +25,7 @@ public class RoomTest {
 		Participant participant = Mockito.mock(Participant.class);
 		Mockito.when(participant.getId()).thenReturn(UUID.randomUUID().toString());
 		return participant;
-	};
+	}
 
 	@Test
 	public void testAddParticipant() {
@@ -41,7 +41,7 @@ public class RoomTest {
 		int size = room.size();
 		Participant participant = null;
 
-		room.add(participant);
+		room.add(null);
 		assert(room.size() == size);
 	}
 

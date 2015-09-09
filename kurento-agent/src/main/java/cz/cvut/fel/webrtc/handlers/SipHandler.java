@@ -23,7 +23,6 @@ import javax.sip.message.Message;
 import javax.sip.message.Request;
 import javax.sip.message.Response;
 import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -36,7 +35,7 @@ public class SipHandler extends TextWebSocketHandler {
 	@Autowired
 	private LineRegistry lineRegistry;
 
-	protected Logger log = LoggerFactory.getLogger(SipHandler.class);
+	protected final Logger log = LoggerFactory.getLogger(SipHandler.class);
 
 	private final SipMessageFactory sipFactory;
 
@@ -102,8 +101,7 @@ public class SipHandler extends TextWebSocketHandler {
 	
 	private String getMethod(Response response) {
 		CSeqHeader cSeqHeader = (CSeqHeader) response.getHeader("CSeq");
-		String method = cSeqHeader.getMethod();
-		return method;
+		return cSeqHeader.getMethod();
 	}
 	
 	private Room getRoom(Response response) {
@@ -276,7 +274,7 @@ public class SipHandler extends TextWebSocketHandler {
 
 			final Softphone user = (Softphone) room.join(address, session, Softphone.class);
 			user.setName(extension);
-			
+
 			// Find a more appropriate name
 			getName(user, extension);
 			
@@ -314,7 +312,7 @@ public class SipHandler extends TextWebSocketHandler {
 	}
 	
 	@Async
-	public void generateInviteRequest(Room room, Softphone user, ToHeader toHeader, Response response) throws ParseException, InvalidArgumentException, NoSuchAlgorithmException, Exception {
+	public void generateInviteRequest(Room room, Softphone user, ToHeader toHeader, Response response) throws Exception {
 		Line line = room.getLine();
 		
 		if ((line == null) || (user == null))

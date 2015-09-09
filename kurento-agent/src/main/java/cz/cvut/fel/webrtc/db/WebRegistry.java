@@ -30,7 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class WebRegistry {
 
-	private final ConcurrentHashMap<String, WebUser> users = new ConcurrentHashMap<String, WebUser>();
+	private final ConcurrentHashMap<String, WebUser> users = new ConcurrentHashMap<>();
 
 	public void register(WebUser user) {
 		users.put(user.getSession().getId(), user);

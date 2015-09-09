@@ -83,7 +83,7 @@ public class Room implements Closeable {
 		this.close();
 	}
 
-	public Participant join(String userId, WebSocketSession session, Class<? extends Participant> sessionClass) throws IOException {
+	public Participant join(String userId, WebSocketSession session, Class<? extends Participant> sessionClass) {
 		log.info("ROOM {}: adding participant {}", name, userId);
 		
 		Participant participant = null;
@@ -141,7 +141,7 @@ public class Room implements Closeable {
 			leave(user);
 	}
 
-	public void joinRoom(Participant newParticipant) throws IOException {
+	public void joinRoom(Participant newParticipant) {
 		final JsonObject newParticipantMsg = new JsonObject();
 		newParticipantMsg.addProperty("id", "newParticipantArrived");
 		newParticipantMsg.addProperty("name", newParticipant.getName());
