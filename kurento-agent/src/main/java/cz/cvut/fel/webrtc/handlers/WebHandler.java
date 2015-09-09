@@ -33,6 +33,8 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -65,9 +67,15 @@ public class WebHandler extends TextWebSocketHandler {
 
 			@Override
 			public void run() {
+				Calendar currentDate = Calendar.getInstance();
+
 				for (WebUser user : registry.getAll()) {
-					if (!user.getSession().isOpen()) {
+					Calendar ping = user.getLastPing();
+					ping.add(Calendar.SECOND, 40);
+
+					if (ping.before(currentDate)) {
 						try {
+							log.info("{} is unreachable.", user.getName());
 							leaveRoom(user);
 						} catch (Exception e) {}
 					}
@@ -165,6 +173,13 @@ public class WebHandler extends TextWebSocketHandler {
 				user.addCandidate(cand, jsonMessage.get("type").getAsString());
 			}
 			break;
+
+		case "stay-alive":
+			if (user != null) {
+				user.setLastPing(Calendar.getInstance());
+			}
+			break;
+
 		default:
 			break;
 		}

@@ -9,6 +9,7 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
+import java.util.Calendar;
 
 public class WebUser extends Participant {
 
@@ -19,7 +20,8 @@ public class WebUser extends Participant {
 
 	protected final WebRtcEndpoint outgoingMedia;
 	private final MediaPipeline presentationPipeline;
-	
+	private Calendar lastPing = Calendar.getInstance();
+
 	public WebUser(final String id, String roomName, final WebSocketSession session, MediaPipeline compositePipeline, MediaPipeline presentationPipeline, Hub hub) {
 		super(id, roomName, session, compositePipeline, presentationPipeline, hub);
 
@@ -254,6 +256,14 @@ public class WebUser extends Participant {
 				}
 			});
 		}
+	}
+
+	public Calendar getLastPing() {
+		return lastPing;
+	}
+
+	public void setLastPing(Calendar now) {
+		this.lastPing = now;
 	}
 
 }
