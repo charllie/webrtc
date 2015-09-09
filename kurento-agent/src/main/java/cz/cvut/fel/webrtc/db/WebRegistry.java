@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 
  * @author Boni Garcia (bgarcia@gsyc.es)
  * @author Micael Gallego (micael.gallego@gmail.com)
- * @authos Ivan Gracia (izanmail@gmail.com)
+ * @author Ivan Gracia (izanmail@gmail.com)
  * @since 4.3.1
  */
 public class WebRegistry {

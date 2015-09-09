@@ -210,7 +210,7 @@ public class SipHandler extends TextWebSocketHandler {
 		}
 	}
 	
-	private void processInviteResponse(Room room, Response response) throws IOException, ParseException, InvalidArgumentException {
+	private void processInviteResponse(Room room, Response response) throws ParseException, InvalidArgumentException {
 		
 		// Process SDP Answer
 		String sdpAnswer = (String) response.getContent();

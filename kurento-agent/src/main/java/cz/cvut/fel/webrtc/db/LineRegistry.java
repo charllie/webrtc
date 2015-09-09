@@ -41,8 +41,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@Configuration
-@EnableConfigurationProperties
 public class LineRegistry {
 
 	@Autowired
