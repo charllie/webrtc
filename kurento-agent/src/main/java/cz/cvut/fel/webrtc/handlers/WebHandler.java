@@ -77,7 +77,7 @@ public class WebHandler extends TextWebSocketHandler {
 		};
 
 		Timer timer = new Timer();
-		timer.scheduleAtFixedRate(task, 0, 30000);
+		timer.scheduleAtFixedRate(task, 30000, 30000);
 	}
 
 	@Override
