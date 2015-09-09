@@ -1,0 +1,12 @@
+sudo: required
+services:
+  - docker
+before_install:
+  - cd docker-compose
+  - curl -L https://github.com/docker/compose/releases/download/1.4.0/docker-compose-`uname -s`-`uname -m` > dcmp  
+  - chmod +x dcmp
+  - sudo mv dcmp /usr/local/bin/docker-compose
+install:
+  - echo "override default travis bundler handling; docker will setup the ruby env"
+script:
+  - docker-compose build
