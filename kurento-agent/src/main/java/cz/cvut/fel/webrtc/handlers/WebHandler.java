@@ -110,8 +110,10 @@ public class WebHandler extends TextWebSocketHandler {
 				String extension = jsonMessage.get("callee").getAsString();
 				Room room = roomManager.getRoom(user.getRoomName());
 				
-				if (room.getLine() != null)
-					invite(room, extension);
+				if (room.getLine() != null) {
+					invite(room, extension, user.getName());
+				}
+
 			}
 			break;
 
@@ -147,12 +149,17 @@ public class WebHandler extends TextWebSocketHandler {
 				final String senderId = jsonMessage.get("userId").getAsString();
 				final Room room = roomManager.getRoom(user.getRoomName());
 				final Participant sender = room.getParticipant(senderId);
-				
+
+				System.out.println("OOOO");
+
 				if (sender != null && (sender instanceof WebUser)) {
+					System.out.println("OOOO");
 					final WebUser webSender = (WebUser) sender;
 					final String sdpOffer = jsonMessage.get("sdpOffer").getAsString();
 					final String type = jsonMessage.get("type").getAsString();
+					System.out.println("OOOO");
 					user.receiveVideoFrom(webSender, type, sdpOffer, room);
+					System.out.println("OOOO");
 				}
 			}
 			
@@ -185,20 +192,37 @@ public class WebHandler extends TextWebSocketHandler {
 		}
 	}
 
-	private void invite(Room room, String extension) {
-		sipHandler.generateInviteRequest(room, extension);
-		
+	private void invite(Room room, String extension, String caller) {
+		final JsonObject callInfo = new JsonObject();
+		callInfo.addProperty("id", "callInformation");
+		callInfo.addProperty("message", String.format("%s is calling no. %s", caller, extension));
+		room.broadcast(callInfo);
+
+		final JsonObject callError = new JsonObject();
+		callError.addProperty("id", "callInformation");
+
 		if (!lineRegistry.isCallable(extension)) {
-			// TODO
+			callError.addProperty("message", String.format("%s is unreachable.", extension));
+			room.broadcast(callError);
 			return;
 		}
-		
+
 		String sipAddress = String.format("sip:%s@%s", extension, sipHandler.getPbxIp());
-		
-		if (room.getParticipant(sipAddress) != null) {
-			// TODO
+
+		Participant participant = room.getParticipant(sipAddress);
+
+		if (participant != null) {
+			String name = participant.getName();
+
+			if (name == null)
+				name = extension;
+
+			callError.addProperty("message", String.format("%s is already in the room.", name));
 			return;
 		}
+
+		sipHandler.generateInviteRequest(room, extension);
+
 	}
 
 	private void stopPresenting(WebUser user) throws IOException {

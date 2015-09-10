@@ -7,6 +7,7 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 
 	$scope.roomName = $params.roomName;
 
+    $scope.lineAvailable = false;
 	$scope.lineExtension = '';
 
 	$scope.presentation = {
@@ -108,8 +109,13 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 				setLineExtension(parsedMessage.extension);
 				break;
 
+            case 'callInformation':
+                notifications.notify(parsedMessage.message);
+                console.log(parsedMessage.message);
+                break;
+
 			default:
-				console.error('Unrecognized message', parsedMessage);
+				console.log('Unrecognized message', parsedMessage);
 		}
 	};
 
@@ -366,7 +372,8 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 	}
 
 	function setLineExtension(extension) {
-		$scope.lineExtension = (extension === '') ? extension : '(' + extension + ')';
+		$scope.lineExtension = extension;
+        $scope.lineAvailable = true;
 		updateScope();
 	}
 

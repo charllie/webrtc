@@ -30,7 +30,7 @@ public class SipMessageFactory {
 	private final int port = 8080;
 	private final String protocol = "ws";
 	private final int tag = (new Random()).nextInt();
-	
+
 	public SipMessageFactory() {
 		try {
 
