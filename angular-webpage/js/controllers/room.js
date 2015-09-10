@@ -7,7 +7,7 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 
 	$scope.roomName = $params.roomName;
 
-    $scope.lineAvailable = false;
+	$scope.lineAvailable = false;
 	$scope.lineExtension = '';
 
 	$scope.presentation = {
@@ -57,21 +57,21 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 			case 'cancelPresentation':
 				cancelPresentation(parsedMessage);
 				break;
-			
+
 			case 'newParticipantArrived':
 				onNewParticipant(parsedMessage);
 				break;
-			
+
 			case 'participantLeft':
 				onParticipantLeft(parsedMessage);
 				break;
-			
+
 			case 'receiveVideoAnswer':
 				receiveVideoResponse(parsedMessage);
 				break;
-			
+
 			case 'existingPresentation':
-				
+
 				var warning = {
 					title: 'Someone is currently presenting',
 					content: 'You cannot present until the current presentation has finished.'
@@ -86,14 +86,14 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 
 				$scope.stopPresenting();
 				break;
-			
+
 			case 'existingName':
 
 				constraints.setWarning(true);
 				$scope.leave();
 
 				break;
-			
+
 			case 'iceCandidate':
 
 				participants.get(parsedMessage.userId).rtcPeer[parsedMessage.type].addIceCandidate(parsedMessage.candidate, function(error) {
@@ -109,10 +109,10 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 				setLineExtension(parsedMessage.extension);
 				break;
 
-            case 'callInformation':
-                notifications.notify(parsedMessage.message);
-                console.log(parsedMessage.message);
-                break;
+			case 'callInformation':
+				notifications.notify(parsedMessage.message);
+				console.log(parsedMessage.message);
+				break;
 
 			default:
 				console.log('Unrecognized message', parsedMessage);
@@ -166,20 +166,20 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 				this.stopPresenting();
 
 			if (constraints.browserIsChrome) {
-			
+
 				if (!constraints.isChromeExtensionInstalled()) {
 					var warning = {
 						title: 'Chrome extension needed',
 						content: 'To enable screensharing or window sharing, please use our extension.'
 					};
-					
+
 					notifications.confirm(warning.title, warning.content, { cancel: 'Cancel', ok: 'Download'}, function(answer) {
 						if (answer === true)
 							$window.location = '/extension.crx';
 					});
 
 					success = false;
-					
+
 				} else {
 					$window.postMessage({ type: 'SS_UI_REQUEST', text: 'start' }, '*');
 				}
@@ -203,7 +203,7 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 	};
 
 	$scope.canPresent = function(browser) {
-		
+
 		return (constraints.canPresent && browser == constraints.browser);
 
 	};
@@ -238,7 +238,7 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 		}
 
 		var participant = participants.get(userId);
-		
+
 		var type = (!isScreensharer) ? 'composite' : 'presentation';
 
 		var options = {
@@ -373,7 +373,7 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 
 	function setLineExtension(extension) {
 		$scope.lineExtension = extension;
-        $scope.lineAvailable = true;
+		$scope.lineAvailable = true;
 		updateScope();
 	}
 

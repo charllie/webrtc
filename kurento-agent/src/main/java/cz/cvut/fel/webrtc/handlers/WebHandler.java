@@ -150,16 +150,11 @@ public class WebHandler extends TextWebSocketHandler {
 				final Room room = roomManager.getRoom(user.getRoomName());
 				final Participant sender = room.getParticipant(senderId);
 
-				System.out.println("OOOO");
-
 				if (sender != null && (sender instanceof WebUser)) {
-					System.out.println("OOOO");
 					final WebUser webSender = (WebUser) sender;
 					final String sdpOffer = jsonMessage.get("sdpOffer").getAsString();
 					final String type = jsonMessage.get("type").getAsString();
-					System.out.println("OOOO");
 					user.receiveVideoFrom(webSender, type, sdpOffer, room);
-					System.out.println("OOOO");
 				}
 			}
 			
