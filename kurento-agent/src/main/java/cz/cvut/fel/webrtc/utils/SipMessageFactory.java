@@ -20,17 +20,17 @@ import java.util.Random;
 
 public class SipMessageFactory {
 	
-	protected Logger log = LoggerFactory.getLogger(SipMessageFactory.class);
+	private final Logger log = LoggerFactory.getLogger(SipMessageFactory.class);
 
 	private MessageFactory messageFactory;
 	private HeaderFactory headerFactory;
 	private AddressFactory addressFactory;
 	private String ip;
 	// TODO
-	private int port = 8080;
-	private String protocol = "ws";
-	private int tag = (new Random()).nextInt();
-	
+	private final int port = 8080;
+	private final String protocol = "ws";
+	private final int tag = (new Random()).nextInt();
+
 	public SipMessageFactory() {
 		try {
 
@@ -61,7 +61,7 @@ public class SipMessageFactory {
 		CSeqHeader cSeqHeader = (CSeqHeader) request.getHeader("CSeq");
 		ViaHeader viaHeaderSender = (ViaHeader) request.getHeader("Via");
 		
-		ArrayList<ViaHeader> viaHeaders = new ArrayList<ViaHeader>();
+		ArrayList<ViaHeader> viaHeaders = new ArrayList<>();
 		ViaHeader viaHeader = headerFactory.createViaHeader(ip, port, protocol, null);
 		viaHeaders.add(viaHeader);
 
@@ -70,7 +70,7 @@ public class SipMessageFactory {
 
 		MaxForwardsHeader maxForwardsHeader = headerFactory.createMaxForwardsHeader(70);
 
-		Response response = messageFactory.createResponse(
+		return messageFactory.createResponse(
 				statusCode,
 				callIdHeader,
 				cSeqHeader,
@@ -79,8 +79,6 @@ public class SipMessageFactory {
 				viaHeaders,
 				maxForwardsHeader
 		);
-		
-		return response;
 	}
 	
 	public Response cloneResponseWithAnotherStatusCode(Response response, int statusCode) throws ParseException {
@@ -116,7 +114,7 @@ public class SipMessageFactory {
 		Address toAddress = to.getAddress();
 		URI uri = toAddress.getURI();
 		
-		ArrayList<ViaHeader> viaHeaders = new ArrayList<ViaHeader>();
+		ArrayList<ViaHeader> viaHeaders = new ArrayList<>();
 		ViaHeader viaHeader = headerFactory.createViaHeader(ip, port, protocol, null);
 		viaHeaders.add(viaHeader);
 		

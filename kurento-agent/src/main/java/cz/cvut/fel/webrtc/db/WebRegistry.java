@@ -17,6 +17,7 @@ package cz.cvut.fel.webrtc.db;
 import cz.cvut.fel.webrtc.resources.WebUser;
 import org.springframework.web.socket.WebSocketSession;
 
+import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -25,15 +26,19 @@ import java.util.concurrent.ConcurrentHashMap;
  * 
  * @author Boni Garcia (bgarcia@gsyc.es)
  * @author Micael Gallego (micael.gallego@gmail.com)
- * @authos Ivan Gracia (izanmail@gmail.com)
+ * @author Ivan Gracia (izanmail@gmail.com)
  * @since 4.3.1
  */
 public class WebRegistry {
 
-	private final ConcurrentHashMap<String, WebUser> users = new ConcurrentHashMap<String, WebUser>();
+	private final ConcurrentHashMap<String, WebUser> users = new ConcurrentHashMap<>();
 
 	public void register(WebUser user) {
 		users.put(user.getSession().getId(), user);
+	}
+
+	public Collection<WebUser> getAll() {
+		return users.values();
 	}
 	
 	public WebUser getBySession(WebSocketSession session) {
