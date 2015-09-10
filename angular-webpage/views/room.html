@@ -6,7 +6,7 @@
 			</button>
 		</div>
 
-		<span class="toolbar__label fs-title">Room {{ roomName }} {{ lineExtension }}</span>
+		<span class="toolbar__label fs-title">Room {{ roomName }}</span>
 
 		<div class="toolbar__right">
 
@@ -58,14 +58,16 @@
 <div class="sidebar bgc-grey-100">
 	<div class="sidebar-menu">
 		<!-- Make a call -->
-		<span class="fs-subhead display-block p+ bgc-grey-200">Make a call</span>
-        <div class="divider divider--dark"></div>
+        <div ng-show="lineAvailable">
+            <span class="fs-subhead display-block p+ bgc-grey-200">Make a call (from {{ lineExtension }})</span>
+            <div class="divider divider--dark"></div>
 
-        <form ng-submit="invite(callId)" class="call-sidebar pr++ fs-subhead">
-			<lx-text-field label="Phone number" fixed-label="true" icon="phone">
-				<input type="text" ng-model="callId">
-			</lx-text-field>
-		</form>
+            <form ng-submit="invite(callId)" class="call-sidebar pr++ fs-subhead">
+                <lx-text-field label="Phone number" fixed-label="true" icon="phone">
+                    <input type="text" ng-model="callId">
+                </lx-text-field>
+            </form>
+        </div>
 
 		<div class="divider divider--dark"></div>
 
@@ -73,7 +75,7 @@
 		<span class="fs-subhead display-block p+ bgc-grey-200">Online users</span>
         <div class="divider divider--dark"></div>
 		<ul class="list mt participants">
-			<li class="list-row" ng-repeat="participant in participantNames">
+			<li class="list-row" ng-repeat="participant in participantNames track by $index">
 				<div class="list-row__primary">
 					<i class="icon icon--s icon--grey icon--flat mdi mdi-message-video"></i>
 				</div>

@@ -15,7 +15,6 @@ import org.apache.http.Header;
 import org.apache.http.auth.AUTH;
 import org.apache.http.auth.AuthenticationException;
 import org.apache.http.auth.MalformedChallengeException;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
@@ -42,18 +41,16 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@Configuration
-@EnableConfigurationProperties
 public class LineRegistry {
-	
+
 	@Autowired
 	private RoomManager roomManager;
 	
-	private Stack<Line> lines = new Stack<Line> ();
-	private Stack<Line> roomLines = new Stack<Line> ();
-	private ConcurrentMap<String, String> roomByURI = new ConcurrentHashMap<>();
+	private Stack<Line> lines = new Stack<>();
+	private final Stack<Line> roomLines = new Stack<>();
+	private final ConcurrentMap<String, String> roomByURI = new ConcurrentHashMap<>();
 	
-	private String roomPattern = "Room ([0-9]+)";
+	private final String roomPattern = "Room ([0-9]+)";
 
 	protected LineRegistry() {}
 	
@@ -90,7 +87,7 @@ public class LineRegistry {
 		}
 	}
 
-	protected void filterLines(Pattern p) {
+	private void filterLines(Pattern p) {
 		Matcher m;
 		for (Iterator<Line> iterator = roomLines.iterator(); iterator.hasNext();) {
 		    Line line = iterator.next();
@@ -113,7 +110,7 @@ public class LineRegistry {
 		return objectReader.readValue(json);
 	}
 
-	protected void processContent(CloseableHttpResponse response) throws IllegalStateException, IOException {
+	private void processContent(CloseableHttpResponse response) throws IllegalStateException, IOException {
 
 		lines = getContent(response);
 		roomLines.addAll(lines);
@@ -133,7 +130,7 @@ public class LineRegistry {
 	        .build();
 	}
 
-	private CloseableHttpResponse processDigest(CloseableHttpClient client, HttpGet get, CloseableHttpResponse response, String login, String password) throws MalformedChallengeException, AuthenticationException, ClientProtocolException, IOException {
+	private CloseableHttpResponse processDigest(CloseableHttpClient client, HttpGet get, CloseableHttpResponse response, String login, String password) throws MalformedChallengeException, AuthenticationException, IOException {
 
 		String strHeaderResponse = DigestAuth.getHeaderResponse(HttpGet.METHOD_NAME, get.getURI().toString(), response.getFirstHeader(AUTH.WWW_AUTH).getValue(), login, password);
 		Header headerResponse = new BasicHeader(AUTH.WWW_AUTH_RESP, strHeaderResponse);

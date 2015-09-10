@@ -33,6 +33,10 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * 
@@ -57,6 +61,33 @@ public class WebHandler extends TextWebSocketHandler {
 	@Autowired
 	private SipHandler sipHandler;
 
+	public WebHandler() {
+		super();
+		TimerTask task = new TimerTask() {
+
+			@Override
+			public void run() {
+				Calendar currentDate = Calendar.getInstance();
+
+				for (WebUser user : registry.getAll()) {
+					Calendar ping = user.getLastPing();
+					ping.add(Calendar.SECOND, 40);
+
+					if (ping.before(currentDate)) {
+						try {
+							log.info("{} is unreachable.", user.getName());
+							leaveRoom(user);
+						} catch (Exception e) {}
+					}
+				}
+			}
+
+		};
+
+		Timer timer = new Timer();
+		timer.scheduleAtFixedRate(task, 30000, 30000);
+	}
+
 	@Override
 	public void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
 		
@@ -79,8 +110,10 @@ public class WebHandler extends TextWebSocketHandler {
 				String extension = jsonMessage.get("callee").getAsString();
 				Room room = roomManager.getRoom(user.getRoomName());
 				
-				if (room.getLine() != null)
-					invite(room, extension);
+				if (room.getLine() != null) {
+					invite(room, extension, user.getName());
+				}
+
 			}
 			break;
 
@@ -116,7 +149,7 @@ public class WebHandler extends TextWebSocketHandler {
 				final String senderId = jsonMessage.get("userId").getAsString();
 				final Room room = roomManager.getRoom(user.getRoomName());
 				final Participant sender = room.getParticipant(senderId);
-				
+
 				if (sender != null && (sender instanceof WebUser)) {
 					final WebUser webSender = (WebUser) sender;
 					final String sdpOffer = jsonMessage.get("sdpOffer").getAsString();
@@ -142,25 +175,49 @@ public class WebHandler extends TextWebSocketHandler {
 				user.addCandidate(cand, jsonMessage.get("type").getAsString());
 			}
 			break;
+
+		case "stay-alive":
+			if (user != null) {
+				user.setLastPing(Calendar.getInstance());
+			}
+			break;
+
 		default:
 			break;
 		}
 	}
 
-	private void invite(Room room, String extension) {
-		sipHandler.generateInviteRequest(room, extension);
-		
+	private void invite(Room room, String extension, String caller) {
+		final JsonObject callInfo = new JsonObject();
+		callInfo.addProperty("id", "callInformation");
+		callInfo.addProperty("message", String.format("%s is calling no. %s", caller, extension));
+		room.broadcast(callInfo);
+
+		final JsonObject callError = new JsonObject();
+		callError.addProperty("id", "callInformation");
+
 		if (!lineRegistry.isCallable(extension)) {
-			// TODO
+			callError.addProperty("message", String.format("%s is unreachable.", extension));
+			room.broadcast(callError);
 			return;
 		}
-		
+
 		String sipAddress = String.format("sip:%s@%s", extension, sipHandler.getPbxIp());
-		
-		if (room.getParticipant(sipAddress) != null) {
-			// TODO
+
+		Participant participant = room.getParticipant(sipAddress);
+
+		if (participant != null) {
+			String name = participant.getName();
+
+			if (name == null)
+				name = extension;
+
+			callError.addProperty("message", String.format("%s is already in the room.", name));
 			return;
 		}
+
+		sipHandler.generateInviteRequest(room, extension);
+
 	}
 
 	private void stopPresenting(WebUser user) throws IOException {

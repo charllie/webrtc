@@ -19,6 +19,8 @@ import java.text.ParseException;
 import java.util.Random;
 import java.util.UUID;
 
+import static org.junit.Assert.assertEquals;
+
 @RunWith(MockitoJUnitRunner.class)
 public class SipMessageFactoryTest {
 
@@ -78,7 +80,7 @@ public class SipMessageFactoryTest {
 		Address toAddress = to.getAddress();
 
 		// Assert
-		assert(fromAddress.getURI().toString().equals(toUri));
+		assertEquals(fromAddress.getURI().toString(), toUri);
 		assert(toAddress.getURI().toString().equals(fromUri));
 		assert(fromAddress.getDisplayName().equals(toDisplayName));
 		assert(toAddress.getDisplayName().equals(fromDisplayName));

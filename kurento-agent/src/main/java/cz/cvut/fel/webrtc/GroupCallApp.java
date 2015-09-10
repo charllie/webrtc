@@ -88,7 +88,7 @@ public class GroupCallApp implements WebSocketConfigurer {
 	
 	@Bean
 	public WebSocketConnectionManager asteriskConnection() throws URISyntaxException {
-		ArrayList<String> protocols = new ArrayList<String>();
+		@SuppressWarnings("Convert2Diamond") ArrayList<String> protocols = new ArrayList<>();
 		protocols.add("sip");
 		WebSocketConnectionManager manager = new WebSocketConnectionManager(new StandardWebSocketClient(), sipHandler(), xivo_ws);
 		manager.setSubProtocols(protocols);
