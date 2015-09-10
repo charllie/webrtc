@@ -57,7 +57,6 @@ app.factory('socket', ['$window', 'variables', function($window, variables) {
 	}
 
 	$window.onbeforeunload = function() {
-		send({ id: 'leaveRoom' });
 		socket.close();
 	};
 

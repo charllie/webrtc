@@ -119,6 +119,10 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 		}
 	};
 
+	$scope.$on('$locationChangeStart', function(event) {
+		leave();
+	});
+
 	// Configuration for the extension if it is Chrome
 	if (constraints.browserIsChrome) {
 		$window.addEventListener('message', function(event) {
@@ -216,11 +220,15 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 	};
 
 	$scope.leave = function() {
+		leave();
+		$location.path('/');
+	};
+
+	function leave() {
 		socket.send({ id: 'leaveRoom' });
 		constraints.setType('composite');
 		participants.clear();
-		$location.path('/');
-	};
+	}
 
 	$scope.$on('$destroy', function() {
 		constraints.setType('composite');
@@ -260,6 +268,8 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 
 		var participant = participants.me();
 
+		console.log(participant);
+
 		var options = {
 			mediaConstraints: constraints.get(),
 			onicecandidate: participant.onIceCandidate[type].bind(participant)
@@ -269,9 +279,11 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 			setLineExtension(message.lineExtension);
 
 		if (type == 'composite') {
-			$scope.participantNames = message.data;
-			$scope.participantNames.push(participant.name);
-			updateScope();
+			if (!_.isEmpty(message)) {
+				$scope.participantNames = message.data;
+				$scope.participantNames.push(participant.name);
+				updateScope();
+			}
 			options.remoteVideo = document.getElementById(type);
 		} else {
 			options.localVideo = document.getElementById(type);
