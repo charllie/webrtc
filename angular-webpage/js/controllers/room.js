@@ -243,6 +243,25 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 		sendStream({}, 'composite', { audio: false, video: false });
 	};
 
+	function renewConstraints(newConstraints) {
+		var participant = participants.me();
+		participant.disposeType('composite');
+		socket.send({ 'id': 'renew' });
+		sendStream({}, 'composite', newConstraints);
+	}
+
+	$scope.watchOnly = function() {
+		renewConstraints({ audio: false, video: false });
+	};
+
+	$scope.microOnly = function() {
+		renewConstraints({ audio: true, video: false });
+	};
+
+	$scope.allTracks = function() {
+		renewConstraints();
+	};
+
 	function receiveVideo(userId, sender, isScreensharer) {
 
 		if (participants.get(userId) === undefined)
@@ -407,6 +426,7 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 	function setLineExtension(extension) {
 		$scope.lineExtension = extension;
 		$scope.lineAvailable = true;
+		$('.search-to-phone input').attr('type', 'tel');
 		updateScope();
 	}
 
@@ -566,8 +586,8 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 		if (matrix != 'none') {
 			var translation = matrix.match(/-?[\d\.]+/g)[4];
 			if (translation == "0") {
-				translateSidebar(266);
-			} else if (translation == "266") {
+				translateSidebar(-266);
+			} else if (translation == "-266") {
 				translateSidebar(0);
 			}
 		}
