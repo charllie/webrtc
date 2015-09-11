@@ -1,7 +1,6 @@
 app.factory('constraints', ['$window', 'deviceDetector', 'upload', function($window, device, upload) {
 
 	var type = 'composite';
-	var viewOnly = false;
 	var browser = device.browser;
 	var chromeExtensionInstalled = false;
 	var canPresent = (device.isDesktop() && (browser == 'chrome' || browser == 'firefox')) && ($window.location.protocol == 'https:');
@@ -17,11 +16,6 @@ app.factory('constraints', ['$window', 'deviceDetector', 'upload', function($win
 				chromeExtensionInstalled = true;
 		});
 	}
-
-	var emptyConstraint = {
-		audio: false,
-		video: false
-	};
 
 	var constraintWebcam = {
 		audio: true,
@@ -63,10 +57,6 @@ app.factory('constraints', ['$window', 'deviceDetector', 'upload', function($win
 				constraints.video.mediaSource = type;
 			}
 
-		} else if (viewOnly) {
-
-			constraints = emptyConstraint;
-
 		} else {
 
 			constraints = constraintWebcam;
@@ -94,10 +84,6 @@ app.factory('constraints', ['$window', 'deviceDetector', 'upload', function($win
 
 	function setType(t) {
 		type = t;
-	}
-
-	function setViewOnly(b) {
-		viewOnly = b;
 	}
 
 	function setId(id) {
@@ -131,7 +117,6 @@ app.factory('constraints', ['$window', 'deviceDetector', 'upload', function($win
 		getType: getType,
 		setType: setType,
 		get: get,
-		setViewOnly: setViewOnly,
 		getWarning: getWarning,
 		setWarning: setWarning
 	};

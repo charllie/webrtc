@@ -176,6 +176,13 @@ public class WebHandler extends TextWebSocketHandler {
 			}
 			break;
 
+		case "renew":
+			// maybe need a secure to avoid to abuse this
+			if (user != null) {
+				user.renewOutgoingMedia();
+			}
+			break;
+
 		case "stay-alive":
 			if (user != null) {
 				user.setLastPing(Calendar.getInstance());

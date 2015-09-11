@@ -235,6 +235,14 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 		participants.clear();
 	});
 
+	$scope.test1 = function() {
+		var participant = participants.me();
+		participant.disposeType('composite');
+		socket.send({ 'id': 'renew' });
+
+		sendStream({}, 'composite', { audio: false, video: false });
+	};
+
 	function receiveVideo(userId, sender, isScreensharer) {
 
 		if (participants.get(userId) === undefined)
@@ -264,14 +272,20 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 			});
 	}
 
-	function sendStream(message, type) {
+	function sendStream(message, type, c) {
+		var emptyTrack = false;
+
+		if (!c) {
+			c = constraints.get();
+		} else if (!c.audio && !c.video) {
+			c.audio = true;
+			emptyTrack = true;
+		}
 
 		var participant = participants.me();
 
-		console.log(participant);
-
 		var options = {
-			mediaConstraints: constraints.get(),
+			mediaConstraints: c,
 			onicecandidate: participant.onIceCandidate[type].bind(participant)
 		};
 
@@ -307,6 +321,13 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 						// May be removed in the future
 						$('.dialog-filter').remove();
 						$('.dialog').remove();
+					});
+				}
+
+				if (emptyTrack) {
+					var tracks = this.getLocalStream().getTracks();
+					tracks.forEach(function(e) {
+						e.stop();
 					});
 				}
 
