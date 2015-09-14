@@ -159,6 +159,10 @@ video {
     text-overflow: ellipsis;
 }
 
+.radio-button__label:after {
+    color: #607D8B !important;
+}
+
 @media screen and (max-width: 1023px) {
     .btn--sidebar-off {
         display: none;

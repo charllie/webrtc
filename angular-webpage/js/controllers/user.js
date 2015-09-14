@@ -2,7 +2,8 @@ function UserCtrl($scope, $location, socket, constraints, notifications, partici
 
 	$scope.participant = {
 		name: '',
-		room: ''
+		room: '',
+		compositeOptions: 'normal'
 	};
 
 	$scope.color = 'blue-grey';
@@ -44,6 +45,8 @@ function UserCtrl($scope, $location, socket, constraints, notifications, partici
 					room: participant.room,
 					mediaSource: 'composite'
 				});
+
+				constraints.setCompositeOptions(participant.compositeOptions);
 
 				$location.path("/rooms/" + participant.room);
 

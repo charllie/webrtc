@@ -235,31 +235,24 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 		participants.clear();
 	});
 
-	$scope.test1 = function() {
+	function renewConstraints(compositeOptions) {
 		var participant = participants.me();
 		participant.disposeType('composite');
 		socket.send({ 'id': 'renew' });
-
-		sendStream({}, 'composite', { audio: false, video: false });
-	};
-
-	function renewConstraints(newConstraints) {
-		var participant = participants.me();
-		participant.disposeType('composite');
-		socket.send({ 'id': 'renew' });
-		sendStream({}, 'composite', newConstraints);
+		constraints.setCompositeOptions(compositeOptions);
+		sendStream({}, 'composite');
 	}
 
 	$scope.watchOnly = function() {
-		renewConstraints({ audio: false, video: false });
+		renewConstraints('watchOnly');
 	};
 
 	$scope.microOnly = function() {
-		renewConstraints({ audio: true, video: false });
+		renewConstraints('audioOnly');
 	};
 
 	$scope.allTracks = function() {
-		renewConstraints();
+		renewConstraints('normal');
 	};
 
 	function receiveVideo(userId, sender, isScreensharer) {
@@ -291,12 +284,11 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 			});
 	}
 
-	function sendStream(message, type, c) {
+	function sendStream(message, type) {
 		var emptyTrack = false;
+		var c = constraints.get();
 
-		if (!c) {
-			c = constraints.get();
-		} else if (!c.audio && !c.video) {
+		if (!c.audio && !c.video) {
 			c.audio = true;
 			emptyTrack = true;
 		}
