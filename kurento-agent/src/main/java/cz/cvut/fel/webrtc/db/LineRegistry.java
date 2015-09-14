@@ -81,7 +81,7 @@ public class LineRegistry {
 			
 			// Only keep lines for rooms
 			filterLines(Pattern.compile(roomPattern));
-			
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -93,8 +93,10 @@ public class LineRegistry {
 		    Line line = iterator.next();
 		    m = p.matcher(line.getName());
 		    
-		    if (!m.matches())
-		    	iterator.remove();
+		    if (!m.matches()) {
+				lines.push(line);
+			    iterator.remove();
+		    }
 		}
 	}
 
@@ -112,8 +114,7 @@ public class LineRegistry {
 
 	private void processContent(CloseableHttpResponse response) throws IllegalStateException, IOException {
 
-		lines = getContent(response);
-		roomLines.addAll(lines);
+		roomLines.addAll(getContent(response));
 	}
 
 	private CloseableHttpClient getSSLClient() throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException {
