@@ -36,9 +36,6 @@ public class WebUser extends Participant {
 		newOutgoingMedia();
 		connectOutgoingMediaToHubPort();
 
-		outgoingMedia.connect(hubPort);
-		hubPort.connect(outgoingMedia);
-		
 		this.presentationPipeline = presentationPipeline;
 	}
 
