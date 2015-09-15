@@ -10,6 +10,9 @@ import org.mockito.runners.MockitoJUnitRunner;
 import java.io.IOException;
 import java.util.UUID;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 @RunWith(MockitoJUnitRunner.class)
 public class RoomTest {
 
@@ -33,7 +36,7 @@ public class RoomTest {
 		Participant participant = getMockParticipant();
 
 		room.add(participant);
-		assert(room.size() == size + 1);
+		assertEquals("Room size must have increased", room.size(), size + 1);
 	}
 
 	@Test
@@ -42,7 +45,7 @@ public class RoomTest {
 		Participant participant = null;
 
 		room.add(null);
-		assert(room.size() == size);
+		assertEquals("Room size should not have changed", room.size(), size);
 	}
 
 	@Test
@@ -54,7 +57,7 @@ public class RoomTest {
 		int size = room.size();
 		room.leave(participant);
 
-		assert(room.size() == size - 1);
+		assertEquals("Room size must have decreased", room.size(), size - 1);
 	}
 
 	@Test
@@ -63,6 +66,6 @@ public class RoomTest {
 
 		int size = room.size();
 		room.leave(participant);
-		assert(room.size() == size);
+		assertEquals("Room size should not have changed", room.size(), size);
 	}
 }

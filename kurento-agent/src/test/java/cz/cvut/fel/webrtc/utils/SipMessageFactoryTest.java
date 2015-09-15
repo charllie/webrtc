@@ -20,6 +20,8 @@ import java.util.Random;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 
 @RunWith(MockitoJUnitRunner.class)
 public class SipMessageFactoryTest {
@@ -40,7 +42,7 @@ public class SipMessageFactoryTest {
 		try {
 			sipMessageFactory.createResponseFromRequest(request, statusCode);
 		} catch (Exception e) {
-			assert(e.toString().contains(NullPointerException.class.getName()));
+			assertTrue("Null pointer exception expected", e.toString().contains(NullPointerException.class.getName()));
 		}
 	}
 
@@ -80,13 +82,13 @@ public class SipMessageFactoryTest {
 		Address toAddress = to.getAddress();
 
 		// Assert
-		assertEquals(fromAddress.getURI().toString(), toUri);
-		assert(toAddress.getURI().toString().equals(fromUri));
-		assert(fromAddress.getDisplayName().equals(toDisplayName));
-		assert(toAddress.getDisplayName().equals(fromDisplayName));
-		assert(callIdHeader.getCallId().equals(callId));
-		assert(cSeqHeader.getMethod().equals(method));
-		assert(cSeqHeader.getSeqNumber() == cseq);
+		assertEquals("From URI response is not equal to To URI request", fromAddress.getURI().toString(), toUri);
+		assertEquals("To URI response is not equal to From URI request", toAddress.getURI().toString(), fromUri);
+		assertEquals("From display name response is not equal to given display name", fromAddress.getDisplayName(), toDisplayName);
+		assertEquals("To display name is not equal to given display name", toAddress.getDisplayName(), fromDisplayName);
+		assertEquals("Call-ID response is not equal to call-id request", callIdHeader.getCallId(), callId);
+		assertEquals("Method has changed", cSeqHeader.getMethod(), method);
+		assertEquals("C-Seq has changed", cSeqHeader.getSeqNumber(), cseq);
 	}
 
 	@Test
@@ -96,7 +98,7 @@ public class SipMessageFactoryTest {
 		try {
 			sipMessageFactory.cloneResponseWithAnotherStatusCode(response, statusCode);
 		} catch (Exception e) {
-			assert(e.toString().contains(NullPointerException.class.getName()));
+			assertTrue("Null pointer exception expected", e.toString().contains(NullPointerException.class.getName()));
 		}
 	}
 
