@@ -1,7 +1,7 @@
 function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constraints, notifications, progress, participants) {
 
 	if (participants.isEmpty())
-		//$location.path('/');
+		$location.path('/');
 
 	socket.roomReady();
 
@@ -650,5 +650,9 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 		_.defer(function() {
 			$scope.$apply();
 		});
+	}
+
+	$scope.test = function() {
+		socket.send({ id: 'record' });
 	}
 }

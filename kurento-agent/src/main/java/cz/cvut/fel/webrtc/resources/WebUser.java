@@ -26,6 +26,8 @@ public class WebUser extends Participant {
 	private final MediaPipeline presentationPipeline;
 	private Calendar lastPing = Calendar.getInstance();
 
+	private RecorderEndpoint recorder;
+
 	public WebUser(final String id, String roomName, final WebSocketSession session, MediaPipeline compositePipeline, MediaPipeline presentationPipeline, Hub hub) {
 		super(id, roomName, session, compositePipeline, presentationPipeline, hub);
 
@@ -36,17 +38,19 @@ public class WebUser extends Participant {
 		newOutgoingMedia();
 		connectOutgoingMediaToHubPort();
 
+		this.recorder = new RecorderEndpoint.Builder(compositePipeline, "file:///tmp/" + id + ".webm").build();
+		hubPort.connect(recorder);
+
 		this.presentationPipeline = presentationPipeline;
+	}
+
+	public void record() {
+		recorder.record();
 	}
 
 	private void connectOutgoingMediaToHubPort() {
 		outgoingMedia.connect(hubPort);
 		hubPort.connect(outgoingMedia);
-	}
-
-	private void disconnectOutgoingMediaFromHubPort() {
-		hubPort.disconnect(outgoingMedia, asyncLog("Disconnect hubPort from outgoingMedia", "Could not disconnect hubPort from outgoingMedia"));
-		outgoingMedia.disconnect(hubPort, asyncLog("Disconnect outgoingMedia from hubPort", "Could not disconnect ougoingMedia from hubPort"));
 	}
 
 	public void renewOutgoingMedia() {

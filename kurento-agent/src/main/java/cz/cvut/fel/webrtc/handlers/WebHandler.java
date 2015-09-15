@@ -189,6 +189,11 @@ public class WebHandler extends TextWebSocketHandler {
 			}
 			break;
 
+		case "record":
+			if (user != null)
+				user.record();
+			break;
+
 		default:
 			break;
 		}
