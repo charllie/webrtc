@@ -102,7 +102,7 @@ This little nodejs module enables to do an upload speed test on port 8081 to ada
  }
  ```
 
-Exemple :
+ Example:
 
  ```json
  {
