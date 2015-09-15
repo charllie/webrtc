@@ -163,6 +163,10 @@ video {
     color: #607D8B !important;
 }
 
+.cursor-pointer {
+	cursor: pointer;
+}
+
 @media screen and (max-width: 1023px) {
     .btn--sidebar-off {
         display: none;
