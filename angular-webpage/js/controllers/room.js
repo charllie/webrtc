@@ -1,7 +1,7 @@
 function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constraints, notifications, progress, participants) {
 
 	if (participants.isEmpty())
-		//$location.path('/');
+		$location.path('/');
 
 	socket.roomReady();
 
