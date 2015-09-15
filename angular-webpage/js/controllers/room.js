@@ -652,7 +652,7 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 		});
 	}
 
-	$scope.test = function() {
+	$scope.testRecording = function() {
 		socket.send({ id: 'record' });
 	}
 }
