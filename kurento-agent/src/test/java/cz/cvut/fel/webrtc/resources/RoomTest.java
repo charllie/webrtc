@@ -42,8 +42,6 @@ public class RoomTest {
 	@Test
 	public void testAddNullParticipant() {
 		int size = room.size();
-		Participant participant = null;
-
 		room.add(null);
 		assertEquals("Room size should not have changed", room.size(), size);
 	}
