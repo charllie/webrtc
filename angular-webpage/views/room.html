@@ -51,15 +51,17 @@
 				<i class="mdi mdi-presentation"></i>
 			</button>
 
-			<lx-dropdown position="right" from-top>
-				<button class="btn btn--l btn--white btn--icon" lx-ripple lx-dropdown-toggle>
-					<i class="mdi mdi-dots-vertical"></i>
-				</button>
+			<button class="btn btn--l btn--white btn--icon" lx-ripple>
+				<i class="mdi mdi-dots-vertical"></i>
+			</button>
 
-				<lx-dropdown-menu>
+			<div class="dropdown-menu dropdown-menu--right dropdown__menu--is-dropped" style="opacity: 1; right: 16px; top: 52px;">
+				<div class="dropdown-menu__content">
 					<!-- Watch / Micro / Video + webcam -->
 					<ul>
-						<li><a class="dropdown-link dropdown-link--is-header">Stream settings</a></li>
+						<li>
+							<a class="dropdown-link dropdown-link--is-header">Stream settings</a>
+						</li>
 
 						<li>
 							<a class="dropdown-link" ng-click="watchOnly()">
@@ -88,8 +90,8 @@
 
 						<li>
 							<a class="dropdown-link" ng-click="volume.change()">
-								<i class="mdi {{ volume.icon }}"></i>
-								<span>{{ volume.muted ? 'Unmute' : 'Mute' }}</span>
+								<i class="mdi mdi-volume-high"></i>
+								<span class="ng-binding">Mute</span>
 							</a>
 						</li>
 
@@ -102,8 +104,8 @@
 							</a>
 						</li>
 					</ul>
-				</lx-dropdown-menu>
-			</lx-dropdown>
+				</div>
+			</div>
 		</div>
 	</div>
 </div>
