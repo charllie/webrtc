@@ -55,8 +55,8 @@
 				<i class="mdi mdi-dots-vertical"></i>
 			</button>
 
-			<div class="dropdown-menu dropdown-menu--right dropdown__menu--is-dropped" style="opacity: 1; right: 16px; top: 52px;">
-				<div class="dropdown-menu__content" ng-if="dropdownDropped">
+			<div class="dropdown-menu dropdown-menu--right dropdown__menu--is-dropped" style="opacity:0;top:40px;right:16px">
+				<div class="dropdown-menu__content">
 					<!-- Watch / Micro / Video + webcam -->
 					<ul>
 						<li>
@@ -90,8 +90,8 @@
 
 						<li>
 							<a class="dropdown-link" ng-click="volume.change()">
-								<i class="mdi mdi-volume-high"></i>
-								<span class="ng-binding">Mute</span>
+								<i class="mdi {{ volume.icon }}"></i>
+								<span>{{ volume.text }}</span>
 							</a>
 						</li>
 

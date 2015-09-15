@@ -1,7 +1,7 @@
 function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constraints, notifications, progress, participants) {
 
 	if (participants.isEmpty())
-		$location.path('/');
+		//$location.path('/');
 
 	socket.roomReady();
 
@@ -598,16 +598,52 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 	$scope.volume = {
 		muted: false,
 		icon: 'mdi-volume-high',
+		text: 'Mute',
 		change: function() {
 			this.muted = !this.muted;
+			this.text = (this.muted) ? 'Unmute' : 'Mute';
 			this.icon = (this.muted) ? 'mdi-volume-off' : 'mdi-volume-high';
 			$('#composite').prop('muted', this.muted);
+			updateScope();
 		}
 	};
 
 	$scope.dropdownDropped = false;
 	$scope.toggleDropdown = function() {
+		var dropdownElt = $('.dropdown-menu');
+		if ($scope.dropdownDropped) {
+			dropdownElt.animate({
+				'opacity': 0,
+				'top': '40px',
+				'right': '16px'
+			}, 200);
+
+			setTimeout(function() {
+				dropdownElt.css('display', 'none');
+			}, 200);
+			$(document).off('click');
+		} else {
+			dropdownElt.css('display', 'block');
+			dropdownElt.animate({
+				'opacity': 1,
+				'top': '52px',
+				'right': '16px'
+			}, 200);
+
+			$(document).click(function(e) {
+
+				if ($(e.target).closest('.dropdown-menu').length != 0)
+					return false;
+
+				if ($(e.target).closest('.mdi-dots-vertical').length != 0)
+					return false;
+
+				$scope.toggleDropdown();
+			});
+		}
+
 		$scope.dropdownDropped = !$scope.dropdownDropped;
+
 	};
 
 	function updateScope() {
