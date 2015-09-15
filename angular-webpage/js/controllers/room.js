@@ -119,6 +119,10 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 		}
 	};
 
+	$scope.$on('$locationChangeStart', function(event) {
+		leave();
+	});
+
 	// Configuration for the extension if it is Chrome
 	if (constraints.browserIsChrome) {
 		$window.addEventListener('message', function(event) {
@@ -216,16 +220,40 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 	};
 
 	$scope.leave = function() {
+		leave();
+		$location.path('/');
+	};
+
+	function leave() {
 		socket.send({ id: 'leaveRoom' });
 		constraints.setType('composite');
 		participants.clear();
-		$location.path('/');
-	};
+	}
 
 	$scope.$on('$destroy', function() {
 		constraints.setType('composite');
 		participants.clear();
 	});
+
+	function renewConstraints(compositeOptions) {
+		var participant = participants.me();
+		participant.disposeType('composite');
+		socket.send({ 'id': 'renew' });
+		constraints.setCompositeOptions(compositeOptions);
+		sendStream({}, 'composite');
+	}
+
+	$scope.watchOnly = function() {
+		renewConstraints('watchOnly');
+	};
+
+	$scope.microOnly = function() {
+		renewConstraints('audioOnly');
+	};
+
+	$scope.allTracks = function() {
+		renewConstraints('normal');
+	};
 
 	function receiveVideo(userId, sender, isScreensharer) {
 
@@ -257,11 +285,18 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 	}
 
 	function sendStream(message, type) {
+		var emptyTrack = false;
+		var c = constraints.get();
+
+		if (!c.audio && !c.video) {
+			c.audio = true;
+			emptyTrack = true;
+		}
 
 		var participant = participants.me();
 
 		var options = {
-			mediaConstraints: constraints.get(),
+			mediaConstraints: c,
 			onicecandidate: participant.onIceCandidate[type].bind(participant)
 		};
 
@@ -269,9 +304,11 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 			setLineExtension(message.lineExtension);
 
 		if (type == 'composite') {
-			$scope.participantNames = message.data;
-			$scope.participantNames.push(participant.name);
-			updateScope();
+			if (!_.isEmpty(message)) {
+				$scope.participantNames = message.data;
+				$scope.participantNames.push(participant.name);
+				updateScope();
+			}
 			options.remoteVideo = document.getElementById(type);
 		} else {
 			options.localVideo = document.getElementById(type);
@@ -295,6 +332,13 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 						// May be removed in the future
 						$('.dialog-filter').remove();
 						$('.dialog').remove();
+					});
+				}
+
+				if (emptyTrack) {
+					var tracks = this.getLocalStream().getTracks();
+					tracks.forEach(function(e) {
+						e.stop();
 					});
 				}
 
@@ -374,6 +418,7 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 	function setLineExtension(extension) {
 		$scope.lineExtension = extension;
 		$scope.lineAvailable = true;
+		$('.search-to-phone input').attr('type', 'tel');
 		updateScope();
 	}
 
@@ -533,8 +578,8 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 		if (matrix != 'none') {
 			var translation = matrix.match(/-?[\d\.]+/g)[4];
 			if (translation == "0") {
-				translateSidebar(266);
-			} else if (translation == "266") {
+				translateSidebar(-266);
+			} else if (translation == "-266") {
 				translateSidebar(0);
 			}
 		}

@@ -39,14 +39,16 @@ public abstract class Participant implements Closeable {
 	protected String name;
 	protected final WebSocketSession session;
 	protected final String roomName;
-	protected final HubPort hubPort;
+	private final Hub hub;
+	protected HubPort hubPort;
 	
 	public Participant(final String id, String roomName, final WebSocketSession session, MediaPipeline compositePipeline, MediaPipeline presentationPipeline, Hub hub) {
 
 		this.id = id;
 		this.session = session;
 		this.roomName = roomName;
-		this.hubPort = new HubPort.Builder(hub).build();		
+		this.hub = hub;
+		newHubPort();
 		
 	}
 
@@ -120,9 +122,20 @@ public abstract class Participant implements Closeable {
 
 	@Override
 	public abstract void close() throws IOException;
-	
-	protected void release() {
+
+	private void newHubPort() {
+		if (hubPort == null)
+			this.hubPort = new HubPort.Builder(hub).build();
+	}
+
+	protected void releaseHubPort() {
 		hubPort.release();
+		hubPort = null;
+	}
+
+	protected void renewHubPort() {
+		releaseHubPort();
+		newHubPort();
 	}
 
 

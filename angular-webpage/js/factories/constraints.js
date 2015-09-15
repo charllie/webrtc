@@ -4,6 +4,7 @@ app.factory('constraints', ['$window', 'deviceDetector', 'upload', function($win
 	var browser = device.browser;
 	var chromeExtensionInstalled = false;
 	var canPresent = (device.isDesktop() && (browser == 'chrome' || browser == 'firefox')) && ($window.location.protocol == 'https:');
+	var compositeOptions = 'normal';
 	var warning = null;
 
 	// Configuration for the extension if it is Chrome
@@ -46,7 +47,7 @@ app.factory('constraints', ['$window', 'deviceDetector', 'upload', function($win
 
 	function get() {
 
-		var constraints;
+		var constraints, consMaxWidth, consMaxHeight;
 
 		if (type != 'composite' && canPresent) {
 
@@ -57,8 +58,11 @@ app.factory('constraints', ['$window', 'deviceDetector', 'upload', function($win
 				constraints.video.mediaSource = type;
 			}
 
+		} else if (compositeOptions == 'watchOnly') {
+			constraints = { audio: false, video: false };
+		} else if (compositeOptions == 'audioOnly') {
+			constraints =  { audio: true, video: false };
 		} else {
-
 			constraints = constraintWebcam;
 
 			if (upload.speed() >= 0.5) {
@@ -76,6 +80,11 @@ app.factory('constraints', ['$window', 'deviceDetector', 'upload', function($win
 
 		return constraints;
 
+	}
+
+	function setCompositeOptions(opt) {
+		if (opt && (opt == 'normal' || opt == 'audioOnly' || opt == 'watchOnly'))
+			compositeOptions = opt;
 	}
 
 	function getType() {
@@ -117,6 +126,7 @@ app.factory('constraints', ['$window', 'deviceDetector', 'upload', function($win
 		getType: getType,
 		setType: setType,
 		get: get,
+		setCompositeOptions: setCompositeOptions,
 		getWarning: getWarning,
 		setWarning: setWarning
 	};

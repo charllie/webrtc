@@ -114,10 +114,6 @@ video {
 	background: #000;
 }
 
-#phone-nb .text-field__label {
-	color: rgb(249, 249, 249) !important;
-}
-
 .text-field:after {
 	background-color: #607d8b;
 }
@@ -145,47 +141,33 @@ video {
 	-moz-transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
 	transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
 	overflow: auto;
-	box-shadow: 0 0 6px -3px rgba(0,0,0,0.6);
+	box-shadow: 4px 0 9px -7px rgba(0,0,0,0.6);
 	position: fixed;
 	bottom: 0;
-	right: 0;
-}
-
-.call-sidebar .mdi, .participants .mdi {
-	font-size: medium;
-}
-
-.call-sidebar .text-field--with-icon {
-    margin-left: 45px;
-}
-
-.call-sidebar .text-field__icon {
-	top: 0px;
-    left: -44px;
-}
-
-.call-sidebar .text-field--is-focused .text-field__label,.text-field--is-focused.text-field--dark-theme .text-field__label {
-	color: #bbb !important;
-}
-
-.call-sidebar .text-field:after {
-	background-color: #757575;
-}
-
-.call-sidebar .text-field__icon {
-	color: #e0e0e0;
-}
-
-.call-sidebar .text-field--is-focused .text-field__icon {
-	color: #757575;
 }
 
 .participants .list-row__primary {
-	width: 32px;
+	width: 46px;
 }
 
+.search-to-phone .mdi-magnify:before {
+    content: "\f477";
+}
+
+.toolbar__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.radio-button__label:after {
+    color: #607D8B !important;
+}
 
 @media screen and (max-width: 1023px) {
+    .btn--sidebar-off {
+        display: none;
+    }
+
 	.header-padding {
 		height: 75px;
 		padding-top: 8px;
@@ -193,15 +175,23 @@ video {
 	}
 
 	.sidebar {
-		top: 48px;
-		-ms-transform: translate(266px);
-		-moz-transform: translate(266px);
-		-webkit-transform: translate(266px);
-		transform: translate(266px);
+		top: 56px;
+		-ms-transform: translate(-266px);
+		-moz-transform: translate(-266px);
+		-webkit-transform: translate(-266px);
+		transform: translate(-266px);
 	}
+    
+    .smallscreen-hide {
+        display: none;
+    }
 }
 
 @media screen and (min-width: 1024px) {
+    .widescreen-hide {
+        display: none;
+    }
+
 	.header-padding {
 		height: 87px;
 		padding-top: 12px;
@@ -209,15 +199,16 @@ video {
 	}
 
 	.sidebar-adaptive {
-		padding-right: 260px;
+		padding-left: 260px;
 	}
 
+    /* TODO */
 	.btn-info-roompage {
 		display: none;
 	}
 
 	.sidebar {
-		top: 60px;
+		top: 62px;
 		-ms-transform: translate(0px) !important;
 		-moz-transform: translate(0px) !important;
 		-webkit-transform: translate(0px) !important;

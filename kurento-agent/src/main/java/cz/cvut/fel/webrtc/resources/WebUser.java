@@ -18,13 +18,52 @@ public class WebUser extends Participant {
 	private WebRtcEndpoint sharingMedia;
 	private boolean isScreensharer = false;
 
-	protected final WebRtcEndpoint outgoingMedia;
+	private final String userId;
+
+	protected WebRtcEndpoint outgoingMedia;
+
+	private final MediaPipeline compositePipeline;
 	private final MediaPipeline presentationPipeline;
 	private Calendar lastPing = Calendar.getInstance();
 
 	public WebUser(final String id, String roomName, final WebSocketSession session, MediaPipeline compositePipeline, MediaPipeline presentationPipeline, Hub hub) {
 		super(id, roomName, session, compositePipeline, presentationPipeline, hub);
 
+		this.userId = id;
+
+		this.compositePipeline = compositePipeline;
+
+		newOutgoingMedia();
+		connectOutgoingMediaToHubPort();
+
+		outgoingMedia.connect(hubPort);
+		hubPort.connect(outgoingMedia);
+		
+		this.presentationPipeline = presentationPipeline;
+	}
+
+	private void connectOutgoingMediaToHubPort() {
+		outgoingMedia.connect(hubPort);
+		hubPort.connect(outgoingMedia);
+	}
+
+	private void disconnectOutgoingMediaFromHubPort() {
+		hubPort.disconnect(outgoingMedia, asyncLog("Disconnect hubPort from outgoingMedia", "Could not disconnect hubPort from outgoingMedia"));
+		outgoingMedia.disconnect(hubPort, asyncLog("Disconnect outgoingMedia from hubPort", "Could not disconnect ougoingMedia from hubPort"));
+	}
+
+	public void renewOutgoingMedia() {
+		super.renewHubPort();
+		releaseOutgoingMedia();
+		newOutgoingMedia();
+		connectOutgoingMediaToHubPort();
+	}
+
+	public String getName() {
+		return this.name;
+	}
+
+	private void newOutgoingMedia() {
 		this.outgoingMedia = new WebRtcEndpoint.Builder(compositePipeline).build();
 
 		this.outgoingMedia
@@ -32,12 +71,10 @@ public class WebUser extends Participant {
 
 					@Override
 					public void onEvent(OnIceCandidateEvent event) {
-						
-						//iceCandidates.add(event.getCandidate().getCandidate());
-						
+
 						JsonObject response = new JsonObject();
 						response.addProperty("id", "iceCandidate");
-						response.addProperty("userId", id);
+						response.addProperty("userId", userId);
 						response.addProperty("type", "composite");
 						response.add("candidate",
 								JsonUtils.toJsonObject(event.getCandidate()));
@@ -51,31 +88,8 @@ public class WebUser extends Participant {
 						}
 					}
 				});
-
-		
-		
-		/*
-		 * For ImageOverlay
-		 * 
-		ImageOverlayFilter imageOverlayFilter = new ImageOverlayFilter.Builder(this.compositePipeline).build();
-		imageOverlayFilter.addImage("username",  "https://webrtc.ml/names/" + UrlEscapers.urlPathSegmentEscaper().escape(name).replace(";",""), 0F, 0F, 1F, 1F, false, true);
-		
-		outgoingMedia.connect(imageOverlayFilter);
-		imageOverlayFilter.connect(hubPort);
-		hubPort.connect(outgoingMedia);
-		
-		 */
-
-		outgoingMedia.connect(hubPort);
-		hubPort.connect(outgoingMedia);
-		
-		this.presentationPipeline = presentationPipeline;
 	}
-	
-	public String getName() {
-		return this.name;
-	}
-	
+
 	public WebRtcEndpoint getOutgoingWebRtcPeer() {
 		return outgoingMedia;
 	}
@@ -97,7 +111,7 @@ public class WebUser extends Participant {
 				sender.getName(), sdpOffer);
 		
 		WebRtcEndpoint ep = this.getEndpointForUser(sender, type, room);
-		
+
 		try {
 			if (ep.getLocalSessionDescriptor() != null)
 				return;
@@ -179,28 +193,9 @@ public class WebUser extends Participant {
 
 	public void cancelPresentation() {
 		log.debug("PARTICIPANT {}: canceling presentation reception", this.getName());
-
 		log.debug("PARTICIPANT {}: removing endpoint", this.getName());
 		
-		if (sharingMedia != null) {
-			sharingMedia.release(new Continuation<Void>() {
-				@Override
-				public void onSuccess(Void result) throws Exception {
-					log.trace(
-							"PARTICIPANT {}: Released successfully incoming EP",
-							WebUser.this.getName());
-				}
-	
-				@Override
-				public void onError(Throwable cause) throws Exception {
-					log.warn(
-							"PARTICIPANT {}: Could not release incoming EP",
-							WebUser.this.getName());
-				}
-			});
-			
-			sharingMedia = null;
-		}
+		releaseSharingMedia();
 	}
 
 	public void addCandidate(IceCandidate e, String type) {
@@ -223,38 +218,23 @@ public class WebUser extends Participant {
 	public void close() throws IOException {
 		
 		log.debug("PARTICIPANT {}: Releasing resources", this.getName());
-		release();
-		
-		this.getOutgoingWebRtcPeer().release(new Continuation<Void>() {
-			
-			@Override
-			public void onSuccess(Void result) throws Exception {
-				log.trace("PARTICIPANT {}: Released outgoing EP",
-						WebUser.this.getName());
-			}
+		super.releaseHubPort();
 
-			@Override
-			public void onError(Throwable cause) throws Exception {
-				log.warn("USER {}: Could not release outgoing EP",
-						WebUser.this.getName());
-			}
-		});
-		
+		releaseOutgoingMedia();
+		releaseSharingMedia();
+	}
+
+	private void releaseOutgoingMedia() {
+		if (outgoingMedia != null) {
+			outgoingMedia.release(asyncLog("Released outgoing endpoint", "Could not release sharing endpoint"));
+			outgoingMedia = null;
+		}
+	}
+
+	private void releaseSharingMedia() {
 		if (sharingMedia != null) {
-			sharingMedia.release(new Continuation<Void>() {
-
-				@Override
-				public void onSuccess(Void result) throws Exception {
-					log.trace("PARTICIPANT {}: Released outgoing EP",
-							WebUser.this.getName());
-				}
-
-				@Override
-				public void onError(Throwable cause) throws Exception {
-					log.warn("USER {}: Could not release outgoing EP",
-							WebUser.this.getName());
-				}
-			});
+			sharingMedia.release(asyncLog("Released sharing endpoint", "Could not release sharing ep"));
+			sharingMedia = null;
 		}
 	}
 
@@ -264,6 +244,23 @@ public class WebUser extends Participant {
 
 	public void setLastPing(Calendar now) {
 		this.lastPing = now;
+	}
+
+	public Continuation<Void> asyncLog(final String success, final String error) {
+		return new Continuation<Void>() {
+
+			@Override
+			public void onSuccess(Void result) throws Exception {
+				log.trace("PARTICIPANT {}: {}",
+						WebUser.this.getName(), success);
+			}
+
+			@Override
+			public void onError(Throwable cause) throws Exception {
+				log.warn("PARTICIPANT {}: {}",
+						WebUser.this.getName(), error);
+			}
+		};
 	}
 
 }

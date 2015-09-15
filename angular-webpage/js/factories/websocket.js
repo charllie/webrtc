@@ -35,7 +35,11 @@ app.factory('socket', ['$window', 'variables', function($window, variables) {
 	function send(message) {
 		var jsonMessage = JSON.stringify(message);
 		console.log('Sending message: ' + jsonMessage);
-		socket.send(jsonMessage);
+		try {
+			socket.send(jsonMessage);
+		} catch (e) {
+			console.warn('Socket was closed before sending message');
+		}
 	}
 
 	function get() {
@@ -57,7 +61,6 @@ app.factory('socket', ['$window', 'variables', function($window, variables) {
 	}
 
 	$window.onbeforeunload = function() {
-		send({ id: 'leaveRoom' });
 		socket.close();
 	};
 

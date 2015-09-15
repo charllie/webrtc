@@ -53,7 +53,7 @@ public class Softphone extends Participant {
 	@Override
 	public void close() throws IOException {
 		log.debug("PARTICIPANT {}: Releasing resources", this.getName());
-		release();
+		super.releaseHubPort();
 		
 		rtpEndpoint.release(new Continuation<Void>() {
 

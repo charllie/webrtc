@@ -21,8 +21,36 @@
 			</lx-text-field>
 			<span class="text-field-error" ng-if="!checked.room">Room can't be empty</span>
 
-			<div class="pt+++" flex-container="row">
+			<!-- Join -->
+			<div class="pt+++ pb" flex-container="row">
 				<button type="submit" class="width--100 btn btn--m btn--blue-grey btn--raised" flex-item="12" lx-ripple>Join!</button>
+			</div>
+
+			<div class="tc-grey-500 pl++ pb fs-caption" ng-click="settings = 'shown'"  ng-hide="settings == 'shown'">
+				<span class="tc-grey-400 pr">&#9660;</span>
+				<span>Show advanced stream settings</span>
+			</div>
+			<div class="tc-grey-700 pl++ pb fs-caption" ng-click="settings = 'hidden'" ng-show="settings == 'shown'">
+				<span class="pr">&#9650;</span>
+				<span>Hide advanced stream settings</span>
+			</div>
+
+			<!-- Advanced settings -->
+			<div class="radio-group fs-caption tc-grey-700 pl++" ng-show="settings == 'shown'">
+				<div class="radio-button" checked>
+					<input type="radio" id="radio1" name="radio1" value="normal" class="radio-button__input" ng-model="participant.compositeOptions">
+					<label for="radio1" class="radio-button__label">Webcam + microphone</label>
+				</div>
+
+				<div class="radio-button">
+					<input type="radio" id="radio2" name="radio1" value="audioOnly" class="radio-button__input" ng-model="participant.compositeOptions">
+					<label for="radio2" class="radio-button__label">Microphone only</label>
+				</div>
+
+				<div class="radio-button">
+					<input type="radio" id="radio3" name="radio1" value="watchOnly" class="radio-button__input" ng-model="participant.compositeOptions">
+					<label for="radio3" class="radio-button__label">Watch only</label>
+				</div>
 			</div>
 		</form>
 

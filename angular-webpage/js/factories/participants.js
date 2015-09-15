@@ -62,14 +62,16 @@ app.factory('participants', ['socket', function(socket) {
 				}
 			},
 
+			disposeType: function(type) {
+				if (this.rtcPeer[type])
+					this.rtcPeer[type].dispose();
+			},
+
 			dispose: function() {
 				console.log('Disposing participant ' + this.name);
 
-				if (this.rtcPeer['presentation'] !== null && this.rtcPeer['presentation'] !== undefined)
-					this.rtcPeer['presentation'].dispose();
-
-				if (this.rtcPeer['composite'] !== null && this.rtcPeer['composite'] !== undefined)
-					this.rtcPeer['composite'].dispose();
+				this.disposeType('presentation');
+				this.disposeType('composite');
 			},
 
 			getIceCandidate: function(type) {
