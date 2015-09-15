@@ -96,17 +96,22 @@ This little nodejs module enables to do an upload speed test on port 8081 to ada
 
  ```json
  {
-     "__comment": {
-      "instance_ws_uri": "ws://localhost:8080/groupcall",
-      "instance_wss_uri": "wss://localhost/groupcall",
-      "instance_upload_speed_tester_uri": "http://localhost:8081/upload"
-     },
      "ws_uri": "KMS_WEBSOCKET_URI",
      "wss_uri": "KMS_SECURE_WEBSOCKET_URI",
      "upload_speed_tester_uri": "UPLOAD_SPEED_TESTER_URI"
  }
  ```
 
+Exemple :
+
+ ```json
+ {
+     "ws_uri": "ws://localhost:8080/groupcall",
+     "wss_uri": "wss://localhost/groupcall",
+     "upload_speed_tester_uri": "http://localhost:8081/upload"
+ }
+ ```
+ 
 2. Basic installation
 
  *Requirements: Node.js, Bower, http-server*
