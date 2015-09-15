@@ -51,12 +51,12 @@
 				<i class="mdi mdi-presentation"></i>
 			</button>
 
-			<button class="btn btn--l btn--white btn--icon" lx-ripple>
+			<button class="btn btn--l btn--white btn--icon" ng-click="toggleDropdown()" lx-ripple>
 				<i class="mdi mdi-dots-vertical"></i>
 			</button>
 
 			<div class="dropdown-menu dropdown-menu--right dropdown__menu--is-dropped" style="opacity: 1; right: 16px; top: 52px;">
-				<div class="dropdown-menu__content">
+				<div class="dropdown-menu__content" ng-if="dropdownDropped">
 					<!-- Watch / Micro / Video + webcam -->
 					<ul>
 						<li>
@@ -64,19 +64,19 @@
 						</li>
 
 						<li>
-							<a class="dropdown-link" ng-click="watchOnly()">
+							<a class="dropdown-link" ng-click="watchOnly();toggleDropdown()">
 								<i class="mdi mdi-eye"></i>
 								<span>Watch only</span>
 							</a>
 						</li>
 						<li>
-							<a class="dropdown-link" ng-click="microOnly()">
+							<a class="dropdown-link" ng-click="microOnly();toggleDropdown()">
 								<i class="mdi mdi-microphone"></i>
 								<span>Microphone only</span>
 							</a>
 						</li>
 						<li>
-							<a class="dropdown-link" ng-click="allTracks()">
+							<a class="dropdown-link" ng-click="allTracks();toggleDropdown()">
 								<i class="mdi mdi-webcam"></i>
 								<span>Webcam + microphone</span>
 							</a>

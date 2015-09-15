@@ -605,6 +605,11 @@ function RoomCtrl($scope, $location, $window, $params, $timeout, socket, constra
 		}
 	};
 
+	$scope.dropdownDropped = false;
+	$scope.toggleDropdown = function() {
+		$scope.dropdownDropped = !$scope.dropdownDropped;
+	};
+
 	function updateScope() {
 		_.defer(function() {
 			$scope.$apply();
