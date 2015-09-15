@@ -1,18 +1,17 @@
 WebRTC Conferencing Project [![Build Status](https://travis-ci.org/charllie/webrtc.svg?branch=master)](https://travis-ci.org/charllie/webrtc)
 ===========================
 
-
 1. [Kurento Media Server](#kurento-media-server)
 2. [Kurento Client](#kurento-client)
 3. [Upload Speed Tester](#upload-speed-tester)
 4. [Web Interface](#web-interface)
 5. [nginx](#nginx)
 
-XIVO may be needed to get a GUI for Asterisk and a REST API to get all line extensions for the Kurento Agent. You can also build your own [REST API](http://documentation.xivo.io/en/stable/api_sdk/rest_api/confd/lines.html#sip-lines).
+[XIVO](http://www.xivo.io) may be needed to get a GUI for Asterisk and a [REST API](http://documentation.xivo.io/en/stable/api_sdk/rest_api/confd/lines.html#sip-lines) to get all line extensions for the Kurento Agent. You can also build your own REST API.
 
 ## Kurento Media Server
 
-This project depends on Kurento so it has to be installed first.
+This project depends on [Kurento](http://www.kurento.org) so it has to be installed first.
 
 1. Basic installation
 
@@ -66,8 +65,8 @@ A Kurento Client is needed to process the information given by the users. In thi
 3. Installation via Docker
 
  ```bash
- docker build --file=kurento-agent -t kurento-agent:6 . 
- docker run --restart=always --net=host --name=kurento-agent -v /root/conf:/webrtc/kurento-agent/config/ kurento-agent:6
+ $ docker build --file=kurento-agent -t kurento-agent:6 . 
+ $ docker run --restart=always --net=host --name=kurento-agent -v /root/conf:/webrtc/kurento-agent/config/ kurento-agent:6
  ```
 
 
@@ -127,7 +126,7 @@ This little nodejs module enables to do an upload speed test on port 8081 to ada
 
 
 ### nginx
-nginx may be needed to redirect ports and/or to enable SSL on the domain (which is mandatory to enable screensharing)
+[nginx](http://nginx.org) may be needed to redirect ports and/or to enable SSL on the domain (which is mandatory to enable screensharing)
 
 ```nginx
 server {
@@ -182,9 +181,9 @@ server {
 
 ## Docker-compose
 
-An easy way to install the project is using docker-compose.
+An easy way to install the project is using [docker-compose](https://docs.docker.com/compose/install/).
 
-1. First, install [docker-compose](https://docs.docker.com/compose/install/)
+1. First, install docker-compose
 2. Edit the configuration files in docker-compose/conf/
 3. Launch the project in the docker-compose folder:
 
